@@ -25,23 +25,9 @@ func TestUnitEnvironmentVariableResource_Validate_Read_ParentDeleted(t *testing.
 			// Step 1 (create + post-apply plan) makes 10 environment lookups; from the step 2
 			// refresh onward the parent environment has been deleted out of band.
 			if envGetCallCount > 10 {
-				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"The environment could not be found."}}`), nil
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/Validate_Read_ParentDeleted/get_environment_not_found.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "name":"00000000-0000-0000-0000-000000000001",
-  "id":"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
-  "type":"Microsoft.BusinessAppPlatform/scopes/admin/environments",
-  "location":"unitedstates",
-  "properties":{
-    "displayName":"Test",
-    "azureRegion":"unitedstates",
-    "createdTime":"2024-01-01T00:00:00Z",
-    "environmentSku":"Sandbox",
-    "linkedEnvironmentMetadata":{
-      "instanceUrl":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-    }
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

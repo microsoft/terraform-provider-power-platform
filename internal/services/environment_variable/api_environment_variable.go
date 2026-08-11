@@ -5,10 +5,12 @@ package environmentvariable
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -54,6 +56,10 @@ func (client *client) GetEnvironmentVariable(ctx context.Context, environmentId,
 func (client *client) UpsertEnvironmentVariableValue(ctx context.Context, environmentId, schemaName, value string) (*resolvedEnvironmentVariableDto, error) {
 	definition, err := client.getDefinitionBySchemaName(ctx, environmentId, schemaName)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := validateValueForDefinitionType(definition.Type, value); err != nil {
 		return nil, err
 	}
 
@@ -306,23 +312,58 @@ func isEnvironmentVariableDefinitionNotFound(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "environment variable definition with schema name")
 }
 
+const (
+	environmentVariableTypeString     = 100000000
+	environmentVariableTypeNumber     = 100000001
+	environmentVariableTypeBoolean    = 100000002
+	environmentVariableTypeJSON       = 100000003
+	environmentVariableTypeDataSource = 100000004
+	environmentVariableTypeSecret     = 100000005
+)
+
 func environmentVariableTypeLabel(value int64) string {
 	switch value {
-	case 100000000:
+	case environmentVariableTypeString:
 		return "String"
-	case 100000001:
+	case environmentVariableTypeNumber:
 		return "Number"
-	case 100000002:
+	case environmentVariableTypeBoolean:
 		return "Boolean"
-	case 100000003:
+	case environmentVariableTypeJSON:
 		return "JSON"
-	case 100000004:
+	case environmentVariableTypeDataSource:
 		return "Data Source"
-	case 100000005:
+	case environmentVariableTypeSecret:
 		return "Secret"
 	default:
 		return fmt.Sprintf("%d", value)
 	}
+}
+
+// validateValueForDefinitionType checks the configured value against the definition's
+// declared type before it is written to Dataverse. Dataverse itself does not validate
+// environment variable values (the value column is free text), so without this check
+// an invalid value would be accepted and only fail later in the consuming components.
+func validateValueForDefinitionType(definitionType int64, value string) error {
+	switch definitionType {
+	case environmentVariableTypeBoolean:
+		// Dataverse stores boolean ("Two options") environment variable values as "yes"/"no",
+		// which is what the maker portal writes for this type.
+		if lowered := strings.ToLower(value); lowered != "yes" && lowered != "no" {
+			return fmt.Errorf("environment variable definition has type %s: value must be \"yes\" or \"no\", got %q", environmentVariableTypeLabel(definitionType), value)
+		}
+	case environmentVariableTypeNumber:
+		if _, err := strconv.ParseFloat(value, 64); err != nil {
+			return fmt.Errorf("environment variable definition has type %s: value %q is not a valid number", environmentVariableTypeLabel(definitionType), value)
+		}
+	case environmentVariableTypeJSON:
+		if !json.Valid([]byte(value)) {
+			return fmt.Errorf("environment variable definition has type %s: value is not valid JSON", environmentVariableTypeLabel(definitionType))
+		}
+	default:
+		// String, Data Source, Secret and unknown types have no value format to enforce.
+	}
+	return nil
 }
 
 func environmentVariableSecretStoreLabel(value int64) string {

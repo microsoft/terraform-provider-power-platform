@@ -187,6 +187,70 @@ resource "powerplatform_environment_variable" "text" {
 	})
 }
 
+func TestUnitEnvironmentVariableResource_Validate_Read_OutOfBandValueChange(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	registerEnvironmentResponder()
+	registerDefinitionResponder()
+
+	// Sequence for the current-value lookup:
+	//   call 1: create's pre-upsert check, no value exists yet;
+	//   call 2: post-apply refresh, the value matches the configuration;
+	//   call 3+: the value was changed out of band, so refresh must detect drift.
+	getValuesCallCount := 0
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=_environmentvariabledefinitionid_value+eq+11111111-1111-1111-1111-111111111111&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
+		func(req *http.Request) (*http.Response, error) {
+			getValuesCallCount++
+			switch getValuesCallCount {
+			case 1:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_1_empty.json").String()), nil
+			case 2:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_2.json").String()), nil
+			default:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Read_OutOfBandValueChange/get_environment_variable_values_drifted.json").String()), nil
+			}
+		})
+
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
+			resp.Header.Set("Odata-Entityid", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues(22222222-2222-2222-2222-222222222222)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29?%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_value.json").String()))
+
+	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29",
+		httpmock.NewStringResponder(http.StatusNoContent, ""))
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the environment variable value successfully.
+				Config: `
+resource "powerplatform_environment_variable" "text" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  schema_name    = "contoso_ApiBaseUrl"
+  value          = "https://api.contoso.example"
+}
+`,
+				Check: resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "value", "https://api.contoso.example"),
+			},
+			{
+				// Step 2: the value was changed out of band; refresh must pick up the
+				// API value so the follow-up plan proposes to restore the configuration.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+				Check:              resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "value", "https://changed-out-of-band.contoso.example"),
+			},
+		},
+	})
+}
+
 func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Definition_Is_Missing(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -218,21 +282,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_No_Dataverse
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
-		httpmock.NewStringResponder(http.StatusOK, `{
-  "name":"00000000-0000-0000-0000-000000000001",
-  "id":"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
-  "type":"Microsoft.BusinessAppPlatform/scopes/admin/environments",
-  "location":"unitedstates",
-  "properties":{
-    "displayName":"No Dataverse",
-    "azureRegion":"unitedstates",
-    "createdTime":"2024-01-01T00:00:00Z",
-    "environmentSku":"Sandbox",
-    "linkedEnvironmentMetadata":{
-      "instanceUrl":""
-    }
-  }
-}`))
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_No_Dataverse/get_environment.json").String()))
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -259,10 +309,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Multiple_Val
 	registerEnvironmentResponder()
 	registerDefinitionResponder()
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=_environmentvariabledefinitionid_value+eq+11111111-1111-1111-1111-111111111111&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
-		httpmock.NewStringResponder(http.StatusOK, `{"value":[
-  {"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"a"},
-  {"environmentvariablevalueid":"33333333-3333-3333-3333-333333333333","schemaname":"contoso_ApiBaseUrl","value":"b"}
-]}`))
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_Multiple_Values_Exist/get_environment_variable_values.json").String()))
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -282,6 +329,81 @@ resource "powerplatform_environment_variable" "broken" {
 	})
 }
 
+func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Number_Value_Invalid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	registerEnvironmentResponder()
+	registerDefinitionResponderFromFile("tests/resource/Validate_Create_Fails_When_Value_Type_Invalid/get_environment_variable_definitions_number.json")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "powerplatform_environment_variable" "number" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  schema_name    = "contoso_ApiBaseUrl"
+  value          = "not-a-number"
+}
+`,
+				ExpectError: regexp.MustCompile(`is\s+not\s+a\s+valid\s+number`),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Json_Value_Invalid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	registerEnvironmentResponder()
+	registerDefinitionResponderFromFile("tests/resource/Validate_Create_Fails_When_Value_Type_Invalid/get_environment_variable_definitions_json.json")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "powerplatform_environment_variable" "json" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  schema_name    = "contoso_ApiBaseUrl"
+  value          = "{not valid json"
+}
+`,
+				ExpectError: regexp.MustCompile(`is\s+not\s+valid\s+JSON`),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Boolean_Value_Invalid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	registerEnvironmentResponder()
+	registerDefinitionResponderFromFile("tests/resource/Validate_Create_Fails_When_Value_Type_Invalid/get_environment_variable_definitions_boolean.json")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "powerplatform_environment_variable" "boolean" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  schema_name    = "contoso_ApiBaseUrl"
+  value          = "true"
+}
+`,
+				ExpectError: regexp.MustCompile(`must\s+be\s+.yes.\s+or\s+.no.`),
+			},
+		},
+	})
+}
+
 func registerEnvironmentVariableHappyPathResponders() {
 	registerEnvironmentResponder()
 	registerDefinitionResponder()
@@ -291,9 +413,9 @@ func registerEnvironmentVariableHappyPathResponders() {
 		func(req *http.Request) (*http.Response, error) {
 			getValuesCallCount++
 			if getValuesCallCount == 1 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_1_empty.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"https://api.contoso.example"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_2.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues",
@@ -307,67 +429,67 @@ func registerEnvironmentVariableHappyPathResponders() {
 		httpmock.NewStringResponder(http.StatusNoContent, ""))
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29?%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
-		httpmock.NewStringResponder(http.StatusOK, `{"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"https://api.contoso.example"}`))
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_value.json").String()))
 }
 
 func registerEnvironmentVariableUpdateResponders() {
 	registerEnvironmentResponder()
 	registerDefinitionResponder()
 
-	getValuesCallCount := 0
+	// The current value the mocked API reports follows the applied changes: no value
+	// before the create, the initial value until the PATCH happens, and the updated
+	// value afterwards. Read now reflects the API value into state, so the refresh
+	// plans after each apply only stay empty if the mock keeps track of the upserts.
+	valueCreated := false
+	valueUpdated := false
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=_environmentvariabledefinitionid_value+eq+11111111-1111-1111-1111-111111111111&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
 		func(req *http.Request) (*http.Response, error) {
-			getValuesCallCount++
-			if getValuesCallCount == 1 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			switch {
+			case !valueCreated:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_1_empty.json").String()), nil
+			case !valueUpdated:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_values_2.json").String()), nil
+			default:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_HappyPath/get_environment_variable_values_updated.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"https://api.contoso.example"}]}`), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues",
 		func(req *http.Request) (*http.Response, error) {
+			valueCreated = true
 			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
 			resp.Header.Set("Odata-Entityid", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues(22222222-2222-2222-2222-222222222222)")
 			return resp, nil
 		})
 
 	httpmock.RegisterResponder("PATCH", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29",
-		httpmock.NewStringResponder(http.StatusNoContent, ""))
+		func(req *http.Request) (*http.Response, error) {
+			valueUpdated = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
 
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29",
 		httpmock.NewStringResponder(http.StatusNoContent, ""))
 
-	readValueCallCount := 0
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29?%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
 		func(req *http.Request) (*http.Response, error) {
-			readValueCallCount++
-			if readValueCallCount == 1 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"https://api.contoso.example"}`), nil
+			if !valueUpdated {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_HappyPath/get_environment_variable_value_1.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"environmentvariablevalueid":"22222222-2222-2222-2222-222222222222","schemaname":"contoso_ApiBaseUrl","value":"https://api2.contoso.example"}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_HappyPath/get_environment_variable_value_2.json").String()), nil
 		})
 }
 
 func registerEnvironmentResponder() {
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
-		httpmock.NewStringResponder(http.StatusOK, `{
-  "name":"00000000-0000-0000-0000-000000000001",
-  "id":"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
-  "type":"Microsoft.BusinessAppPlatform/scopes/admin/environments",
-  "location":"unitedstates",
-  "properties":{
-    "displayName":"Test",
-    "azureRegion":"unitedstates",
-    "createdTime":"2024-01-01T00:00:00Z",
-    "environmentSku":"Sandbox",
-    "linkedEnvironmentMetadata":{
-      "instanceUrl":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-    }
-  }
-}`))
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment.json").String()))
 }
 
 func registerDefinitionResponder() {
+	registerDefinitionResponderFromFile("tests/resource/Validate_Create_HappyPath/get_environment_variable_definitions.json")
+}
+
+func registerDefinitionResponderFromFile(fixturePath string) {
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariabledefinitions?%24filter=schemaname+eq+%27contoso_ApiBaseUrl%27&%24select=environmentvariabledefinitionid%2Cschemaname%2Cdisplayname%2Cdescription%2Cdefaultvalue%2Ctype%2Cvalueschema%2Csecretstore",
-		httpmock.NewStringResponder(http.StatusOK, `{"value":[{"environmentvariabledefinitionid":"11111111-1111-1111-1111-111111111111","schemaname":"contoso_ApiBaseUrl","displayname":"API Base URL","description":"Base URL for downstream API","defaultvalue":"https://default.contoso.example","type":100000000,"valueschema":"{\"type\":\"string\"}","secretstore":1}]}`))
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixturePath).String()))
 }

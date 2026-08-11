@@ -186,7 +186,9 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	newState := buildStateFromResolved(state.EnvironmentId.ValueString(), state.Value.ValueString(), state.Timeouts, resolved)
+	// Use the value the API returned, not the previously configured one, so that
+	// out-of-band changes to the variable value are detected as drift.
+	newState := buildStateFromResolved(state.EnvironmentId.ValueString(), resolved.Value.Value, state.Timeouts, resolved)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
@@ -266,13 +268,13 @@ func (r *Resource) applyEnvironmentVariableValue(ctx context.Context, plan *Reso
 	return buildStateFromResolved(plan.EnvironmentId.ValueString(), plan.Value.ValueString(), plan.Timeouts, resolved), nil
 }
 
-func buildStateFromResolved(environmentID, configuredValue string, timeoutValue timeouts.Value, resolved *resolvedEnvironmentVariableDto) *ResourceModel {
+func buildStateFromResolved(environmentID, value string, timeoutValue timeouts.Value, resolved *resolvedEnvironmentVariableDto) *ResourceModel {
 	state := &ResourceModel{
 		Timeouts:                      timeoutValue,
 		Id:                            types.StringValue(environmentVariableResourceID(environmentID, resolved.Definition.SchemaName)),
 		EnvironmentId:                 types.StringValue(environmentID),
 		SchemaName:                    types.StringValue(resolved.Definition.SchemaName),
-		Value:                         types.StringValue(configuredValue),
+		Value:                         types.StringValue(value),
 		EnvironmentVariableDefinition: types.StringValue(resolved.Definition.EnvironmentVariableDefinitionId),
 		DisplayName:                   types.StringValue(resolved.Definition.DisplayName),
 		Description:                   types.StringValue(resolved.Definition.Description),
