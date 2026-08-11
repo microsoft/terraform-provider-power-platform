@@ -1,0 +1,5 @@
+kind: added
+body: Add `powerplatform_role_assignment` resource for assigning a Dataverse security role to a principal independently of the principal's lifecycle
+time: 2026-08-12T09:10:00+10:00
+custom:
+    Issue: ""

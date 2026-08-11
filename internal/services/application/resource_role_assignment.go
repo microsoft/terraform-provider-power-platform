@@ -64,7 +64,7 @@ func (r *RoleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Assigns one Dataverse security role to an existing Dataverse principal.",
+		MarkdownDescription: "Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
