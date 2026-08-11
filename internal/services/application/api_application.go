@@ -220,7 +220,7 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 
 	requestBody := map[string]any{
 		"applicationid":             applicationId,
-		"accessmode":                "4",
+		"accessmode":                4,
 		"isdisabled":                false,
 		"businessunitid@odata.bind": fmt.Sprintf("/businessunits(%s)", businessUnitId),
 	}
@@ -417,10 +417,6 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	return resolved, nil
 }
 
-func (client *client) AddApplicationUserSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
-	return client.AddPrincipalSecurityRoles(ctx, environmentId, systemUserId, roleIds)
-}
-
 func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
@@ -450,10 +446,6 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 	}
 
 	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
-}
-
-func (client *client) RemoveApplicationUserSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
-	return client.RemovePrincipalSecurityRoles(ctx, environmentId, systemUserId, roleIds)
 }
 
 func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
@@ -528,7 +520,7 @@ func (client *client) deleteSystemUser(ctx context.Context, environmentId string
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)", systemUserId),
+		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)", constants.DATAVERSE_API_VERSION, systemUserId),
 	}
 
 	// Make the request

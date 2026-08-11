@@ -55,3 +55,18 @@ type EnvironmentApplicationPackageInstallResourceModel struct {
 	UniqueName    types.String   `tfsdk:"unique_name"`
 	EnvironmentId types.String   `tfsdk:"environment_id"`
 }
+
+type ApplicationUserResource struct {
+	helpers.TypeInfo
+	ApplicationClient client
+}
+
+type ApplicationUserResourceModel struct {
+	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	Id             types.String   `tfsdk:"id"`
+	EnvironmentId  types.String   `tfsdk:"environment_id"`
+	ApplicationId  types.String   `tfsdk:"application_id"`
+	SystemUserId   types.String   `tfsdk:"system_user_id"`
+	BusinessUnitId types.String   `tfsdk:"business_unit_id"`
+	Disabled       types.Bool     `tfsdk:"disabled"`
+}

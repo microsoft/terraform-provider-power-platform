@@ -15,7 +15,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestUnitEnvironmentApplicationUserResource_CreateUpdateDelete(t *testing.T) {
+func TestUnitEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
