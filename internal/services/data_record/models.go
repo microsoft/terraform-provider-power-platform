@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 type DataRecordDataSource struct {
@@ -42,7 +43,8 @@ type DataRecordListDataSourceModel struct {
 
 type DataRecordResource struct {
 	helpers.TypeInfo
-	DataRecordClient client
+	DataRecordClient  client
+	EnvironmentClient environment.Client
 }
 
 type DataRecordResourceModel struct {

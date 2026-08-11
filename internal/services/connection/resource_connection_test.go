@@ -131,3 +131,75 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitConnectionsResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/connections/Validate_Create/put_connection.json").String()), nil
+		})
+
+	var getConnectionCallCount = 0
+	// First two calls (Create + post-Create plan check) succeed; step 2 refresh simulates a 403 because the environment is gone.
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			getConnectionCallCount++
+			if getConnectionCallCount <= 2 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connections/Validate_Create/put_connection.json").String()), nil
+			}
+			// Simulate 403 ConnectionAuthorizationFailed when the parent environment has been deleted.
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"error":{"code":"ConnectionAuthorizationFailed","message":"The caller does not have permission."}}`), nil
+		})
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	// When the connection GET fails with a non-ErrObjectNotFound error, the provider checks
+	// whether the parent environment still exists. Return 404 to indicate it is gone.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000000\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/connections/Validate_Read_ParentDeleted/get_environment_00000000-0000-0000-0000-000000000000.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the connection successfully.
+				Config: `
+				resource "powerplatform_connection" "azure_openai_connection" {
+					environment_id = "00000000-0000-0000-0000-000000000000"
+					name           = "shared_azureopenai"
+					display_name   = "OpenAI Connection"
+					connection_parameters = jsonencode({
+						"azureOpenAIResourceName" : "aaa",
+						"azureOpenAIApiKey" : "bbb"
+						"azureSearchEndpointUrl" : "ccc",
+						"azureSearchApiKey" : "ddd"
+					})
+
+					lifecycle {
+						ignore_changes = [
+							connection_parameters
+						]
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "name", "shared_azureopenai"),
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "display_name", "OpenAI Connection"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// The connection GET returns 403; the provider detects the parent is gone and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}

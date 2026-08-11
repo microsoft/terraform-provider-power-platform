@@ -1603,3 +1603,84 @@ func TestAccDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitDataRecordResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var getEnvironmentCallCount = 0
+	// The data_record client's internal getEnvironment() (exact URL with api-version only).
+	// Step 1 (Create + Reads) makes ~5 calls that succeed; step 2 refresh returns 404
+	// to simulate the environment being deleted out-of-band.
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			getEnvironmentCallCount++
+			if getEnvironmentCallCount <= 5 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/Validate_Read_ParentDeleted/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	// The EnvironmentClient's GetEnvironment() returns 404 (URL includes $expand query params).
+	// This is only called during tier-2 parent check when the data record read fails.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?.+expand`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/Validate_Read_ParentDeleted/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_contact_00000000-0000-0000-0000-000000000010.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/([a-zA-Z]+)`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the data record successfully.
+				Config: `
+				resource "powerplatform_data_record" "data_record_sample_contact1" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "contact"
+					columns = {
+						firstname     = "John"
+						lastname      = "Doe"
+						telephone1    = "555-555-5555"
+						emailaddress1 = "johndoe@contoso.com"
+						anniversary   = "2024-04-10"
+						annualincome  = 1234.56
+						birthdate     = "2024-04-10"
+						description   = "This is the description of the the terraform \n\nsample contact"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_data_record.data_record_sample_contact1", "table_logical_name", "contact"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// The GetDataRecord call fails because getEnvironment returns 404; the provider detects the parent is gone and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}

@@ -276,3 +276,62 @@ func TestUnitTestEncryptionPolicyResource_Validate_Create(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitTestEnterprisePolicyResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	// Mock the enterprise policy link operation
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/enterprisePolicies/NetworkInjection/link?api-version=2019-10-01`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Create/get_lifecycle.json").String()), nil
+		})
+
+	// enterprise_policy.Read calls environment.Client.GetEnvironment which uses the URL
+	// without query params (httpmock also matches against the stripped URL).
+	// First few calls (step 1 Read) return 200; subsequent calls (step 2 RefreshState) return 404.
+	var envCallCount = 0
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			envCallCount++
+			id := httpmock.MustGetSubmatch(req, 1)
+			if envCallCount <= 1 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Create/get_environment_%s_network_injection.json", id)).String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/Validate_Read_ParentDeleted/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the resource successfully.
+				Config: `
+				  resource "powerplatform_enterprise_policy" "network_injection" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					system_id      = "/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/00000000-0000-0000-0000-000000000002"
+					policy_type    = "NetworkInjection"
+				  }`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "environment_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+			{
+				// Step 2: Refresh when the parent environment has been deleted out-of-band.
+				// The resource should be silently removed from state (no error).
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}

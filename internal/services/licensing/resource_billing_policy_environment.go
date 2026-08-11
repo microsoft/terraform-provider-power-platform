@@ -156,6 +156,12 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		// For ambiguous errors, check whether the parent billing policy still exists.
+		_, bpErr := r.LicensingClient.GetBillingPolicy(ctx, state.BillingPolicyId)
+		if errors.Is(bpErr, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		addClientError(&resp.Diagnostics, r.FullTypeName(), "reading", err)
 		return
 	}
