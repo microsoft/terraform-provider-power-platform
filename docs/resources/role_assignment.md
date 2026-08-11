@@ -31,7 +31,7 @@ resource "powerplatform_role_assignment" "example" {
 
 ### Optional
 
-- `business_unit_id` (String) Business unit ID used to resolve the requested security role name. Defaults to the application user's current business unit.
+- `business_unit_id` (String) Business unit ID used to resolve the requested security role name. Defaults to the principal's current business unit.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

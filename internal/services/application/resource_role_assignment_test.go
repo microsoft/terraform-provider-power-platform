@@ -216,6 +216,157 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.
 	})
 }
 
+func TestUnitEnvironmentApplicationUserRoleAssignmentResource_ImportRoleNameWithSlash(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		principalID    = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		roleName       = "MetaForm Admin/Delegate"
+	)
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}]}`,
+				principalID, applicationID, rootBusinessID, roleAdminID, roleName, rootBusinessID)
+			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[%s]}`, body)), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"value":[{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}]}`,
+				roleAdminID, roleName, rootBusinessID)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))/systemuserroles_association/\$ref.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					principal_id       = "` + principalID + `"
+					security_role_name = "` + roleName + `"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/"+roleName),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "security_role_name", roleName),
+				),
+			},
+			{
+				// The import ID contains "/" inside the security role name; SplitN must keep
+				// the role name's trailing segments intact.
+				ResourceName:      "powerplatform_role_assignment.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     environmentID + "/" + principalID + "/" + roleName,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Read_RoleDeletedOutOfBand(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		principalID    = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	)
+
+	roleDeleted := false
+	roleAssigned := false
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			rolePayload := ""
+			if roleAssigned && !roleDeleted {
+				rolePayload = fmt.Sprintf(`{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}`, roleAdminID, rootBusinessID)
+			}
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[%s]}`,
+				principalID, applicationID, rootBusinessID, rolePayload)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if roleDeleted {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			body := fmt.Sprintf(`{"value":[{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}]}`, roleAdminID, rootBusinessID)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			roleAssigned = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the role assignment successfully.
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					principal_id       = "` + principalID + `"
+					security_role_name = "MetaForm Global Admin"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleAdminID),
+				),
+			},
+			{
+				// Step 2: refresh when the security role has been deleted out-of-band.
+				// ResolveSecurityRoleNames surfaces ErrObjectNotFound -> the resource is
+				// removed from state instead of failing the refresh; the follow-up plan
+				// recreates it.
+				PreConfig:          func() { roleDeleted = true },
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Validate_Read_ParentDeleted(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

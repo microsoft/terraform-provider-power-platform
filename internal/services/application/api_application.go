@@ -402,7 +402,7 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	for _, roleName := range roleNames {
 		matches := rolesByName[roleName]
 		if len(matches) == 0 {
-			return nil, fmt.Errorf("security role '%s' not found in business unit '%s'", roleName, businessUnitId)
+			return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("security role '%s' not found in business unit '%s'", roleName, businessUnitId))
 		}
 		if len(matches) > 1 {
 			return nil, fmt.Errorf("security role '%s' is ambiguous in business unit '%s'", roleName, businessUnitId)

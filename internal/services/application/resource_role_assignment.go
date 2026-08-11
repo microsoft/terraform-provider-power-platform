@@ -94,7 +94,7 @@ func (r *RoleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"business_unit_id": schema.StringAttribute{
-				MarkdownDescription: "Business unit ID used to resolve the requested security role name. Defaults to the application user's current business unit.",
+				MarkdownDescription: "Business unit ID used to resolve the requested security role name. Defaults to the principal's current business unit.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
@@ -294,7 +294,7 @@ func (r *RoleAssignmentResource) ImportState(ctx context.Context, req resource.I
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	idParts := strings.Split(req.ID, "/")
+	idParts := strings.SplitN(req.ID, "/", 3)
 	if len(idParts) != 3 {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
