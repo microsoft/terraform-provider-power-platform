@@ -1,3 +1,5 @@
 kind: added
 body: Add `powerplatform_environment_variable` resource to manage current environment-scoped values for existing environment variable definitions
 time: 2026-04-09T23:05:00.000000+11:00
+custom:
+    Issue: "1225"
