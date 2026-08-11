@@ -25,7 +25,7 @@ func TestUnitPublishersDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://"+testPublisherHost+"/api/data/v9.2/publishers",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+publisherCreateResponse()+`,`+systemPublisherResponse()+`]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/PublishersDataSource_Validate_Read/get_publishers.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -35,9 +35,9 @@ func TestUnitPublishersDataSource_Validate_Read(t *testing.T) {
 			{
 				ResourceName: "data.powerplatform_publishers.example",
 				Config: `
-data "powerplatform_publishers" "example" {
-  environment_id = "` + testEnvironmentID + `"
-}`,
+				data "powerplatform_publishers" "example" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_publishers.example", "publishers.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_publishers.example", "publishers.0.id", testPublisherID),
@@ -61,7 +61,35 @@ func TestAccPublishersDataSource_Validate_Read(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: publishersAcceptanceDataSourceConfig(mocks.TestName(), "terraformpublisherds", "Terraform Publisher DS", "tpd"),
+				Config: fmt.Sprintf(`
+				resource "powerplatform_environment" "environment" {
+					display_name     = "%s"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on      = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
+				resource "powerplatform_publisher" "example" {
+					depends_on           = [time_sleep.wait_120_seconds]
+					environment_id       = powerplatform_environment.environment.id
+					uniquename           = "terraformpublisherds"
+					friendly_name        = "Terraform Publisher DS"
+					customization_prefix = "tpd"
+				}
+
+				data "powerplatform_publishers" "example" {
+					environment_id = powerplatform_publisher.example.environment_id
+				}
+				`, mocks.TestName()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testCheckPublisherAttrMatches("data.powerplatform_publishers.example", "terraformpublisherds", "id", regexp.MustCompile(helpers.GuidRegex)),
 					testCheckPublisherAttr("data.powerplatform_publishers.example", "terraformpublisherds", "friendly_name", "Terraform Publisher DS"),
@@ -69,20 +97,6 @@ func TestAccPublishersDataSource_Validate_Read(t *testing.T) {
 			},
 		},
 	})
-}
-
-func systemPublisherResponse() string {
-	return `{
-  "publisherid": "22222222-2222-2222-2222-222222222222",
-  "friendlyname": "MicrosoftCorporation",
-  "uniquename": "systempublisher",
-  "customizationprefix": "msft",
-  "customizationoptionvalueprefix": 10000,
-  "description": "",
-  "emailaddress": "",
-  "supportingwebsiteurl": "",
-  "isreadonly": true
-}`
 }
 
 func findPublisherIndex(s *terraform.State, datasourceName, uniqueName string) (int, error) {
@@ -121,37 +135,4 @@ func testCheckPublisherAttrMatches(datasourceName, uniqueName, attrSuffix string
 		}
 		return resource.TestMatchResourceAttr(datasourceName, fmt.Sprintf("publishers.%d.%s", idx, attrSuffix), re)(s)
 	}
-}
-
-func publishersAcceptanceDataSourceConfig(environmentDisplayName, uniqueName, friendlyName, customizationPrefix string) string {
-	return fmt.Sprintf(`
-resource "powerplatform_environment" "environment" {
-  display_name     = "%s"
-  location         = "unitedstates"
-  environment_type = "Sandbox"
-  dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
-  }
-}
-
-resource "time_sleep" "wait_120_seconds" {
-  depends_on      = [powerplatform_environment.environment]
-  create_duration = "120s"
-}
-
-resource "powerplatform_publisher" "example" {
-  depends_on           = [time_sleep.wait_120_seconds]
-  environment_id       = powerplatform_environment.environment.id
-  uniquename           = "%s"
-  friendly_name        = "%s"
-  customization_prefix = "%s"
-}
-
-data "powerplatform_publishers" "example" {
-  environment_id = powerplatform_environment.environment.id
-  depends_on     = [powerplatform_publisher.example]
-}
-`, environmentDisplayName, uniqueName, friendlyName, customizationPrefix)
 }
