@@ -108,7 +108,6 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		environment_wave.NewEnvironmentWaveResource(),
 		application.NewEnvironmentApplicationAdminResource(),
 		application.NewApplicationUserResource(),
-		application.NewRoleAssignmentResource(),
 		disaster_recovery.NewDisasterRecoveryResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
