@@ -44,7 +44,7 @@ func TestUnitAddressModelsFromDto_PreservesPlaceholderSlotWhenAlreadyTracked(t *
 		Address1ShippingMethodCode: int64Pointer(1),
 	}
 
-	existing := []PublisherAddressModel{
+	existing := []AddressModel{
 		{
 			Slot:               types.Int64Value(1),
 			AddressTypeCode:    types.Int64Value(1),
@@ -106,7 +106,7 @@ func TestUnitSetResourceModelFromDto_PreservesCaseOnlyFriendlyNameDifferences(t 
 }
 
 func TestUnitAddressModelsFromDto_PreservesExplicitEmptyAddressList(t *testing.T) {
-	models := addressModelsFromDto(&publisherDto{}, []PublisherAddressModel{})
+	models := addressModelsFromDto(&publisherDto{}, []AddressModel{})
 	if models == nil {
 		t.Fatal("expected explicit empty address list to be preserved")
 	}
@@ -122,7 +122,7 @@ func TestUnitAddressModelsFromDto_PreservesTrackedEmptyStringAddressFields(t *te
 		Address1ShippingMethodCode: int64Pointer(1),
 	}
 
-	existing := []PublisherAddressModel{
+	existing := []AddressModel{
 		{
 			Slot:               types.Int64Value(1),
 			AddressTypeCode:    types.Int64Value(1),
@@ -177,7 +177,7 @@ func TestUnitSetDerivedCustomizationOptionValuePrefix_DerivesWhenConfigOmitted(t
 		CustomizationOptionValuePrefix: types.Int64Null(),
 	}
 
-	setDerivedCustomizationOptionValuePrefix(&plan, &config, &ResourceModel{}, false)
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, nil)
 
 	if plan.CustomizationOptionValuePrefix.IsUnknown() || plan.CustomizationOptionValuePrefix.IsNull() {
 		t.Fatal("expected derived customization option value prefix to be planned")
@@ -196,7 +196,7 @@ func TestUnitSetDerivedCustomizationOptionValuePrefix_PreservesExplicitConfigVal
 		CustomizationOptionValuePrefix: types.Int64Value(77777),
 	}
 
-	setDerivedCustomizationOptionValuePrefix(&plan, &config, &ResourceModel{}, false)
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, nil)
 
 	if plan.CustomizationOptionValuePrefix.ValueInt64() != 77777 {
 		t.Fatalf("expected explicit customization option value prefix to be preserved, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
@@ -218,7 +218,7 @@ func TestUnitSetDerivedCustomizationOptionValuePrefix_PreservesStateValueAfterCr
 		CustomizationOptionValuePrefix: types.Int64Value(77074),
 	}
 
-	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state, true)
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state)
 
 	if plan.CustomizationOptionValuePrefix.ValueInt64() != state.CustomizationOptionValuePrefix.ValueInt64() {
 		t.Fatalf("expected existing customization option value prefix to be preserved from state, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())

@@ -248,16 +248,17 @@ func (r *Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReques
 		return
 	}
 
-	var state ResourceModel
-	hasState := !req.State.Raw.IsNull()
-	if hasState {
+	var statePtr *ResourceModel
+	if !req.State.Raw.IsNull() {
+		var state ResourceModel
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		statePtr = &state
 	}
 
-	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state, hasState)
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, statePtr)
 	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
 
@@ -421,7 +422,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
 }
 
-func validateAddressSlots(addresses []PublisherAddressModel) (diags diag.Diagnostics) {
+func validateAddressSlots(addresses []AddressModel) (diags diag.Diagnostics) {
 	seen := map[int64]struct{}{}
 	for idx, address := range addresses {
 		if address.Slot.IsNull() || address.Slot.IsUnknown() {
@@ -477,7 +478,7 @@ func publisherBodyFromModel(model *ResourceModel) map[string]any {
 		"supportingwebsiteurl":           nullableStringPointer(model.SupportingWebsiteURL),
 	}
 
-	addressBySlot := map[int64]PublisherAddressModel{}
+	addressBySlot := map[int64]AddressModel{}
 	for _, address := range model.Address {
 		if address.Slot.IsNull() || address.Slot.IsUnknown() {
 			continue
@@ -513,8 +514,8 @@ func publisherBodyFromModel(model *ResourceModel) map[string]any {
 	return body
 }
 
-func addressModelsFromDto(publisher *publisherDto, existing []PublisherAddressModel) []PublisherAddressModel {
-	var addresses []PublisherAddressModel
+func addressModelsFromDto(publisher *publisherDto, existing []AddressModel) []AddressModel {
+	var addresses []AddressModel
 
 	if address1 := addressModelFromDtoWithExisting(1, publisher, findAddressBySlot(existing, 1)); address1 != nil {
 		if !isPlaceholderAddressModel(*address1) || hasAddressSlot(existing, 1) {
@@ -529,7 +530,7 @@ func addressModelsFromDto(publisher *publisherDto, existing []PublisherAddressMo
 
 	if len(addresses) == 0 {
 		if existing != nil {
-			return []PublisherAddressModel{}
+			return []AddressModel{}
 		}
 		return nil
 	}
@@ -537,38 +538,16 @@ func addressModelsFromDto(publisher *publisherDto, existing []PublisherAddressMo
 	return addresses
 }
 
-func addressModelFromDto(slot int64, publisher *publisherDto) *PublisherAddressModel {
+func addressModelFromDto(slot int64, publisher *publisherDto) *AddressModel {
 	if publisher == nil {
 		return nil
 	}
 
-	model := PublisherAddressModel{
+	model := AddressModel{
 		Slot: types.Int64Value(slot),
 	}
 
 	switch slot {
-	case 1:
-		model.AddressId = nullableStringValue(publisher.Address1AddressId)
-		model.AddressTypeCode = nullableInt64Value(publisher.Address1AddressTypeCode)
-		model.City = nullableStringValue(publisher.Address1City)
-		model.Country = nullableStringValue(publisher.Address1Country)
-		model.County = nullableStringValue(publisher.Address1County)
-		model.Fax = nullableStringValue(publisher.Address1Fax)
-		model.Latitude = nullableFloat64Value(publisher.Address1Latitude)
-		model.Line1 = nullableStringValue(publisher.Address1Line1)
-		model.Line2 = nullableStringValue(publisher.Address1Line2)
-		model.Line3 = nullableStringValue(publisher.Address1Line3)
-		model.Longitude = nullableFloat64Value(publisher.Address1Longitude)
-		model.Name = nullableStringValue(publisher.Address1Name)
-		model.PostalCode = nullableStringValue(publisher.Address1PostalCode)
-		model.PostOfficeBox = nullableStringValue(publisher.Address1PostOfficeBox)
-		model.ShippingMethodCode = nullableInt64Value(publisher.Address1ShippingMethodCode)
-		model.StateOrProvince = nullableStringValue(publisher.Address1StateOrProvince)
-		model.Telephone1 = nullableStringValue(publisher.Address1Telephone1)
-		model.Telephone2 = nullableStringValue(publisher.Address1Telephone2)
-		model.Telephone3 = nullableStringValue(publisher.Address1Telephone3)
-		model.UpsZone = nullableStringValue(publisher.Address1UpsZone)
-		model.UtcOffset = nullableInt64Value(publisher.Address1UtcOffset)
 	case 2:
 		model.AddressId = nullableStringValue(publisher.Address2AddressId)
 		model.AddressTypeCode = nullableInt64Value(publisher.Address2AddressTypeCode)
@@ -591,6 +570,29 @@ func addressModelFromDto(slot int64, publisher *publisherDto) *PublisherAddressM
 		model.Telephone3 = nullableStringValue(publisher.Address2Telephone3)
 		model.UpsZone = nullableStringValue(publisher.Address2UpsZone)
 		model.UtcOffset = nullableInt64Value(publisher.Address2UtcOffset)
+	default:
+		// Slot is schema-validated to be 1 or 2; treat anything other than 2 as slot 1.
+		model.AddressId = nullableStringValue(publisher.Address1AddressId)
+		model.AddressTypeCode = nullableInt64Value(publisher.Address1AddressTypeCode)
+		model.City = nullableStringValue(publisher.Address1City)
+		model.Country = nullableStringValue(publisher.Address1Country)
+		model.County = nullableStringValue(publisher.Address1County)
+		model.Fax = nullableStringValue(publisher.Address1Fax)
+		model.Latitude = nullableFloat64Value(publisher.Address1Latitude)
+		model.Line1 = nullableStringValue(publisher.Address1Line1)
+		model.Line2 = nullableStringValue(publisher.Address1Line2)
+		model.Line3 = nullableStringValue(publisher.Address1Line3)
+		model.Longitude = nullableFloat64Value(publisher.Address1Longitude)
+		model.Name = nullableStringValue(publisher.Address1Name)
+		model.PostalCode = nullableStringValue(publisher.Address1PostalCode)
+		model.PostOfficeBox = nullableStringValue(publisher.Address1PostOfficeBox)
+		model.ShippingMethodCode = nullableInt64Value(publisher.Address1ShippingMethodCode)
+		model.StateOrProvince = nullableStringValue(publisher.Address1StateOrProvince)
+		model.Telephone1 = nullableStringValue(publisher.Address1Telephone1)
+		model.Telephone2 = nullableStringValue(publisher.Address1Telephone2)
+		model.Telephone3 = nullableStringValue(publisher.Address1Telephone3)
+		model.UpsZone = nullableStringValue(publisher.Address1UpsZone)
+		model.UtcOffset = nullableInt64Value(publisher.Address1UtcOffset)
 	}
 
 	if model.AddressId.IsNull() &&
@@ -624,7 +626,7 @@ func addressModelFromDto(slot int64, publisher *publisherDto) *PublisherAddressM
 	return &model
 }
 
-func addressModelFromDtoWithExisting(slot int64, publisher *publisherDto, existing *PublisherAddressModel) *PublisherAddressModel {
+func addressModelFromDtoWithExisting(slot int64, publisher *publisherDto, existing *AddressModel) *AddressModel {
 	model := addressModelFromDto(slot, publisher)
 	if model == nil || existing == nil {
 		return model
@@ -649,7 +651,7 @@ func addressModelFromDtoWithExisting(slot int64, publisher *publisherDto, existi
 	return model
 }
 
-func hasAddressSlot(addresses []PublisherAddressModel, slot int64) bool {
+func hasAddressSlot(addresses []AddressModel, slot int64) bool {
 	for _, address := range addresses {
 		if address.Slot.IsNull() || address.Slot.IsUnknown() {
 			continue
@@ -661,7 +663,7 @@ func hasAddressSlot(addresses []PublisherAddressModel, slot int64) bool {
 	return false
 }
 
-func findAddressBySlot(addresses []PublisherAddressModel, slot int64) *PublisherAddressModel {
+func findAddressBySlot(addresses []AddressModel, slot int64) *AddressModel {
 	for idx := range addresses {
 		if addresses[idx].Slot.IsNull() || addresses[idx].Slot.IsUnknown() {
 			continue
@@ -673,7 +675,7 @@ func findAddressBySlot(addresses []PublisherAddressModel, slot int64) *Publisher
 	return nil
 }
 
-func isPlaceholderAddressModel(model PublisherAddressModel) bool {
+func isPlaceholderAddressModel(model AddressModel) bool {
 	if !isAddressContentEmpty(model) {
 		return false
 	}
@@ -682,7 +684,7 @@ func isPlaceholderAddressModel(model PublisherAddressModel) bool {
 		isDefaultOrNullInt64(model.ShippingMethodCode, 1)
 }
 
-func isAddressContentEmpty(model PublisherAddressModel) bool {
+func isAddressContentEmpty(model AddressModel) bool {
 	return model.City.IsNull() &&
 		model.Country.IsNull() &&
 		model.County.IsNull() &&
@@ -789,12 +791,12 @@ func effectiveCustomizationOptionValuePrefix(model *ResourceModel) int64 {
 	return deriveCustomizationOptionValuePrefix(model.CustomizationPrefix.ValueString(), model.Id.ValueString())
 }
 
-func setDerivedCustomizationOptionValuePrefix(plan, config, state *ResourceModel, hasState bool) {
+func setDerivedCustomizationOptionValuePrefix(plan, config, state *ResourceModel) {
 	if !config.CustomizationOptionValuePrefix.IsNull() || config.CustomizationOptionValuePrefix.IsUnknown() {
 		return
 	}
 
-	if hasState && !state.CustomizationOptionValuePrefix.IsNull() && !state.CustomizationOptionValuePrefix.IsUnknown() {
+	if state != nil && !state.CustomizationOptionValuePrefix.IsNull() && !state.CustomizationOptionValuePrefix.IsUnknown() {
 		plan.CustomizationOptionValuePrefix = state.CustomizationOptionValuePrefix
 		return
 	}
@@ -806,7 +808,7 @@ func setDerivedCustomizationOptionValuePrefix(plan, config, state *ResourceModel
 	publisherId := ""
 	if !plan.Id.IsNull() && !plan.Id.IsUnknown() {
 		publisherId = plan.Id.ValueString()
-	} else if hasState && !state.Id.IsNull() && !state.Id.IsUnknown() {
+	} else if state != nil && !state.Id.IsNull() && !state.Id.IsUnknown() {
 		publisherId = state.Id.ValueString()
 	}
 
