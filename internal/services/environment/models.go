@@ -49,7 +49,9 @@ type SourceModel struct {
 	OwnerId                      types.String       `tfsdk:"owner_id"`
 	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
 	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowMicrosoft365Services    types.Bool         `tfsdk:"allow_microsoft_365_services"`
 	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	AllowFlexRouting             types.Bool         `tfsdk:"allow_flex_routing"`
 	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
@@ -135,6 +137,10 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
 	}
 
+	if helpers.IsKnown(environmentSource.AllowMicrosoft365Services) {
+		environmentDto.Properties.M365Enabled = environmentSource.AllowMicrosoft365Services.ValueBool()
+	}
+
 	if helpers.IsKnown(environmentSource.OwnerId) {
 		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
 		if err != nil {
@@ -200,15 +206,16 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 
 func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
 	model := &SourceModel{
-		Timeouts:        timeout,
-		Description:     types.StringValue(environmentDto.Properties.Description),
-		Id:              types.StringValue(environmentDto.Name),
-		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
-		Location:        types.StringValue(environmentDto.Location),
-		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
-		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
-		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
-		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		Timeouts:                  timeout,
+		Description:               types.StringValue(environmentDto.Properties.Description),
+		Id:                        types.StringValue(environmentDto.Name),
+		DisplayName:               types.StringValue(environmentDto.Properties.DisplayName),
+		Location:                  types.StringValue(environmentDto.Location),
+		AzureRegion:               types.StringValue(environmentDto.Properties.AzureRegion),
+		EnvironmentType:           types.StringValue(environmentDto.Properties.EnvironmentSku),
+		Cadence:                   types.StringValue(environmentDto.Properties.UpdateCadence.Id),
+		AllowBingSearch:           types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		AllowMicrosoft365Services: types.BoolValue(environmentDto.Properties.M365Enabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)
@@ -216,7 +223,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
-	convertCrossRegionDataMovementFromDto(environmentDto, model)
+	convertCopilotPoliciesFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -363,12 +370,10 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 	}
 }
 
-func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
-	} else {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
-	}
+func convertCopilotPoliciesFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	policies := environmentDto.Properties.CopilotPolicies
+	model.AllowMovingDataAcrossRegions = types.BoolValue(policies != nil && policies.CrossGeoCopilotDataMovementEnabled != nil && *policies.CrossGeoCopilotDataMovementEnabled)
+	model.AllowFlexRouting = types.BoolValue(policies != nil && policies.CrossBoundaryCopilotDataMovementEnabled != nil && *policies.CrossBoundaryCopilotDataMovementEnabled)
 }
 
 func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
