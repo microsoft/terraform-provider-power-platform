@@ -58,7 +58,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Delete: true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite resource id in the format `{environment_id}_{schema_name}`.",
+				MarkdownDescription: "Composite resource id in the format `{environment_id}/{schema_name}`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
