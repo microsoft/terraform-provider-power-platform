@@ -5,6 +5,7 @@ package enterprise_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -154,6 +156,10 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	env, err := r.EnterprisePolicyClient.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment in %s", r.FullTypeName()), err.Error())
 		return
 	}

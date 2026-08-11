@@ -5,6 +5,7 @@ package connection
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -18,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 var _ resource.Resource = &ShareResource{}
@@ -134,6 +137,7 @@ func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 		return
 	}
 	r.ConnectionsClient = newConnectionsClient(client.Api)
+	r.EnvironmentClient = environment.NewEnvironmentClient(client.Api)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -186,11 +190,22 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	share, err := r.ConnectionsClient.GetConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Principal.EntraObjectId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error getting connection share", err.Error())
 		return
 	}
 	if share == nil {
-		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
 	newState, err := convertFromConnectionResourceSharesDto(state, share)

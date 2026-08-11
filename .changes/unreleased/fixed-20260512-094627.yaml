@@ -1,0 +1,5 @@
+kind: fixed
+body: Child resources (environment_settings, enterprise_policy, connection_share, connection, data_record, environment_application_admin, billing_policy_environment, environment_disaster_recovery, environment_wave, user) now remove themselves from state when their parent resource no longer exists, instead of failing indefinitely during refresh
+time: 2026-05-12T09:46:27.911774594Z
+custom:
+    Issue: "1165"

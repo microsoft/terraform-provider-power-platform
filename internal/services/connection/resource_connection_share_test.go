@@ -157,3 +157,113 @@ func TestUnitConnectionsShareResource_Validate_Create(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitConnectionsShareResource_Validate_Read_ShareNotFound(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/modifyPermissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	var getSharesCallCount = 0
+	// First two calls (Create + post-Create plan check) return the share; step 2 refresh returns empty list.
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			getSharesCallCount++
+			if getSharesCallCount <= 2 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connection_shares/Validate_Create/get_connection_shares.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connection_shares/Validate_Read_ShareNotFound/get_connection_shares.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the share successfully.
+				Config: `
+				resource "powerplatform_connection_share" "share_with_user1" {
+					environment_id = "00000000-0000-0000-0000-000000000000"
+					connector_name = "shared_commondataserviceforapps"
+					connection_id  = "00000000-0000-0000-0000-000000000001"
+					role_name      = "CanViewWithShare"
+					principal = {
+						entra_object_id = "00000000-0000-0000-0000-000000000002"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanViewWithShare"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.entra_object_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				// Step 2: refresh when the share no longer exists in the permissions list.
+				// GetConnectionShare returns ErrObjectNotFound → resource removed from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsShareResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/modifyPermissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	var getSharesCallCount = 0
+	// First two calls (Create + post-Create plan check) succeed; step 2 refresh simulates the environment being gone.
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			getSharesCallCount++
+			if getSharesCallCount <= 2 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connection_shares/Validate_Create/get_connection_shares.json").String()), nil
+			}
+			// Simulate what the PowerApps API returns when the environment no longer exists.
+			return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"environment not found"}}`), nil
+		})
+
+	// When the connection share GET fails with a non-ErrObjectNotFound error, the provider checks
+	// whether the parent environment still exists. Return 404 to indicate it is gone.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000000\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/connection_shares/Validate_Read_ParentDeleted/get_environment_00000000-0000-0000-0000-000000000000.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the share successfully.
+				Config: `
+				resource "powerplatform_connection_share" "share_with_user1" {
+					environment_id = "00000000-0000-0000-0000-000000000000"
+					connector_name = "shared_commondataserviceforapps"
+					connection_id  = "00000000-0000-0000-0000-000000000001"
+					role_name      = "CanViewWithShare"
+					principal = {
+						entra_object_id = "00000000-0000-0000-0000-000000000002"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanViewWithShare"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.entra_object_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// The connection share GET fails; the provider detects the parent is gone and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
