@@ -148,9 +148,11 @@ func ConvertFromConnectionDto(connection connectionDto) ConnectionsDataSourceMod
 	nameConnector := nameConnectorSplit[len(nameConnectorSplit)-1]
 
 	conn := ConnectionsDataSourceModel{
-		Id:          types.StringValue(connection.Name),
-		Name:        types.StringValue(nameConnector),
-		DisplayName: types.StringValue(connection.Properties.DisplayName),
+		Id:                      types.StringValue(connection.Name),
+		Name:                    types.StringValue(nameConnector),
+		DisplayName:             types.StringValue(connection.Properties.DisplayName),
+		ConnectionParameters:    types.StringNull(),
+		ConnectionParametersSet: types.StringNull(),
 	}
 
 	statuses := []string{}
