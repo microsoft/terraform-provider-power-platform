@@ -3,12 +3,12 @@
 page_title: "powerplatform_managed_solution Resource - Power Platform"
 subcategory: ""
 description: |-
-  Resource for deploying managed Power Platform solutions using solution identity (unique_name + version) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no target-specific component parameters must be applied. Exact or same-version target bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses {environment_id}_{solution_id} and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable satisfiability, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
+  Resource for deploying managed Power Platform solutions using solution identity (unique_name + version) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no connection bindings must be applied. Exact or same-version connection bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses {environment_id}/{solution_id} and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable reference resolution, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
 ---
 
 # powerplatform_managed_solution (Resource)
 
-Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no target-specific component parameters must be applied. Exact or same-version target bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses `{environment_id}_{solution_id}` and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable satisfiability, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
+Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no connection bindings must be applied. Exact or same-version connection bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses `{environment_id}/{solution_id}` and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable reference resolution, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ resource "powerplatform_managed_solution" "solution" {
 ### Optional
 
 - `connection_references` (Map of String) Map of connection reference logical name to environment connection id. Every connection reference declared by the package must be bound here.
-- `environment_variables` (Map of String) Map of environment variable schema name to target-specific value supplied as a managed import component parameter. Configured values satisfy package definitions that have no default or existing target value.
+- `environment_variables` (Map of String) Map of environment variable schema name to the id of the `powerplatform_environment_variable` resource that owns the value (`{environment_id}/{schema_name}`). A binding creates an ordering edge and is verified at preflight to resolve to an existing value; this resource never writes environment variable values.
 - `publish_all_customizations` (Boolean) Publish all Dataverse customizations after the managed import completes. This is opt-in because managed solution import already publishes its own solution components.
 - `skip_product_update_dependencies` (Boolean) Skip Dataverse product-update dependency processing during managed import. The package graph remains responsible for satisfying declared solution dependencies.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -68,7 +68,7 @@ resource "powerplatform_managed_solution" "solution" {
 ### Read-Only
 
 - `display_name` (String) Display name of the installed solution.
-- `id` (String) Unique identifier of the managed solution deployment in format `{environment_id}_{solution_id}`.
+- `id` (String) Unique identifier of the managed solution deployment in format `{environment_id}/{solution_id}`.
 - `solution_id` (String) Dataverse solution id of the installed solution.
 
 <a id="nestedatt--source"></a>
@@ -99,6 +99,6 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 ```shell
 #!/usr/bin/env bash
 
-# Managed solution resource can be imported using the solution id in format {environment_id}_{solution_id}
-terraform import powerplatform_managed_solution.solution 00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000001
+# Managed solution resource can be imported using the solution id in format {environment_id}/{solution_id}
+terraform import powerplatform_managed_solution.solution 00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000001
 ```

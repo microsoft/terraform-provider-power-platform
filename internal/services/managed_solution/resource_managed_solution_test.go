@@ -270,7 +270,7 @@ resource "powerplatform_managed_solution" "solution" {
 			{
 				Config: config,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "id", "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "id", "00000000-0000-0000-0000-000000000001/86928ed8-df37-4ce2-add5-47030a833bff"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "solution_id", "86928ed8-df37-4ce2-add5-47030a833bff"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "version", "2.0.246"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "skip_product_update_dependencies", "true"),
@@ -280,7 +280,7 @@ resource "powerplatform_managed_solution" "solution" {
 			{
 				ResourceName:      "powerplatform_managed_solution.solution",
 				ImportState:       true,
-				ImportStateId:     "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff",
+				ImportStateId:     "00000000-0000-0000-0000-000000000001/86928ed8-df37-4ce2-add5-47030a833bff",
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"source",

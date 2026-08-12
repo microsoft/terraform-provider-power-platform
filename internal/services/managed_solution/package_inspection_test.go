@@ -144,35 +144,59 @@ func TestUnitValidateEnvironmentVariables_FailsWithoutDefaultOrExistingValue(t *
 	}
 }
 
-func TestUnitValidateEnvironmentVariables_AllowsConfiguredImportValue(t *testing.T) {
-	err := validateEnvironmentVariables(map[string]packageEnvironmentVariable{
+func TestUnitValidateEnvironmentVariables_BindingRequiresExistingValue(t *testing.T) {
+	packageVars := map[string]packageEnvironmentVariable{
 		"sch_PortalDataverseEnvironmentUrl": {
 			SchemaName:      "sch_PortalDataverseEnvironmentUrl",
 			HasDefaultValue: false,
 		},
-	}, map[string]string{
-		"sch_PortalDataverseEnvironmentUrl": "https://safety.crm6.dynamics.com/",
-	}, map[string]bool{})
-	if err != nil {
-		t.Fatalf("expected configured import value to satisfy variable: %v", err)
+	}
+	bindings := map[string]string{
+		"sch_PortalDataverseEnvironmentUrl": "00000000-0000-0000-0000-000000000001/sch_PortalDataverseEnvironmentUrl",
+	}
+
+	if err := validateEnvironmentVariables(packageVars, bindings, map[string]bool{}); err == nil {
+		t.Fatal("expected a binding without an existing value to fail")
+	}
+	if err := validateEnvironmentVariables(packageVars, bindings, map[string]bool{"sch_PortalDataverseEnvironmentUrl": true}); err != nil {
+		t.Fatalf("expected a binding with an existing value to satisfy the reference: %v", err)
 	}
 }
 
-func TestUnitBuildEnvironmentVariableParameters(t *testing.T) {
-	parameters := buildEnvironmentVariableParameters(map[string]string{
-		"sch_PortalDataverseEnvironmentUrl": "https://safety.crm6.dynamics.com/",
-	})
-	if len(parameters) != 1 {
-		t.Fatalf("expected one component parameter, got %d", len(parameters))
+func TestUnitValidateEnvironmentVariables_DefaultIsFallbackNeedingNoValue(t *testing.T) {
+	err := validateEnvironmentVariables(map[string]packageEnvironmentVariable{
+		"codeeditor_theme": {
+			SchemaName:      "codeeditor_theme",
+			HasDefaultValue: true,
+		},
+	}, map[string]string{}, map[string]bool{})
+	if err != nil {
+		t.Fatalf("expected a packaged default alone to satisfy the reference: %v", err)
 	}
-	parameter, ok := parameters[0].(importSolutionEnvironmentVariableDto)
-	if !ok {
-		t.Fatalf("expected environment variable component parameter, got %T", parameters[0])
+}
+
+func TestUnitValidateEnvironmentVariableBindings_ChecksShapeAndConsistency(t *testing.T) {
+	envID := "00000000-0000-0000-0000-000000000001"
+
+	if err := validateEnvironmentVariableBindings(envID, map[string]string{
+		"sch_Url": envID + "/sch_Url",
+	}); err != nil {
+		t.Fatalf("expected a well-formed binding to validate: %v", err)
 	}
-	if parameter.Type != "Microsoft.Dynamics.CRM.environmentvariablevalue" ||
-		parameter.SchemaName != "sch_PortalDataverseEnvironmentUrl" ||
-		parameter.Value != "https://safety.crm6.dynamics.com/" {
-		t.Fatalf("unexpected environment variable component parameter: %#v", parameter)
+	if err := validateEnvironmentVariableBindings(envID, map[string]string{
+		"sch_Url": "not-a-composite-id",
+	}); err == nil {
+		t.Fatal("expected a malformed binding id to fail")
+	}
+	if err := validateEnvironmentVariableBindings(envID, map[string]string{
+		"sch_Url": "00000000-0000-0000-0000-000000000002/sch_Url",
+	}); err == nil {
+		t.Fatal("expected a cross-environment binding to fail")
+	}
+	if err := validateEnvironmentVariableBindings(envID, map[string]string{
+		"sch_Url": envID + "/sch_Other",
+	}); err == nil {
+		t.Fatal("expected a schema-name mismatch to fail")
 	}
 }
 

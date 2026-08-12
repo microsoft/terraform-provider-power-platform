@@ -155,12 +155,6 @@ type environmentVariableValueDto struct {
 	Value      *string `json:"value"`
 }
 
-type importSolutionEnvironmentVariableDto struct {
-	Type       string `json:"@odata.type"`
-	SchemaName string `json:"schemaname"`
-	Value      string `json:"value"`
-}
-
 type packageEnvironmentVariable struct {
 	SchemaName            string
 	HasDefaultValue       bool

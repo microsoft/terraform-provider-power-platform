@@ -588,24 +588,6 @@ func buildConnectionParameters(packageRefs map[string]packageConnectionReference
 	return parameters, nil
 }
 
-func buildEnvironmentVariableParameters(configured map[string]string) []any {
-	keys := make([]string, 0, len(configured))
-	for key := range configured {
-		keys = append(keys, key)
-	}
-	slices.Sort(keys)
-
-	parameters := make([]any, 0, len(keys))
-	for _, schemaName := range keys {
-		parameters = append(parameters, importSolutionEnvironmentVariableDto{
-			Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
-			SchemaName: schemaName,
-			Value:      configured[schemaName],
-		})
-	}
-	return parameters
-}
-
 func validateConnectionReferences(packageRefs map[string]packageConnectionReference, configuredRefs map[string]string) error {
 	packageKeys := make([]string, 0, len(packageRefs))
 	for key := range packageRefs {
@@ -647,11 +629,11 @@ func validateConnectionReferences(packageRefs map[string]packageConnectionRefere
 	return fmt.Errorf("connection reference validation failed: %s", strings.Join(messages, "; "))
 }
 
-func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVariable, configuredValues map[string]string, existingValues map[string]bool) error {
+func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVariable, bindings map[string]string, existingValues map[string]bool) error {
 	problems := make([]string, 0)
-	for key := range configuredValues {
+	for key := range bindings {
 		if _, exists := packageVars[key]; !exists {
-			problems = append(problems, fmt.Sprintf("%s was configured but is not declared by the solution package", key))
+			problems = append(problems, fmt.Sprintf("%s was bound but is not declared by the solution package", key))
 		}
 	}
 
@@ -667,16 +649,19 @@ func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVaria
 			problems = append(problems, fmt.Sprintf("%s contains a packaged current value; managed_solution does not manage environment variable values", key))
 			continue
 		}
-		if packageVar.HasDefaultValue {
-			continue
-		}
-		if _, configured := configuredValues[key]; configured {
+		if _, bound := bindings[key]; bound {
+			if !existingValues[key] {
+				problems = append(problems, fmt.Sprintf("%s is bound to a powerplatform_environment_variable that provides no value in the target environment; reference the owning resource's id so Terraform creates the value before this import", key))
+			}
 			continue
 		}
 		if existingValues[key] {
 			continue
 		}
-		problems = append(problems, fmt.Sprintf("%s has no packaged default and no existing environment value", key))
+		if packageVar.HasDefaultValue {
+			continue
+		}
+		problems = append(problems, fmt.Sprintf("%s has no packaged default and no existing environment value; declare a powerplatform_environment_variable to own the value and bind it in environment_variables", key))
 	}
 
 	if len(problems) == 0 {
