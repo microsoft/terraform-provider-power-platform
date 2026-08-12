@@ -204,8 +204,18 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Optional:            true,
 				Computed:            true,
 			},
+			"allow_microsoft_365_services": schema.BoolAttribute{
+				MarkdownDescription: "Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.",
+				Optional:            true,
+				Computed:            true,
+			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
+				Optional:            true,
+				Computed:            true,
+			},
+			"allow_flex_routing": schema.BoolAttribute{
+				MarkdownDescription: "Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -449,8 +459,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
-		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
+		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
@@ -582,6 +592,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		DisplayName:     plan.DisplayName.ValueString(),
 		EnvironmentSku:  plan.EnvironmentType.ValueString(),
 		BingChatEnabled: plan.AllowBingSearch.ValueBool(),
+		M365Enabled:     plan.AllowMicrosoft365Services.ValueBool(),
 	}
 
 	environmentDto := EnvironmentDto{
@@ -631,9 +642,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	err = r.updateAllowBingSearch(ctx, plan)
+	err = r.updateGenerativeAiFeatures(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		resp.Diagnostics.AddError("Error when updating generative ai features", err.Error())
 		return
 	}
 
@@ -670,17 +681,20 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowMovingData *bool) error {
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) error {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
-			BingChatEnabled: allowBingSearch,
+			BingChatEnabled: plan.AllowBingSearch.ValueBool(),
+			M365Enabled:     plan.AllowMicrosoft365Services.ValueBool(),
 		},
 	}
 
-	if allowMovingData != nil {
-		featuresDto.Properties.CopilotPolicies = &CopilotPoliciesDto{
-			CrossGeoCopilotDataMovementEnabled: allowMovingData,
-		}
+	copilotPolicies := CopilotPoliciesDto{
+		CrossGeoCopilotDataMovementEnabled:      plan.AllowMovingDataAcrossRegions.ValueBoolPointer(),
+		CrossBoundaryCopilotDataMovementEnabled: plan.AllowFlexRouting.ValueBoolPointer(),
+	}
+	if copilotPolicies.CrossGeoCopilotDataMovementEnabled != nil || copilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil {
+		featuresDto.Properties.CopilotPolicies = &copilotPolicies
 	}
 
 	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
@@ -809,12 +823,9 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
-	allowBingSearchSet := !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown()
-	allowMovingDataSet := !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown()
-
-	if allowBingSearchSet || allowMovingDataSet {
-		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) error {
+	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
+		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
 		if err != nil {
 			return err
 		}
@@ -881,7 +892,7 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("moving data across regions is not supported in the unitedstates location")
 	}
-	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil
