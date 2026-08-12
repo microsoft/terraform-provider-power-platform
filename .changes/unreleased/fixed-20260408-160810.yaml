@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix connection parameter apply state normalization.
+time: 2026-04-08T16:08:10.783457+10:00
+custom:
+    Issue: "1139"
