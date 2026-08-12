@@ -528,6 +528,162 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	})
 }
 
+// Note: unlike the unit test counterpart, solution_file is kept constant across steps.
+// TerraformTestSolution and TerraformSimpleTestSolution are genuinely different solutions
+// (different unique names), so swapping between them mid-resource would import a second
+// solution rather than update the first, which is outside the scope of this checksum test.
+func TestAccSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
+	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
+	if err != nil {
+		t.Fatalf("Failed to read solution file: %s", err.Error())
+	}
+
+	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
+	if err != nil {
+		t.Fatalf("Failed to write solution file: %s", err.Error())
+	}
+
+	settingsBeforeFileName := "test_acc_settings_before.json"
+	settingsBeforeContent := []byte(`{
+		"EnvironmentVariables": [
+		  {
+			"SchemaName": "cra6e_SolutionVariableText",
+			"Value": "before"
+		  }
+		],
+		"ConnectionReferences": []
+	  }`)
+	err = os.WriteFile(settingsBeforeFileName, settingsBeforeContent, 0644)
+	if err != nil {
+		t.Fatalf("Failed to write settings file: %s", err.Error())
+	}
+
+	settingsAfterFileName := "test_acc_settings_after.json"
+	settingsAfterContent := []byte(`{
+		"EnvironmentVariables": [
+		  {
+			"SchemaName": "cra6e_SolutionVariableText",
+			"Value": "after"
+		  }
+		],
+		"ConnectionReferences": []
+	  }`)
+	err = os.WriteFile(settingsAfterFileName, settingsAfterContent, 0644)
+	if err != nil {
+		t.Fatalf("Failed to write settings file: %s", err.Error())
+	}
+
+	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
+	settingsBeforeChecksum, _ := helpers.CalculateSHA256(settingsBeforeFileName)
+	settingsAfterChecksum, _ := helpers.CalculateSHA256(settingsAfterFileName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+
+				resource "powerplatform_environment" "environment" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                         = "1033"
+						currency_code                         = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
+				resource "powerplatform_solution" "solution" {
+					depends_on = [time_sleep.wait_120_seconds]
+
+					environment_id = powerplatform_environment.environment.id
+					solution_file    = "` + SOLUTION_1_NAME + `"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
+					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
+				),
+			},
+			{
+				Config: `
+
+				resource "powerplatform_environment" "environment" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                         = "1033"
+						currency_code                         = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
+				resource "powerplatform_solution" "solution" {
+					depends_on = [time_sleep.wait_120_seconds]
+
+					environment_id = powerplatform_environment.environment.id
+					solution_file    = "` + SOLUTION_1_NAME + `"
+					settings_file    = "` + settingsBeforeFileName + `"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsBeforeChecksum),
+				),
+			},
+			{
+				Config: `
+
+				resource "powerplatform_environment" "environment" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                         = "1033"
+						currency_code                         = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
+				resource "powerplatform_solution" "solution" {
+					depends_on = [time_sleep.wait_120_seconds]
+
+					environment_id = powerplatform_environment.environment.id
+					solution_file    = "` + SOLUTION_1_NAME + `"
+					settings_file    = "` + settingsAfterFileName + `"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsAfterChecksum),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {

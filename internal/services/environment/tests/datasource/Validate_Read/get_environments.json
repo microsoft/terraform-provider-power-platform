@@ -211,6 +211,12 @@
                 "updateCadence": {
                     "id": "Frequent"
                 },
+                "bingChatEnabled": true,
+                "m365Enabled": true,
+                "copilotPolicies": {
+                    "crossGeoCopilotDataMovementEnabled": true,
+                    "crossBoundaryCopilotDataMovementEnabled": true
+                },
                 "retentionDetails": {
                     "retentionPeriod": "P7D",
                     "backupsAvailableFromDateTime": "2023-10-03T08:12:55.5332994Z"
