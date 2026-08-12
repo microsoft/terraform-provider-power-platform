@@ -26,7 +26,7 @@ provider "powerplatform" {
 }
 
 data "powerplatform_publishers" "example" {
-  environment_id = "e9f7a826-3dc2-e0ca-944e-630e3acead06"
+  environment_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
