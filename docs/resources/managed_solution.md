@@ -56,18 +56,48 @@ resource "powerplatform_managed_solution" "solution" {
   unique_name    = "TerraformSolutionExample"
   version        = "1.0.0.1"
 
+  # Set exactly one of path or url. A url is typically a build artifact
+  # location such as a blob SAS url and is treated as sensitive.
   source = {
     path = "${path.module}/TerraformSolutionExample_1_0_0_1_managed.zip"
+    # url = "https://example.blob.core.windows.net/artifacts/TerraformSolutionExample_1_0_0_1_managed.zip?<sas>"
   }
 
+  # Every connection reference declared by the package must be bound to a
+  # connection in the target environment.
   connection_references = {
     terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
   }
 
-  # Environment variable values are owned by their own resource and set after the
-  # import that ships the definitions, ordered with an ordinary depends_on.
+  # Optional import behavior. Both default to false.
+  skip_product_update_dependencies = false
+  publish_all_customizations       = false
 
   depends_on = [powerplatform_connection.dataverse_connection]
+}
+
+# Environment variable definitions ship inside the solution package; their
+# values are owned by powerplatform_environment_variable_value and set after
+# the import that ships the definitions, ordered with an ordinary depends_on.
+# A definition with no value is valid until a consumer needs one, so unset
+# variables (like terr_SolutionVariableDataSource here) need no placeholder.
+resource "powerplatform_environment_variable_value" "solution_variable_text" {
+  environment_id = powerplatform_environment.environment.id
+  schema_name    = "terr_SolutionVariableText"
+  value          = "sample text value"
+
+  depends_on = [powerplatform_managed_solution.solution]
+}
+
+resource "powerplatform_environment_variable_value" "solution_variable_json" {
+  environment_id = powerplatform_environment.environment.id
+  schema_name    = "terr_SolutionVariableJson"
+  value = jsonencode({
+    value = 1234
+    text  = "abc"
+  })
+
+  depends_on = [powerplatform_managed_solution.solution]
 }
 ```
 
