@@ -74,12 +74,6 @@ resource "powerplatform_managed_solution" "solution" {
     terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
   }
 
-  environment_variables = {
-    terr_SolutionVariableDataSource = "${powerplatform_environment.environment.id}"
-    terr_SolutionVariableJson       = "{ \"value\": 1234, \"text\": \"abc\" }"
-    terr_SolutionVariableText       = "foo"
-  }
-
   depends_on = [powerplatform_connection.dataverse_connection]
 }
 `, mocks.TestName(), solutionPath),
@@ -97,10 +91,6 @@ resource "powerplatform_managed_solution" "solution" {
 					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_id", "powerplatform_environment.environment", "id"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "connection_references.%", "1"),
 					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "connection_references.terr_SolutionConnectionReference", "powerplatform_connection.dataverse_connection", "id"),
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.%", "3"),
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableText", "foo"),
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableJson", `{ "value": 1234, "text": "abc" }`),
-					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableDataSource", "powerplatform_environment.environment", "id"),
 				),
 			},
 		},
@@ -329,7 +319,7 @@ resource "powerplatform_managed_solution" "solution" {
 	})
 }
 
-func TestUnitManagedSolutionResource_Validate_Create_Fails_When_EnvironmentVariableIsUnsatisfied(t *testing.T) {
+func TestUnitManagedSolutionResource_Validate_Create_Fails_When_UnmanagedDefinitionWouldBeCaptured(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -341,10 +331,10 @@ func TestUnitManagedSolutionResource_Validate_Create_Fails_When_EnvironmentVaria
 		"environmentvariabledefinitions/codeeditor_secret/environmentvariabledefinition.xml": `<environmentvariabledefinition schemaname="codeeditor_secret"></environmentvariabledefinition>`,
 	})
 
-	registerManagedSolutionEnvironmentResponder("Validate_Create_Fails_When_EnvironmentVariableIsUnsatisfied")
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=schemaname+eq+%27codeeditor_secret%27&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
+	registerManagedSolutionEnvironmentResponder("Validate_Create_Fails_When_UnmanagedDefinitionCapture")
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariabledefinitions?%24filter=schemaname+eq+%27codeeditor_secret%27&%24select=schemaname%2Cismanaged",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_EnvironmentVariableIsUnsatisfied/get_environment_variable_values.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_UnmanagedDefinitionCapture/get_environment_variable_definitions.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -363,7 +353,7 @@ resource "powerplatform_managed_solution" "solution" {
   }
 }
 `, solutionPath),
-				ExpectError: regexp.MustCompile(`(?s)environment variable validation failed: codeeditor_secret has no packaged\s+default and no existing environment value`),
+				ExpectError: regexp.MustCompile(`(?s)environment variable packaging validation failed: codeeditor_secret already\s+exists as an unmanaged definition`),
 			},
 		},
 	})

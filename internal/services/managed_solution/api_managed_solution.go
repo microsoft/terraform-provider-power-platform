@@ -245,21 +245,23 @@ func (client *Client) getConnections(ctx context.Context, environmentId string) 
 	return connections.Value, nil
 }
 
-func (client *Client) GetExistingEnvironmentVariableValues(ctx context.Context, environmentId string, schemaNames []string) (map[string]bool, error) {
+func (client *Client) GetUnmanagedEnvironmentVariableDefinitions(ctx context.Context, environmentId string, schemaNames []string) (map[string]bool, error) {
 	result := make(map[string]bool, len(schemaNames))
 
 	for _, schemaName := range schemaNames {
 		values := url.Values{}
-		values.Add("$select", "environmentvariablevalueid,schemaname,value")
+		values.Add("$select", "schemaname,ismanaged")
 		values.Add("$filter", fmt.Sprintf("schemaname eq '%s'", escapeODataString(schemaName)))
 
-		response := environmentVariableValuesResponseDto{}
-		if err := client.SolutionClient.GetTableData(ctx, environmentId, "environmentvariablevalues", values.Encode(), &response); err != nil {
+		response := environmentVariableDefinitionsResponseDto{}
+		if err := client.SolutionClient.GetTableData(ctx, environmentId, "environmentvariabledefinitions", values.Encode(), &response); err != nil {
 			return nil, err
 		}
 
-		if len(response.Value) > 0 {
-			result[schemaName] = true
+		for _, definition := range response.Value {
+			if !definition.IsManaged {
+				result[schemaName] = true
+			}
 		}
 	}
 
@@ -629,14 +631,8 @@ func validateConnectionReferences(packageRefs map[string]packageConnectionRefere
 	return fmt.Errorf("connection reference validation failed: %s", strings.Join(messages, "; "))
 }
 
-func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVariable, bindings map[string]string, existingValues map[string]bool) error {
+func validateEnvironmentVariablePackaging(packageVars map[string]packageEnvironmentVariable, existingUnmanaged map[string]bool) error {
 	problems := make([]string, 0)
-	for key := range bindings {
-		if _, exists := packageVars[key]; !exists {
-			problems = append(problems, fmt.Sprintf("%s was bound but is not declared by the solution package", key))
-		}
-	}
-
 	keys := make([]string, 0, len(packageVars))
 	for key := range packageVars {
 		keys = append(keys, key)
@@ -644,31 +640,20 @@ func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVaria
 	slices.Sort(keys)
 
 	for _, key := range keys {
-		packageVar := packageVars[key]
-		if packageVar.ContainsPackagedValue {
-			problems = append(problems, fmt.Sprintf("%s contains a packaged current value; managed_solution does not manage environment variable values", key))
+		if packageVars[key].ContainsPackagedValue {
+			problems = append(problems, fmt.Sprintf("%s contains a packaged current value; environment variable values are owned by the deployment context, never the solution", key))
 			continue
 		}
-		if _, bound := bindings[key]; bound {
-			if !existingValues[key] {
-				problems = append(problems, fmt.Sprintf("%s is bound to a powerplatform_environment_variable that provides no value in the target environment; reference the owning resource's id so Terraform creates the value before this import", key))
-			}
-			continue
+		if existingUnmanaged[key] {
+			problems = append(problems, fmt.Sprintf("%s already exists as an unmanaged definition in the target environment; importing this package would silently absorb it into the solution's managed layer and uninstalling would delete it. Make the package reference-only for this variable, or deliberately remove the environment-side definition first", key))
 		}
-		if existingValues[key] {
-			continue
-		}
-		if packageVar.HasDefaultValue {
-			continue
-		}
-		problems = append(problems, fmt.Sprintf("%s has no packaged default and no existing environment value; declare a powerplatform_environment_variable to own the value and bind it in environment_variables", key))
 	}
 
 	if len(problems) == 0 {
 		return nil
 	}
 
-	return fmt.Errorf("environment variable validation failed: %s", strings.Join(problems, "; "))
+	return fmt.Errorf("environment variable packaging validation failed: %s", strings.Join(problems, "; "))
 }
 
 func validateDependencies(required map[string]string, installed []solution.SolutionDto) error {

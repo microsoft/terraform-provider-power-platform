@@ -145,14 +145,13 @@ type connectionPropertiesDto struct {
 	DisplayName string `json:"displayName"`
 }
 
-type environmentVariableValuesResponseDto struct {
-	Value []environmentVariableValueDto `json:"value"`
+type environmentVariableDefinitionsResponseDto struct {
+	Value []environmentVariableDefinitionDto `json:"value"`
 }
 
-type environmentVariableValueDto struct {
-	Id         string  `json:"environmentvariablevalueid"`
-	SchemaName string  `json:"schemaname"`
-	Value      *string `json:"value"`
+type environmentVariableDefinitionDto struct {
+	SchemaName string `json:"schemaname"`
+	IsManaged  bool   `json:"ismanaged"`
 }
 
 type packageEnvironmentVariable struct {

@@ -49,11 +49,8 @@ resource "powerplatform_managed_solution" "solution" {
     terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
   }
 
-  environment_variables = {
-    terr_SolutionVariableDataSource = "${powerplatform_environment.environment.id}"
-    terr_SolutionVariableJson       = "{ \"value\": 1234, \"text\": \"abc\" }"
-    terr_SolutionVariableText       = "foo"
-  }
+  # Environment variable values are owned by their own resource and set after the
+  # import that ships the definitions, ordered with an ordinary depends_on.
 
   depends_on = [powerplatform_connection.dataverse_connection]
 }

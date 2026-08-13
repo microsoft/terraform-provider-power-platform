@@ -57,7 +57,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no connection bindings must be applied. Exact or same-version connection bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses `{environment_id}/{solution_id}` and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable reference resolution, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.",
+		MarkdownDescription: "Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no connection bindings must be applied. Exact or same-version connection bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses `{environment_id}/{solution_id}` and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment variable packaging rules, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -107,11 +107,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"connection_references": schema.MapAttribute{
 				MarkdownDescription: "Map of connection reference logical name to environment connection id. Every connection reference declared by the package must be bound here.",
-				ElementType:         types.StringType,
-				Optional:            true,
-			},
-			"environment_variables": schema.MapAttribute{
-				MarkdownDescription: "Map of environment variable schema name to the id of the `powerplatform_environment_variable` resource that owns the value (`{environment_id}/{schema_name}`). A binding creates an ordering edge and is verified at preflight to resolve to an existing value; this resource never writes environment variable values.",
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
@@ -192,7 +187,6 @@ func (r *Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReques
 		plan.UniqueName.ValueString() == state.UniqueName.ValueString() &&
 		plan.Version.ValueString() == state.Version.ValueString() &&
 		plan.ConnectionReferences.Equal(state.ConnectionReferences) &&
-		plan.EnvironmentVariables.Equal(state.EnvironmentVariables) &&
 		plan.SkipProductUpdateDependencies.Equal(state.SkipProductUpdateDependencies) &&
 		plan.PublishAllCustomizations.Equal(state.PublishAllCustomizations) &&
 		sourcesAreEquivalent(plan.Source, state.Source) {
@@ -493,7 +487,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		return nil
 	}
 
-	if !r.validateEnvironmentVariableReferences(ctx, plan, pkg, diagnostics) {
+	if !r.validatePackagedEnvironmentVariables(ctx, plan, pkg, diagnostics) {
 		return nil
 	}
 
@@ -652,58 +646,25 @@ func isGuid(value string) bool {
 	return err == nil
 }
 
-// validateEnvironmentVariableReferences expands the configured bindings, checks their shape,
-// and proves every package-declared environment variable reference resolves in the target
-// environment before anything uploads. Reports diagnostics and returns false on failure.
-func (r *Resource) validateEnvironmentVariableReferences(ctx context.Context, plan *ResourceModel, pkg *solutionPackage, diagnostics *diag.Diagnostics) bool {
-	variableBindings, variableDiags := expandStringMap(plan.EnvironmentVariables)
-	diagnostics.Append(variableDiags...)
-	if diagnostics.HasError() {
-		return false
+// validatePackagedEnvironmentVariables enforces the package-shape rules for environment
+// variables: a package may ship definitions and defaults, but never current values, and it
+// must not ship a definition that already exists unmanaged in the target environment (the
+// import would silently absorb it into this solution's managed layer). Values themselves are
+// none of this resource's business; they are owned by their own resource.
+func (r *Resource) validatePackagedEnvironmentVariables(ctx context.Context, plan *ResourceModel, pkg *solutionPackage, diagnostics *diag.Diagnostics) bool {
+	if len(pkg.EnvironmentVariables) == 0 {
+		return true
 	}
-	if err := validateEnvironmentVariableBindings(plan.EnvironmentId.ValueString(), variableBindings); err != nil {
-		diagnostics.AddError("Managed solution environment variable binding validation failed", err.Error())
-		return false
-	}
-	existingValues, err := r.Client.GetExistingEnvironmentVariableValues(ctx, plan.EnvironmentId.ValueString(), sortedEnvironmentVariableNames(pkg.EnvironmentVariables))
+	existingUnmanaged, err := r.Client.GetUnmanagedEnvironmentVariableDefinitions(ctx, plan.EnvironmentId.ValueString(), sortedEnvironmentVariableNames(pkg.EnvironmentVariables))
 	if err != nil {
-		diagnostics.AddError("Unable to verify environment variable satisfiability", err.Error())
+		diagnostics.AddError("Unable to verify environment variable definitions", err.Error())
 		return false
 	}
-	if err := validateEnvironmentVariables(pkg.EnvironmentVariables, variableBindings, existingValues); err != nil {
+	if err := validateEnvironmentVariablePackaging(pkg.EnvironmentVariables, existingUnmanaged); err != nil {
 		diagnostics.AddError("Managed solution environment variable validation failed", err.Error())
 		return false
 	}
 	return true
-}
-
-// validateEnvironmentVariableBindings checks each configured binding refers to a
-// powerplatform_environment_variable in the same environment whose schema name matches
-// the map key. Bindings are references: this resource never writes variable values.
-func validateEnvironmentVariableBindings(environmentId string, bindings map[string]string) error {
-	problems := make([]string, 0)
-	keys := make([]string, 0, len(bindings))
-	for key := range bindings {
-		keys = append(keys, key)
-	}
-	slices.Sort(keys)
-	for _, key := range keys {
-		parts := strings.SplitN(bindings[key], "/", 2)
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			problems = append(problems, fmt.Sprintf("%s: expected a powerplatform_environment_variable id in the form {environment_id}/{schema_name}, got %q", key, bindings[key]))
-			continue
-		}
-		if !strings.EqualFold(parts[0], environmentId) {
-			problems = append(problems, fmt.Sprintf("%s: bound environment variable belongs to environment %q, not %q", key, parts[0], environmentId))
-		}
-		if parts[1] != key {
-			problems = append(problems, fmt.Sprintf("%s: bound environment variable id is for schema name %q", key, parts[1]))
-		}
-	}
-	if len(problems) == 0 {
-		return nil
-	}
-	return fmt.Errorf("environment variable binding validation failed: %s", strings.Join(problems, "; "))
 }
 
 func expandStringMap(value types.Map) (map[string]string, diag.Diagnostics) {

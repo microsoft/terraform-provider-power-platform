@@ -132,71 +132,37 @@ func TestUnitInspectSolutionPackage_FailsWhenDependencySolutionReferenceIsEmpty(
 	}
 }
 
-func TestUnitValidateEnvironmentVariables_FailsWithoutDefaultOrExistingValue(t *testing.T) {
-	err := validateEnvironmentVariables(map[string]packageEnvironmentVariable{
-		"codeeditor_text": {
-			SchemaName:      "codeeditor_text",
-			HasDefaultValue: false,
+func TestUnitValidateEnvironmentVariablePackaging_RejectsPackagedValue(t *testing.T) {
+	err := validateEnvironmentVariablePackaging(map[string]packageEnvironmentVariable{
+		"codeeditor_secret": {
+			SchemaName:            "codeeditor_secret",
+			ContainsPackagedValue: true,
 		},
-	}, map[string]string{}, map[string]bool{})
+	}, map[string]bool{})
 	if err == nil {
-		t.Fatal("expected validateEnvironmentVariables to fail")
+		t.Fatal("expected a packaged current value to be rejected")
 	}
 }
 
-func TestUnitValidateEnvironmentVariables_BindingRequiresExistingValue(t *testing.T) {
-	packageVars := map[string]packageEnvironmentVariable{
-		"sch_PortalDataverseEnvironmentUrl": {
-			SchemaName:      "sch_PortalDataverseEnvironmentUrl",
-			HasDefaultValue: false,
+func TestUnitValidateEnvironmentVariablePackaging_RejectsUnmanagedDefinitionCapture(t *testing.T) {
+	err := validateEnvironmentVariablePackaging(map[string]packageEnvironmentVariable{
+		"terr_Shared": {
+			SchemaName: "terr_Shared",
 		},
-	}
-	bindings := map[string]string{
-		"sch_PortalDataverseEnvironmentUrl": "00000000-0000-0000-0000-000000000001/sch_PortalDataverseEnvironmentUrl",
-	}
-
-	if err := validateEnvironmentVariables(packageVars, bindings, map[string]bool{}); err == nil {
-		t.Fatal("expected a binding without an existing value to fail")
-	}
-	if err := validateEnvironmentVariables(packageVars, bindings, map[string]bool{"sch_PortalDataverseEnvironmentUrl": true}); err != nil {
-		t.Fatalf("expected a binding with an existing value to satisfy the reference: %v", err)
+	}, map[string]bool{"terr_Shared": true})
+	if err == nil {
+		t.Fatal("expected shipping a definition that exists unmanaged in the target to be rejected")
 	}
 }
 
-func TestUnitValidateEnvironmentVariables_DefaultIsFallbackNeedingNoValue(t *testing.T) {
-	err := validateEnvironmentVariables(map[string]packageEnvironmentVariable{
-		"codeeditor_theme": {
-			SchemaName:      "codeeditor_theme",
-			HasDefaultValue: true,
+func TestUnitValidateEnvironmentVariablePackaging_AllowsUnresolvedReferences(t *testing.T) {
+	err := validateEnvironmentVariablePackaging(map[string]packageEnvironmentVariable{
+		"terr_NoDefaultNoValue": {
+			SchemaName: "terr_NoDefaultNoValue",
 		},
-	}, map[string]string{}, map[string]bool{})
+	}, map[string]bool{})
 	if err != nil {
-		t.Fatalf("expected a packaged default alone to satisfy the reference: %v", err)
-	}
-}
-
-func TestUnitValidateEnvironmentVariableBindings_ChecksShapeAndConsistency(t *testing.T) {
-	envID := "00000000-0000-0000-0000-000000000001"
-
-	if err := validateEnvironmentVariableBindings(envID, map[string]string{
-		"sch_Url": envID + "/sch_Url",
-	}); err != nil {
-		t.Fatalf("expected a well-formed binding to validate: %v", err)
-	}
-	if err := validateEnvironmentVariableBindings(envID, map[string]string{
-		"sch_Url": "not-a-composite-id",
-	}); err == nil {
-		t.Fatal("expected a malformed binding id to fail")
-	}
-	if err := validateEnvironmentVariableBindings(envID, map[string]string{
-		"sch_Url": "00000000-0000-0000-0000-000000000002/sch_Url",
-	}); err == nil {
-		t.Fatal("expected a cross-environment binding to fail")
-	}
-	if err := validateEnvironmentVariableBindings(envID, map[string]string{
-		"sch_Url": envID + "/sch_Other",
-	}); err == nil {
-		t.Fatal("expected a schema-name mismatch to fail")
+		t.Fatalf("a definition with no default and no value resolves to null by platform contract and must be allowed: %v", err)
 	}
 }
 
