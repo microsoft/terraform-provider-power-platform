@@ -148,7 +148,7 @@ func (r *RoleAssignmentResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	currentPrincipal, resolvedRole, businessUnitID, err := r.resolveRequestedRole(
+	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
 		plan.PrincipalId.ValueString(),
@@ -163,8 +163,8 @@ func (r *RoleAssignmentResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	if !principalHasRole(currentPrincipal, resolvedRole.RoleId) {
-		currentPrincipal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), currentPrincipal.SystemUserId, []string{resolvedRole.RoleId})
+	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
+		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.PrincipalId.ValueString()),
@@ -175,8 +175,8 @@ func (r *RoleAssignmentResource) Create(ctx context.Context, req resource.Create
 	}
 
 	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.PrincipalId.ValueString(), plan.SecurityRoleName.ValueString()))
-	plan.BusinessUnitId = types.StringValue(businessUnitID)
-	plan.RoleId = types.StringValue(resolvedRole.RoleId)
+	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
+	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -190,7 +190,7 @@ func (r *RoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	currentPrincipal, resolvedRole, businessUnitID, err := r.resolveRequestedRole(
+	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
 		state.PrincipalId.ValueString(),
@@ -209,13 +209,13 @@ func (r *RoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	if !principalHasRole(currentPrincipal, resolvedRole.RoleId) {
+	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	state.BusinessUnitId = types.StringValue(businessUnitID)
-	state.RoleId = types.StringValue(resolvedRole.RoleId)
+	state.BusinessUnitId = types.StringValue(resolved.businessUnitID)
+	state.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -229,7 +229,7 @@ func (r *RoleAssignmentResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	_, resolvedRole, businessUnitID, err := r.resolveRequestedRole(
+	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
 		plan.PrincipalId.ValueString(),
@@ -245,8 +245,8 @@ func (r *RoleAssignmentResource) Update(ctx context.Context, req resource.Update
 	}
 
 	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.PrincipalId.ValueString(), plan.SecurityRoleName.ValueString()))
-	plan.BusinessUnitId = types.StringValue(businessUnitID)
-	plan.RoleId = types.StringValue(resolvedRole.RoleId)
+	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
+	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -260,7 +260,7 @@ func (r *RoleAssignmentResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	currentPrincipal, resolvedRole, _, err := r.resolveRequestedRole(
+	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
 		state.PrincipalId.ValueString(),
@@ -278,11 +278,11 @@ func (r *RoleAssignmentResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	if !principalHasRole(currentPrincipal, resolvedRole.RoleId) {
+	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
 		return
 	}
 
-	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), currentPrincipal.SystemUserId, []string{resolvedRole.RoleId}); err != nil {
+	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId}); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Failed to remove security role '%s' from principal '%s'", state.SecurityRoleName.ValueString(), state.PrincipalId.ValueString()),
 			err.Error(),
@@ -309,18 +309,24 @@ func (r *RoleAssignmentResource) ImportState(ctx context.Context, req resource.I
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_name"), idParts[2])...)
 }
 
-func (r *RoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID, principalID, requestedBusinessUnitID, securityRoleName string) (*applicationUserDto, applicationSecurityRoleDto, string, error) {
+type resolvedRoleAssignment struct {
+	principal      *applicationUserDto
+	role           applicationSecurityRoleDto
+	businessUnitID string
+}
+
+func (r *RoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID, principalID, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {
-		return nil, applicationSecurityRoleDto{}, "", err
+		return nil, err
 	}
 	if !dvExists {
-		return nil, applicationSecurityRoleDto{}, "", fmt.Errorf("environment '%s' does not have Dataverse", environmentID)
+		return nil, fmt.Errorf("environment '%s' does not have Dataverse", environmentID)
 	}
 
 	currentPrincipal, err := r.ApplicationClient.GetPrincipalBySystemUserId(ctx, environmentID, principalID)
 	if err != nil {
-		return nil, applicationSecurityRoleDto{}, "", err
+		return nil, err
 	}
 
 	businessUnitID := requestedBusinessUnitID
@@ -330,13 +336,17 @@ func (r *RoleAssignmentResource) resolveRequestedRole(ctx context.Context, envir
 
 	resolvedRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, environmentID, businessUnitID, []string{securityRoleName})
 	if err != nil {
-		return nil, applicationSecurityRoleDto{}, "", err
+		return nil, err
 	}
 	if len(resolvedRoles) != 1 {
-		return nil, applicationSecurityRoleDto{}, "", fmt.Errorf("expected exactly one resolved security role for '%s', got %d", securityRoleName, len(resolvedRoles))
+		return nil, fmt.Errorf("expected exactly one resolved security role for '%s', got %d", securityRoleName, len(resolvedRoles))
 	}
 
-	return currentPrincipal, resolvedRoles[0], businessUnitID, nil
+	return &resolvedRoleAssignment{
+		principal:      currentPrincipal,
+		role:           resolvedRoles[0],
+		businessUnitID: businessUnitID,
+	}, nil
 }
 
 func principalHasRole(principal *applicationUserDto, roleID string) bool {
