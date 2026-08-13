@@ -25,18 +25,18 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-var _ resource.Resource = &ApplicationUserResource{}
-var _ resource.ResourceWithImportState = &ApplicationUserResource{}
+var _ resource.Resource = &UserResource{}
+var _ resource.ResourceWithImportState = &UserResource{}
 
 func NewApplicationUserResource() resource.Resource {
-	return &ApplicationUserResource{
+	return &UserResource{
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "application_user",
 		},
 	}
 }
 
-func (r *ApplicationUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	r.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
@@ -46,7 +46,7 @@ func (r *ApplicationUserResource) Metadata(ctx context.Context, req resource.Met
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -112,7 +112,7 @@ func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *ApplicationUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
@@ -130,11 +130,11 @@ func (r *ApplicationUserResource) Configure(ctx context.Context, req resource.Co
 	r.ApplicationClient = newApplicationClient(client.Api)
 }
 
-func (r *ApplicationUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan ApplicationUserResourceModel
+	var plan UserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -209,7 +209,7 @@ func (r *ApplicationUserResource) Create(ctx context.Context, req resource.Creat
 	}
 }
 
-func (r *ApplicationUserResource) resolveApplicationUserForCreate(ctx context.Context, plan *ApplicationUserResourceModel) (*applicationUserDto, bool, error) {
+func (r *UserResource) resolveApplicationUserForCreate(ctx context.Context, plan *UserResourceModel) (*applicationUserDto, bool, error) {
 	environmentID := plan.EnvironmentId.ValueString()
 	applicationID := plan.ApplicationId.ValueString()
 	existing, err := r.ApplicationClient.GetApplicationUser(ctx, environmentID, applicationID)
@@ -262,7 +262,7 @@ func (r *ApplicationUserResource) resolveApplicationUserForCreate(ctx context.Co
 	return nil, false, createErr
 }
 
-func (r *ApplicationUserResource) addCreateFailureWithCleanupDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, systemUserID, summary string, err error) {
+func (r *UserResource) addCreateFailureWithCleanupDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, systemUserID, summary string, err error) {
 	cleanupErr := r.cleanupCreatedApplicationUser(ctx, environmentID, systemUserID)
 	if cleanupErr != nil {
 		resp.Diagnostics.AddError(
@@ -278,7 +278,7 @@ func (r *ApplicationUserResource) addCreateFailureWithCleanupDiagnostics(ctx con
 	)
 }
 
-func (r *ApplicationUserResource) cleanupCreatedApplicationUser(ctx context.Context, environmentID, systemUserID string) error {
+func (r *UserResource) cleanupCreatedApplicationUser(ctx context.Context, environmentID, systemUserID string) error {
 	if err := r.ApplicationClient.DeactivateSystemUser(ctx, environmentID, systemUserID); err != nil {
 		return fmt.Errorf("failed to deactivate created application user '%s': %w", systemUserID, err)
 	}
@@ -290,11 +290,11 @@ func (r *ApplicationUserResource) cleanupCreatedApplicationUser(ctx context.Cont
 	return nil
 }
 
-func (r *ApplicationUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state ApplicationUserResourceModel
+	var state UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -321,12 +321,12 @@ func (r *ApplicationUserResource) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *ApplicationUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan ApplicationUserResourceModel
-	var state ApplicationUserResourceModel
+	var plan UserResourceModel
+	var state UserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -371,11 +371,11 @@ func (r *ApplicationUserResource) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *ApplicationUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state ApplicationUserResourceModel
+	var state UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -423,7 +423,7 @@ func (r *ApplicationUserResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *ApplicationUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 

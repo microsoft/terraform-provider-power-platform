@@ -56,12 +56,12 @@ type EnvironmentApplicationPackageInstallResourceModel struct {
 	EnvironmentId types.String   `tfsdk:"environment_id"`
 }
 
-type ApplicationUserResource struct {
+type UserResource struct {
 	helpers.TypeInfo
 	ApplicationClient client
 }
 
-type ApplicationUserResourceModel struct {
+type UserResourceModel struct {
 	Timeouts       timeouts.Value `tfsdk:"timeouts"`
 	Id             types.String   `tfsdk:"id"`
 	EnvironmentId  types.String   `tfsdk:"environment_id"`

@@ -236,8 +236,12 @@ func TestUnitEnvironmentApplicationUserResource_RecreatesDeletedUser(t *testing.
 			if createCount == 0 {
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 			}
+			deletedState := 0
+			if userDeleted {
+				deletedState = 1
+			}
 			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"deletedstate":%d,"systemuserroles_association":[]}`,
-				currentSystemUserID, applicationID, rootBusinessID, boolToDeletedState(userDeleted))
+				currentSystemUserID, applicationID, rootBusinessID, deletedState)
 
 			if strings.Contains(req.URL.Path, "/systemusers(") || strings.Contains(req.URL.RawPath, "/systemusers%28") {
 				return httpmock.NewStringResponse(http.StatusOK, body), nil
@@ -374,14 +378,6 @@ func TestUnitEnvironmentApplicationUserResource_Import(t *testing.T) {
 			},
 		},
 	})
-}
-
-func boolToDeletedState(deleted bool) int {
-	if deleted {
-		return 1
-	}
-
-	return 0
 }
 
 func TestUnitEnvironmentApplicationUserResource_Read_NotFound(t *testing.T) {

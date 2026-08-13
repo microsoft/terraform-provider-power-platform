@@ -28,11 +28,11 @@ func TestUnitUseDefaultBoolValueWhenConfigNullModifier(t *testing.T) {
 		modifier.PlanModifyBool(ctx, req, &resp)
 
 		if resp.PlanValue.IsNull() || resp.PlanValue.IsUnknown() {
-			t.Fatalf("expected known plan value")
+			t.Fatal("expected known plan value")
 		}
 
 		if resp.PlanValue.ValueBool() {
-			t.Fatalf("expected plan value false, got true")
+			t.Fatal("expected plan value false, got true")
 		}
 	})
 
@@ -47,7 +47,7 @@ func TestUnitUseDefaultBoolValueWhenConfigNullModifier(t *testing.T) {
 		modifier.PlanModifyBool(ctx, req, &resp)
 
 		if !resp.PlanValue.ValueBool() {
-			t.Fatalf("expected explicit configured value to be preserved")
+			t.Fatal("expected explicit configured value to be preserved")
 		}
 	})
 }
