@@ -37,13 +37,13 @@ func TestUnitEnvironmentVariableResource_Validate_Read_ParentDeleted(t *testing.
 			{
 				// Step 1: create the environment variable value successfully.
 				Config: `
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "https://api.contoso.example"
 }
 `,
-				Check: resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "schema_name", "contoso_ApiBaseUrl"),
+				Check: resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "contoso_ApiBaseUrl"),
 			},
 			{
 				// Step 2: refresh after the parent environment was deleted out of band.

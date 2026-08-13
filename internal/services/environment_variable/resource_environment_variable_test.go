@@ -63,7 +63,7 @@ resource "powerplatform_solution" "solution" {
   solution_file  = "` + solutionFileName + `"
 }
 
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   depends_on     = [powerplatform_solution.solution]
   environment_id = powerplatform_environment.environment.id
   schema_name    = "cra6e_SolutionVariableText"
@@ -71,12 +71,12 @@ resource "powerplatform_environment_variable" "text" {
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "schema_name", "cra6e_SolutionVariableText"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "display_name", "SolutionVariableText"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "type", "String"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "secret_store", "Microsoft Dataverse"),
-					resource.TestMatchResourceAttr("powerplatform_environment_variable.text", "environment_variable_definition_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
-					resource.TestMatchResourceAttr("powerplatform_environment_variable.text", "environment_variable_value_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "cra6e_SolutionVariableText"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "display_name", "SolutionVariableText"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "type", "String"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Microsoft Dataverse"),
+					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_definition_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
+					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_value_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ resource "powerplatform_solution" "solution" {
   solution_file  = "` + solutionFileName + `"
 }
 
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   depends_on     = [powerplatform_solution.solution]
   environment_id = powerplatform_environment.environment.id
   schema_name    = "cra6e_SolutionVariableText"
@@ -111,7 +111,7 @@ resource "powerplatform_environment_variable" "text" {
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "schema_name", "cra6e_SolutionVariableText"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "cra6e_SolutionVariableText"),
 				),
 			},
 		},
@@ -130,22 +130,22 @@ func TestUnitEnvironmentVariableResource_Validate_Create_HappyPath(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "https://api.contoso.example"
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "id", "00000000-0000-0000-0000-000000000001/contoso_ApiBaseUrl"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "schema_name", "contoso_ApiBaseUrl"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "display_name", "API Base URL"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "description", "Base URL for downstream API"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "type", "String"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "secret_store", "Microsoft Dataverse"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "value_schema", "{\"type\":\"string\"}"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "environment_variable_definition_id", "11111111-1111-1111-1111-111111111111"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "environment_variable_value_id", "22222222-2222-2222-2222-222222222222"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "id", "00000000-0000-0000-0000-000000000001/contoso_ApiBaseUrl"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "contoso_ApiBaseUrl"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "display_name", "API Base URL"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "description", "Base URL for downstream API"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "type", "String"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Microsoft Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "value_schema", "{\"type\":\"string\"}"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_definition_id", "11111111-1111-1111-1111-111111111111"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_value_id", "22222222-2222-2222-2222-222222222222"),
 				),
 			},
 		},
@@ -164,7 +164,7 @@ func TestUnitEnvironmentVariableResource_Validate_Update_HappyPath(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "https://api.contoso.example"
@@ -173,14 +173,14 @@ resource "powerplatform_environment_variable" "text" {
 			},
 			{
 				Config: `
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "https://api2.contoso.example"
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "environment_variable_value_id", "22222222-2222-2222-2222-222222222222"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_value_id", "22222222-2222-2222-2222-222222222222"),
 				),
 			},
 		},
@@ -232,20 +232,20 @@ func TestUnitEnvironmentVariableResource_Validate_Read_OutOfBandValueChange(t *t
 			{
 				// Step 1: create the environment variable value successfully.
 				Config: `
-resource "powerplatform_environment_variable" "text" {
+resource "powerplatform_environment_variable_value" "text" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "https://api.contoso.example"
 }
 `,
-				Check: resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "value", "https://api.contoso.example"),
+				Check: resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "value", "https://api.contoso.example"),
 			},
 			{
 				// Step 2: the value was changed out of band; refresh must pick up the
 				// API value so the follow-up plan proposes to restore the configuration.
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
-				Check:              resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "value", "https://changed-out-of-band.contoso.example"),
+				Check:              resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "value", "https://changed-out-of-band.contoso.example"),
 			},
 		},
 	})
@@ -265,7 +265,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Definition_I
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "missing" {
+resource "powerplatform_environment_variable_value" "missing" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_Missing"
   value          = "x"
@@ -290,7 +290,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_No_Dataverse
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "missing" {
+resource "powerplatform_environment_variable_value" "missing" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "x"
@@ -317,7 +317,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Multiple_Val
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "broken" {
+resource "powerplatform_environment_variable_value" "broken" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "x"
@@ -342,7 +342,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Number_Value
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "number" {
+resource "powerplatform_environment_variable_value" "number" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "not-a-number"
@@ -367,7 +367,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Json_Value_I
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "json" {
+resource "powerplatform_environment_variable_value" "json" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "{not valid json"
@@ -392,7 +392,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_Fails_When_Boolean_Valu
 		Steps: []resource.TestStep{
 			{
 				Config: `
-resource "powerplatform_environment_variable" "boolean" {
+resource "powerplatform_environment_variable_value" "boolean" {
   environment_id = "00000000-0000-0000-0000-000000000001"
   schema_name    = "contoso_ApiBaseUrl"
   value          = "true"

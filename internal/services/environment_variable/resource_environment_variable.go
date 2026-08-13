@@ -29,7 +29,7 @@ var _ resource.ResourceWithImportState = &Resource{}
 func NewEnvironmentVariableResource() resource.Resource {
 	return &Resource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "environment_variable",
+			TypeName: "environment_variable_value",
 		},
 	}
 }
