@@ -12,64 +12,95 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
 func TestAccManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
-	solutionFileBytes, err := os.ReadFile("../solution/tests/resource/Test_Files/TerraformSimpleTestSolution_1_0_0_1_managed.zip")
+	solutionPath, err := filepath.Abs("tests/resource/TerraformSolutionExample_1_0_0_1_managed.zip")
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %s", err.Error())
+		t.Fatalf("failed to resolve solution path: %v", err)
 	}
 
-	err = os.WriteFile("TerraformSimpleTestSolution_1_0_0_1_managed.zip", solutionFileBytes, 0644)
-	if err != nil {
-		t.Fatalf("Failed to write solution file: %s", err.Error())
-	}
+	guid := strings.Trim(helpers.GuidRegex, "^$")
+	idRegex := regexp.MustCompile(fmt.Sprintf(`^%s_%s$`, guid, guid))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: fmt.Sprintf(`
+resource "powerplatform_environment" "environment" {
+  display_name     = "%s"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
+}
 
-				resource "powerplatform_environment" "environment" {
-					display_name     = "` + mocks.TestName() + `"
-					location         = "unitedstates"
-					environment_type = "Sandbox"
-					dataverse = {
-						language_code     = "1033"
-						currency_code     = "USD"
-						security_group_id = "00000000-0000-0000-0000-000000000000"
-					}
-				}
+resource "powerplatform_connection" "dataverse_connection" {
+  environment_id = powerplatform_environment.environment.id
+  name           = "shared_commondataserviceforapps"
+  display_name   = "Dataverse Connection"
 
-				resource "time_sleep" "wait_120_seconds" {
-					depends_on = [powerplatform_environment.environment]
-					create_duration = "120s"
-				}
+  connection_parameters = jsonencode({
+  })
 
-				resource "powerplatform_managed_solution" "solution" {
-					depends_on     = [time_sleep.wait_120_seconds]
-					environment_id = powerplatform_environment.environment.id
-					unique_name    = "TerraformSimpleTestSolution"
-					version        = "1.0.0.1"
+  lifecycle {
+    ignore_changes = [
+      connection_parameters
+    ]
+  }
+}
 
-					source = {
-						path = "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
-					}
-				}`,
+resource "powerplatform_managed_solution" "solution" {
+  environment_id = powerplatform_environment.environment.id
+  unique_name    = "TerraformSolutionExample"
+  version        = "1.0.0.1"
+
+  source = {
+    path = %q
+  }
+
+  connection_references = {
+    terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
+  }
+
+  environment_variables = {
+    terr_SolutionVariableDataSource = "${powerplatform_environment.environment.id}"
+    terr_SolutionVariableJson       = "{ \"value\": 1234, \"text\": \"abc\" }"
+    terr_SolutionVariableText       = "foo"
+  }
+
+  depends_on = [powerplatform_connection.dataverse_connection]
+}
+`, mocks.TestName(), solutionPath),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "unique_name", "TerraformSimpleTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "unique_name", "TerraformSolutionExample"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "version", "1.0.0.1"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "display_name", "Terraform Solution Example"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "source.path", solutionPath),
+					resource.TestCheckNoResourceAttr("powerplatform_managed_solution.solution", "source.url"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "skip_product_update_dependencies", "true"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "publish_all_customizations", "false"),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "solution_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "id", idRegex),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_id", "powerplatform_environment.environment", "id"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "connection_references.%", "1"),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "connection_references.terr_SolutionConnectionReference", "powerplatform_connection.dataverse_connection", "id"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.%", "3"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableText", "foo"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableJson", `{ "value": 1234, "text": "abc" }`),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableDataSource", "powerplatform_environment.environment", "id"),
 				),
 			},
 		},
