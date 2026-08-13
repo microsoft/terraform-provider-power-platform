@@ -369,22 +369,18 @@ func (client *client) DeactivateSystemUser(ctx context.Context, environmentId st
 }
 
 func (client *client) DeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
-	return client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK})
+	return client.executeSystemUserDelete(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK})
 }
 
 func (client *client) PermanentlyDeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
-	if err := client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound}); err != nil {
+	if err := client.executeSystemUserDelete(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound}); err != nil {
 		return err
 	}
 
-	if err := client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound}); err != nil {
-		return err
-	}
-
-	return nil
+	return client.executeSystemUserDelete(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound})
 }
 
-func (client *client) deleteSystemUser(ctx context.Context, environmentId string, systemUserId string, expectedStatusCodes []int) error {
+func (client *client) executeSystemUserDelete(ctx context.Context, environmentId string, systemUserId string, expectedStatusCodes []int) error {
 	// Get the environment host
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
