@@ -37,8 +37,6 @@ resource "powerplatform_environment_settings" "settings" {
 
   environment_id = powerplatform_environment.example_environment_settings.id
 
-
-
   audit_and_logs = {
     plugin_trace_log_setting = "Exception"
     audit_settings = {
@@ -52,6 +50,9 @@ resource "powerplatform_environment_settings" "settings" {
     email_settings = {
       max_upload_file_size_in_bytes = 123456
     }
+  }
+  privacy_and_security = {
+    blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
   }
   product = {
     behavior_settings = {
@@ -73,9 +74,6 @@ resource "powerplatform_environment_settings" "settings" {
       ai_form_fill_toolbar                          = "Off"
       natural_language_grid_and_view_search         = "NoOne"
       allow_ai_to_generate_charts                   = "Off"
-    }
-    privacy_and_security = {
-      blocked_attachment_extensions = ["exe", "dll", "ps1"]
     }
     security = {
       allow_application_user_access               = true
