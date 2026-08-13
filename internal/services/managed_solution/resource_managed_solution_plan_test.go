@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func TestSourcesAreEquivalent_IgnoresQueryAndFragment(t *testing.T) {
+func TestUnitSourcesAreEquivalent_IgnoresQueryAndFragment(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -21,7 +21,7 @@ func TestSourcesAreEquivalent_IgnoresQueryAndFragment(t *testing.T) {
 	}
 }
 
-func TestSourcesAreEquivalent_IgnoresTransportLocatorChangeForExactIdentity(t *testing.T) {
+func TestUnitSourcesAreEquivalent_IgnoresTransportLocatorChangeForExactIdentity(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -36,7 +36,7 @@ func TestSourcesAreEquivalent_IgnoresTransportLocatorChangeForExactIdentity(t *t
 	}
 }
 
-func TestSourcesAreEquivalent_IgnoresEphemeralWorkspacePathChange(t *testing.T) {
+func TestUnitSourcesAreEquivalent_IgnoresEphemeralWorkspacePathChange(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -51,7 +51,7 @@ func TestSourcesAreEquivalent_IgnoresEphemeralWorkspacePathChange(t *testing.T) 
 	}
 }
 
-func TestSourcesAreEquivalent_RejectsMissingDeliverySource(t *testing.T) {
+func TestUnitSourcesAreEquivalent_RejectsMissingDeliverySource(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{}
@@ -62,7 +62,7 @@ func TestSourcesAreEquivalent_RejectsMissingDeliverySource(t *testing.T) {
 	}
 }
 
-func TestNormalizeSolutionVersion_PadsMissingSegments(t *testing.T) {
+func TestUnitNormalizeSolutionVersion_PadsMissingSegments(t *testing.T) {
 	t.Parallel()
 
 	normalized, err := normalizeSolutionVersion("1.3.5")
@@ -75,7 +75,7 @@ func TestNormalizeSolutionVersion_PadsMissingSegments(t *testing.T) {
 	}
 }
 
-func TestReconcileSolutionVersion_PreservesEquivalentDeclaredVersion(t *testing.T) {
+func TestUnitReconcileSolutionVersion_PreservesEquivalentDeclaredVersion(t *testing.T) {
 	t.Parallel()
 
 	actual := reconcileSolutionVersion(types.StringValue("0.1.39"), "0.1.39.0")
@@ -85,7 +85,7 @@ func TestReconcileSolutionVersion_PreservesEquivalentDeclaredVersion(t *testing.
 	}
 }
 
-func TestReconcileSolutionVersion_ReportsRemoteVersionDrift(t *testing.T) {
+func TestUnitReconcileSolutionVersion_ReportsRemoteVersionDrift(t *testing.T) {
 	t.Parallel()
 
 	actual := reconcileSolutionVersion(types.StringValue("0.1.39"), "0.1.40.0")

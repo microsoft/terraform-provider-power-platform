@@ -36,14 +36,41 @@ resource "powerplatform_environment" "environment" {
   }
 }
 
+resource "powerplatform_connection" "dataverse_connection" {
+  environment_id = powerplatform_environment.environment.id
+  name           = "shared_commondataserviceforapps"
+  display_name   = "Dataverse Connection"
+
+  connection_parameters = jsonencode({
+  })
+
+  lifecycle {
+    ignore_changes = [
+      connection_parameters
+    ]
+  }
+}
+
 resource "powerplatform_managed_solution" "solution" {
   environment_id = powerplatform_environment.environment.id
-  unique_name    = "TerraformSimpleTestSolution"
+  unique_name    = "TerraformSolutionExample"
   version        = "1.0.0.1"
 
   source = {
-    path = "${path.module}/TerraformSimpleTestSolution_1_0_0_1_managed.zip"
+    path = "${path.module}/TerraformSolutionExample_1_0_0_1_managed.zip"
   }
+
+  connection_references = {
+    terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
+  }
+
+  environment_variables = {
+    terr_SolutionVariableDataSource = "${powerplatform_environment.environment.id}"
+    terr_SolutionVariableJson       = "{ \"value\": 1234, \"text\": \"abc\" }"
+    terr_SolutionVariableText       = "foo"
+  }
+
+  depends_on = [powerplatform_connection.dataverse_connection]
 }
 ```
 

@@ -12,64 +12,95 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
 func TestAccManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
-	solutionFileBytes, err := os.ReadFile("../solution/tests/resource/Test_Files/TerraformSimpleTestSolution_1_0_0_1_managed.zip")
+	solutionPath, err := filepath.Abs("tests/resource/TerraformSolutionExample_1_0_0_1_managed.zip")
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %s", err.Error())
+		t.Fatalf("failed to resolve solution path: %v", err)
 	}
 
-	err = os.WriteFile("TerraformSimpleTestSolution_1_0_0_1_managed.zip", solutionFileBytes, 0644)
-	if err != nil {
-		t.Fatalf("Failed to write solution file: %s", err.Error())
-	}
+	guid := strings.Trim(helpers.GuidRegex, "^$")
+	idRegex := regexp.MustCompile(fmt.Sprintf(`^%s_%s$`, guid, guid))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: fmt.Sprintf(`
+resource "powerplatform_environment" "environment" {
+  display_name     = "%s"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
+}
 
-				resource "powerplatform_environment" "environment" {
-					display_name     = "` + mocks.TestName() + `"
-					location         = "unitedstates"
-					environment_type = "Sandbox"
-					dataverse = {
-						language_code     = "1033"
-						currency_code     = "USD"
-						security_group_id = "00000000-0000-0000-0000-000000000000"
-					}
-				}
+resource "powerplatform_connection" "dataverse_connection" {
+  environment_id = powerplatform_environment.environment.id
+  name           = "shared_commondataserviceforapps"
+  display_name   = "Dataverse Connection"
 
-				resource "time_sleep" "wait_120_seconds" {
-					depends_on = [powerplatform_environment.environment]
-					create_duration = "120s"
-				}
+  connection_parameters = jsonencode({
+  })
 
-				resource "powerplatform_managed_solution" "solution" {
-					depends_on     = [time_sleep.wait_120_seconds]
-					environment_id = powerplatform_environment.environment.id
-					unique_name    = "TerraformSimpleTestSolution"
-					version        = "1.0.0.1"
+  lifecycle {
+    ignore_changes = [
+      connection_parameters
+    ]
+  }
+}
 
-					source = {
-						path = "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
-					}
-				}`,
+resource "powerplatform_managed_solution" "solution" {
+  environment_id = powerplatform_environment.environment.id
+  unique_name    = "TerraformSolutionExample"
+  version        = "1.0.0.1"
+
+  source = {
+    path = %q
+  }
+
+  connection_references = {
+    terr_SolutionConnectionReference = powerplatform_connection.dataverse_connection.id
+  }
+
+  environment_variables = {
+    terr_SolutionVariableDataSource = "${powerplatform_environment.environment.id}"
+    terr_SolutionVariableJson       = "{ \"value\": 1234, \"text\": \"abc\" }"
+    terr_SolutionVariableText       = "foo"
+  }
+
+  depends_on = [powerplatform_connection.dataverse_connection]
+}
+`, mocks.TestName(), solutionPath),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "unique_name", "TerraformSimpleTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "unique_name", "TerraformSolutionExample"),
 					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "version", "1.0.0.1"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "display_name", "Terraform Solution Example"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "source.path", solutionPath),
+					resource.TestCheckNoResourceAttr("powerplatform_managed_solution.solution", "source.url"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "skip_product_update_dependencies", "true"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "publish_all_customizations", "false"),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "solution_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_managed_solution.solution", "id", idRegex),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_id", "powerplatform_environment.environment", "id"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "connection_references.%", "1"),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "connection_references.terr_SolutionConnectionReference", "powerplatform_connection.dataverse_connection", "id"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.%", "3"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableText", "foo"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableJson", `{ "value": 1234, "text": "abc" }`),
+					resource.TestCheckResourceAttrPair("powerplatform_managed_solution.solution", "environment_variables.terr_SolutionVariableDataSource", "powerplatform_environment.environment", "id"),
 				),
 			},
 		},
@@ -89,40 +120,22 @@ func TestUnitManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "id": "00000000-0000-0000-0000-000000000001",
-  "name": "env",
-  "properties": {
-    "linkedEnvironmentMetadata": {
-      "instanceURL": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-    }
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.environment.api.powerplatform.com/connectivity/connections?api-version=1",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_connections.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_installed_solutions.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "StageSolutionResults": {
-    "StageSolutionUploadId": "upload-id",
-    "StageSolutionStatus": "Passed",
-    "SolutionValidationResults": [],
-    "MissingDependencies": [],
-    "SolutionDetails": {
-      "SolutionUniqueName": "TerraformSimpleTestSolution"
-    }
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/post_stage_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
@@ -141,44 +154,22 @@ func TestUnitManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 				t.Fatalf("ComponentParameters should be omitted when the package declares no connection references: %s", string(body))
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "ImportJobKey": "job-id",
-  "AsyncOperationId": "async-id"
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/post_import_solution_async.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28async-id%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"completedon":"2024-01-01T00:00:00Z"}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_async_operations.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=job-id%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "SolutionOperationResult": {
-    "Status": "Passed",
-    "ErrorMessages": []
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_solution_import_result.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+%27TerraformSimpleTestSolution%27",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "value": [
-    {
-      "solutionid": "86928ed8-df37-4ce2-add5-47030a833bff",
-      "environment_id": "00000000-0000-0000-0000-000000000001",
-      "uniquename": "TerraformSimpleTestSolution",
-      "friendlyname": "Terraform Simple Test Solution",
-      "ismanaged": true,
-      "createdon": "2024-01-01T00:00:00Z",
-      "version": "1.0.0.1",
-      "modifiedon": "2024-01-01T00:00:00Z",
-      "installedon": "2024-01-01T00:00:00Z"
-    }
-  ]
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
@@ -222,24 +213,24 @@ func TestUnitManagedSolutionResource_AdoptsExactInstalledManagedSolution_AndImpo
 		"solution.xml":       `<ImportExportXml><SolutionManifest><UniqueName>MetaForm</UniqueName><Version>2.0.246</Version><Managed>1</Managed><LocalizedNames><LocalizedName description="Meta Form" /></LocalizedNames></SolutionManifest></ImportExportXml>`,
 		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
 	})
-	registerManagedSolutionEnvironmentResponder()
+	registerManagedSolutionEnvironmentResponder("AdoptsExactInstalledManagedSolution_AndImportsState")
 
-	const installed = `{"value":[{"solutionid":"86928ed8-df37-4ce2-add5-47030a833bff","uniquename":"MetaForm","friendlyname":"Meta Form","ismanaged":true,"version":"2.0.246.0"}]}`
+	const installedSolutionFile = "tests/resource/AdoptsExactInstalledManagedSolution_AndImportsState/get_solution.json"
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(installedSolutionFile).String()), nil
 		})
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+%27MetaForm%27",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(installedSolutionFile).String()), nil
 		})
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(installedSolutionFile).String()), nil
 		})
 	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.environment.api.powerplatform.com/connectivity/connections?api-version=1",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/AdoptsExactInstalledManagedSolution_AndImportsState/get_connections.json").String()), nil
 		})
 	importStarts := 0
 	httpmock.RegisterResponder("POST", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/(StageSolution|ImportSolutionAsync|StageAndUpgradeAsync)$`,
@@ -314,7 +305,7 @@ func TestUnitManagedSolutionResource_Validate_Create_Fails_When_ConnectionRefere
 		"customizations.xml": `<ImportExportXml><connectionreferences><connectionreference connectionreferencelogicalname="codeeditor_sharepoint"><connectorid>/providers/Microsoft.PowerApps/apis/shared_sharepointonline</connectorid></connectionreference></connectionreferences></ImportExportXml>`,
 	})
 
-	registerManagedSolutionEnvironmentResponder()
+	registerManagedSolutionEnvironmentResponder("Validate_Create_Fails_When_ConnectionReferenceMissing")
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -350,10 +341,10 @@ func TestUnitManagedSolutionResource_Validate_Create_Fails_When_EnvironmentVaria
 		"environmentvariabledefinitions/codeeditor_secret/environmentvariabledefinition.xml": `<environmentvariabledefinition schemaname="codeeditor_secret"></environmentvariabledefinition>`,
 	})
 
-	registerManagedSolutionEnvironmentResponder()
+	registerManagedSolutionEnvironmentResponder("Validate_Create_Fails_When_EnvironmentVariableIsUnsatisfied")
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=schemaname+eq+%27codeeditor_secret%27&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_EnvironmentVariableIsUnsatisfied/get_environment_variable_values.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -389,23 +380,10 @@ func TestUnitManagedSolutionResource_Validate_Create_Fails_When_DependencyVersio
 		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
 	})
 
-	registerManagedSolutionEnvironmentResponder()
+	registerManagedSolutionEnvironmentResponder("Validate_Create_Fails_When_DependencyVersionIsTooLow")
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "value": [
-    {
-      "solutionid": "base-id",
-      "uniquename": "BaseLib",
-      "friendlyname": "Base Lib",
-      "ismanaged": true,
-      "createdon": "2024-01-01T00:00:00Z",
-      "version": "1.0.0.0",
-      "modifiedon": "2024-01-01T00:00:00Z",
-      "installedon": "2024-01-01T00:00:00Z"
-    }
-  ]
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Fails_When_DependencyVersionIsTooLow/get_installed_solutions.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -430,23 +408,15 @@ resource "powerplatform_managed_solution" "solution" {
 	})
 }
 
-func registerManagedSolutionEnvironmentResponder() {
+func registerManagedSolutionEnvironmentResponder(testFolder string) {
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "id": "00000000-0000-0000-0000-000000000001",
-  "name": "env",
-  "properties": {
-    "linkedEnvironmentMetadata": {
-      "instanceURL": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-    }
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/%s/get_environment_00000000-0000-0000-0000-000000000001.json", testFolder)).String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/%s/get_installed_solutions.json", testFolder)).String()), nil
 		})
 }
 
