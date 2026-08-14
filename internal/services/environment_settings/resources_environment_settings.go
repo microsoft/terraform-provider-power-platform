@@ -174,6 +174,23 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					},
 				},
 			},
+			"privacy_and_security": schema.SingleNestedAttribute{
+				MarkdownDescription: "Privacy and Security settings. See the environment Privacy + Security settings for more details.",
+				Optional:            true, Computed: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"blocked_attachment_extensions": schema.SetAttribute{
+						ElementType:         types.StringType,
+						MarkdownDescription: "Blocked attachment extensions enforced at the environment level.",
+						Optional:            true, Computed: true,
+						PlanModifiers: []planmodifier.Set{
+							setplanmodifier.UseStateForUnknown(),
+						},
+					},
+				},
+			},
 			"product": schema.SingleNestedAttribute{
 				MarkdownDescription: "Product",
 				Optional:            true, Computed: true,
