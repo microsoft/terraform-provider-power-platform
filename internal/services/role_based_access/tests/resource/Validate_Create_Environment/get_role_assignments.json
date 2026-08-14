@@ -2,7 +2,7 @@
   "value": [
     {
       "roleAssignmentId": "33333333-3333-3333-3333-333333333333",
-      "scope": "/environments/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+      "scope": "/tenants/00000000-0000-0000-0000-000000000001/environments/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
       "principalType": "ApplicationUser",
       "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",

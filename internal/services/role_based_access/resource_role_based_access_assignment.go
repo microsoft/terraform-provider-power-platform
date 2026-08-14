@@ -57,8 +57,8 @@ func (r *roleBasedAccessAssignmentResource) Schema(ctx context.Context, req reso
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"principal_object_id": schema.StringAttribute{
-				MarkdownDescription: "The object ID of the principal (service principal or user) to assign the role to",
+			"enterprise_application_object_id": schema.StringAttribute{
+				MarkdownDescription: "The object ID of the enterprise application (service principal) or user to assign the role to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -112,7 +112,7 @@ func (r *roleBasedAccessAssignmentResource) Configure(ctx context.Context, req r
 		)
 		return
 	}
-	r.Client = NewRoleBasedAccessClient(providerClient.Api)
+	r.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
 func (r *roleBasedAccessAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -125,10 +125,10 @@ func (r *roleBasedAccessAssignmentResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Creating tenant-level role assignment for principal %s", plan.PrincipalObjectId.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("Creating tenant-level role assignment for principal %s", plan.EnterpriseApplicationObjectId.ValueString()))
 
 	request := roleAssignmentRequestDto{
-		PrincipalObjectId: plan.PrincipalObjectId.ValueString(),
+		PrincipalObjectId: plan.EnterpriseApplicationObjectId.ValueString(),
 		PrincipalType:     plan.PrincipalType.ValueString(),
 		RoleDefinitionId:  plan.RoleDefinitionId.ValueString(),
 	}
@@ -177,7 +177,7 @@ func (r *roleBasedAccessAssignmentResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	state.PrincipalObjectId = types.StringValue(found.PrincipalObjectId)
+	state.EnterpriseApplicationObjectId = types.StringValue(found.PrincipalObjectId)
 	state.PrincipalType = types.StringValue(found.PrincipalType)
 	state.RoleDefinitionId = types.StringValue(found.RoleDefinitionId)
 	state.Scope = types.StringValue(found.Scope)

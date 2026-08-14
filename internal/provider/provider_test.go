@@ -29,7 +29,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
-	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_based_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
@@ -77,6 +76,9 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		tenant.NewTenantDataSource(),
 		solution_checker_rules.NewSolutionCheckerRulesDataSource(),
 		role_based_access.NewRoleDefinitionsDataSource(),
+		role_based_access.NewRoleBasedAccessAssignmentsDataSource(),
+		role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource(),
+		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource(),
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
@@ -105,7 +107,6 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		connection.NewConnectionShareResource(),
 		admin_management_application.NewAdminManagementApplicationResource(),
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
-		environment_group_rule_based_policy.NewEnvironmentGroupRuleBasedPolicyResource(),
 		enterprise_policy.NewEnterpisePolicyResource(),
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),

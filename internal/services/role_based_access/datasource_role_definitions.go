@@ -45,8 +45,8 @@ func (d *roleDefinitionsDataSource) Schema(ctx context.Context, req datasource.S
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches available [role definitions](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control) from Power Platform. " +
-			"Use this data source to discover available roles that can be assigned to service principals or users.",
+		MarkdownDescription: "Fetches available [role definitions](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-definitions) from Power Platform. " +
+			"Use this data source to discover available roles that can be assigned to service principals or users at the tenant, environment group or environment scope.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
@@ -92,7 +92,7 @@ func (d *roleDefinitionsDataSource) Configure(ctx context.Context, req datasourc
 		)
 		return
 	}
-	d.Client = NewRoleBasedAccessClient(providerClient.Api)
+	d.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
 func (d *roleDefinitionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

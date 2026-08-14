@@ -17,6 +17,7 @@ type environmentGroupRuleSetResource struct {
 type environmentGroupRuleSetResourceModel struct {
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Id                 types.String   `tfsdk:"id"`
+	PolicyId           types.String   `tfsdk:"policy_id"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 	Rules              types.Object   `tfsdk:"rules"`
 }
@@ -51,4 +52,19 @@ type environmentGroupRuleSetAiGeneratedDescriptionsModel struct {
 type environmentGroupRuleSetAiGenerativeSettingsModel struct {
 	MoveDataAcrossRegionsEnabled types.Bool `tfsdk:"move_data_across_regions_enabled"`
 	BingSearchEnabled            types.Bool `tfsdk:"bing_search_enabled"`
+}
+
+type environmentGroupRuleSetAdvancedConnectorPoliciesOnlyModel struct {
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+type environmentGroupRuleSetContentSecurityPolicyModel struct {
+	Enabled                  types.Bool   `tfsdk:"enabled"`
+	EnabledForCanvas         types.Bool   `tfsdk:"enabled_for_canvas"`
+	EnabledForCodeApps       types.Bool   `tfsdk:"enabled_for_code_apps"`
+	ReportUri                types.String `tfsdk:"report_uri"`
+	ReportingEndpoint        types.String `tfsdk:"reporting_endpoint"`
+	Configuration            types.Object `tfsdk:"configuration"`
+	ConfigurationForCanvas   types.Object `tfsdk:"configuration_for_canvas"`
+	ConfigurationForCodeApps types.Object `tfsdk:"configuration_for_code_apps"`
 }

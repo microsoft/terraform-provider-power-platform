@@ -1,0 +1,15 @@
+{
+  "value": [
+    {
+      "roleAssignmentId": "44444444-4444-4444-4444-444444444444",
+      "scope": "/environmentGroups/ffffffff-ffff-ffff-ffff-ffffffffffff",
+      "principalType": "ApplicationUser",
+      "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "createdByPrincipalType": "User",
+      "createdByPrincipalObjectId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+      "createdOn": "2026-06-22T17:00:00Z",
+      "expiresOn": null
+    }
+  ]
+}

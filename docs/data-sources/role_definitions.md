@@ -3,12 +3,12 @@
 page_title: "powerplatform_role_definitions Data Source - Power Platform"
 subcategory: ""
 description: |-
-  Fetches available role definitions https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control from Power Platform. Use this data source to discover available roles that can be assigned to service principals or users.
+  Fetches available role definitions https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-definitions from Power Platform. Use this data source to discover available roles that can be assigned to service principals or users at the tenant, environment group or environment scope.
 ---
 
 # powerplatform_role_definitions (Data Source)
 
-Fetches available [role definitions](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control) from Power Platform. Use this data source to discover available roles that can be assigned to service principals or users.
+Fetches available [role definitions](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-definitions) from Power Platform. Use this data source to discover available roles that can be assigned to service principals or users at the tenant, environment group or environment scope.
 
 ## Example Usage
 
