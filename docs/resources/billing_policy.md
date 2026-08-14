@@ -23,6 +23,20 @@ Additional Resources:
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
+    azurerm = {
+      source = "hashicorp/azurerm"
+    }
+    azurecaf = {
+      source = "aztfmod/azurecaf"
+    }
+  }
+}
+
 provider "powerplatform" {
   use_cli = true
 }

@@ -39,6 +39,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/publisher"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
@@ -71,6 +72,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		connection.NewConnectionsDataSource(),
 		connection.NewConnectionSharesDataSource(),
 		data_record.NewDataRecordDataSource(),
+		publisher.NewPublishersDataSource(),
 		rest.NewDataverseWebApiDatasource(),
 		capacity.NewTenantCapcityDataSource(),
 		tenant.NewTenantDataSource(),
@@ -102,6 +104,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		authorization.NewUserResource(),
 		environment_settings.NewEnvironmentSettingsResource(),
 		data_record.NewDataRecordResource(),
+		publisher.NewPublisherResource(),
 		rest.NewDataverseWebApiResource(),
 		connection.NewConnectionResource(),
 		connection.NewConnectionShareResource(),

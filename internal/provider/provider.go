@@ -48,6 +48,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/publisher"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
@@ -408,6 +409,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return authorization.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
+		func() resource.Resource { return publisher.NewPublisherResource() },
 		func() resource.Resource { return environment_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
@@ -453,6 +455,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return authorization.NewSecurityRolesDataSource() },
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
+		func() datasource.DataSource { return publisher.NewPublishersDataSource() },
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 		func() datasource.DataSource { return connection.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },

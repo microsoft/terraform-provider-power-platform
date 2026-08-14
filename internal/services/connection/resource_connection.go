@@ -191,20 +191,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	plan.Status = types.SetValueMust(types.StringType, statuses)
+	plan.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
-	if conectionState.ConnectionParameters == types.StringNull() {
-		plan.ConnectionParameters = types.StringValue("")
-	}
-
-	if conectionState.ConnectionParametersSet == types.StringNull() {
-		plan.ConnectionParametersSet = types.StringValue("")
-	}
+	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
+	plan.ConnectionParametersSet = normalizeConnectionParameter(plan.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -238,14 +229,10 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	conectionState := ConvertFromConnectionDto(*connection)
 	state.Id = types.String(conectionState.Id)
 	state.DisplayName = types.String(conectionState.DisplayName)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	state.Status = types.SetValueMust(types.StringType, statuses)
+	state.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
 	state.Name = types.String(conectionState.Name)
-	state.ConnectionParameters = types.String(conectionState.ConnectionParameters)
-	state.ConnectionParametersSet = types.String(conectionState.ConnectionParametersSet)
+	state.ConnectionParameters = normalizeConnectionParameter(state.ConnectionParameters, conectionState.ConnectionParameters)
+	state.ConnectionParametersSet = normalizeConnectionParameter(state.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -292,18 +279,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	plan.Status = types.SetValueMust(types.StringType, statuses)
-
-	if conectionState.ConnectionParameters == types.StringNull() {
-		plan.ConnectionParameters = types.StringValue("")
-	}
-	if conectionState.ConnectionParametersSet == types.StringNull() {
-		plan.ConnectionParametersSet = types.StringValue("")
-	}
+	plan.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
+	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
+	plan.ConnectionParametersSet = normalizeConnectionParameter(plan.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -330,4 +308,30 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func normalizeConnectionParameter(existing, actual types.String) types.String {
+	if !existing.IsNull() && !existing.IsUnknown() {
+		return existing
+	}
+
+	if !actual.IsNull() && !actual.IsUnknown() {
+		return actual
+	}
+
+	return types.StringNull()
+}
+
+// uniqueStatusValues dedupes API-reported statuses since Terraform sets cannot contain duplicate elements.
+func uniqueStatusValues(statuses []string) []attr.Value {
+	seen := make(map[string]struct{}, len(statuses))
+	values := []attr.Value{}
+	for _, status := range statuses {
+		if _, ok := seen[status]; ok {
+			continue
+		}
+		seen[status] = struct{}{}
+		values = append(values, types.StringValue(status))
+	}
+	return values
 }
