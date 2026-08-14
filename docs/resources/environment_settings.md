@@ -66,6 +66,9 @@ resource "powerplatform_environment_settings" "settings" {
       max_upload_file_size_in_bytes = 123456
     }
   }
+  privacy_and_security = {
+    blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+  }
   product = {
     behavior_settings = {
       show_dashboard_cards_in_expanded_state = true
