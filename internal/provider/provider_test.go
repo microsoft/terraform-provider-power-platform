@@ -33,6 +33,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
+	environmentvariable "github.com/microsoft/terraform-provider-power-platform/internal/services/environment_variable"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
@@ -96,6 +97,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		tenant_settings.NewTenantSettingsResource(),
 		managed_environment.NewManagedEnvironmentResource(),
 		managedsolution.NewManagedSolutionResource(),
+		environmentvariable.NewEnvironmentVariableResource(),
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
 		authorization.NewUserResource(),
