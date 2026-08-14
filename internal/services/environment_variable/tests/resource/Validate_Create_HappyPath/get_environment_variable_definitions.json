@@ -1,0 +1,1 @@
+{"value":[{"environmentvariabledefinitionid":"11111111-1111-1111-1111-111111111111","schemaname":"contoso_ApiBaseUrl","displayname":"API Base URL","description":"Base URL for downstream API","defaultvalue":"https://default.contoso.example","type":100000000,"valueschema":"{\"type\":\"string\"}","secretstore":1}]}
