@@ -1,0 +1,15 @@
+{
+  "name":"00000000-0000-0000-0000-000000000001",
+  "id":"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+  "type":"Microsoft.BusinessAppPlatform/scopes/admin/environments",
+  "location":"unitedstates",
+  "properties":{
+    "displayName":"Test",
+    "azureRegion":"unitedstates",
+    "createdTime":"2024-01-01T00:00:00Z",
+    "environmentSku":"Sandbox",
+    "linkedEnvironmentMetadata":{
+      "instanceUrl":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
+    }
+  }
+}
