@@ -1,0 +1,5 @@
+kind: added
+body: Add `powerplatform_application_user` resource for managing non-interactive Dataverse application users (service principals) with business unit selection, live-user adoption on create, and disabled-state reconciliation
+time: 2026-08-12T09:00:00+10:00
+custom:
+    Issue: "1223"

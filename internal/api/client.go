@@ -112,6 +112,29 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 // The HTTP request is then prepared and executed. The response status code is checked against the list of acceptable status codes. If the status code
 // is not acceptable, an error is returned. If a responseObj is provided, the response body is unmarshaled into this object.
 func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
+	return client.doExecute(ctx, scopes, method, url, headers, body, acceptableStatusCodes, responseObj, retryTransientStatuses)
+}
+
+// ExecuteWithoutRetry executes exactly one HTTP request. It is intended for
+// non-idempotent mutation starts whose outcome can be ambiguous when the
+// service returns a transient status after accepting the request. Callers must
+// recover the remote operation by its durable identity rather than replaying
+// the request.
+func (client *Client) ExecuteWithoutRetry(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
+	return client.doExecute(ctx, scopes, method, url, headers, body, acceptableStatusCodes, responseObj, retryNever)
+}
+
+// retryBehavior selects whether doExecute replays requests that fail with a
+// transient (retryable) HTTP status. Non-idempotent mutation starts must never
+// be replayed, so they run with retryNever.
+type retryBehavior int
+
+const (
+	retryTransientStatuses retryBehavior = iota
+	retryNever
+)
+
+func (client *Client) doExecute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any, retry retryBehavior) (*Response, error) {
 	if len(scopes) == 0 {
 		// if no scopes are provided, try to guess the scope from the URL.
 		scope, err := tryGetScopeFromURL(url, client.Config.Urls)
@@ -166,7 +189,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 		}
 
 		isRetryable := helpers.ArrayContains(retryableStatusCodes, resp.HttpResponse.StatusCode)
-		if !isRetryable {
+		if retry == retryNever || !isRetryable {
 			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
 
