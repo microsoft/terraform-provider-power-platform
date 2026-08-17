@@ -12,8 +12,63 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_role_assignment.example",
+				Config: `
+				resource "azuread_application_registration" "example_app" {
+					display_name = "TestAccAdminManagementApplicationResource Application"
+				}
+
+				resource "azuread_service_principal" "example_sp" {
+					client_id = azuread_application_registration.example_app.client_id
+				}
+		
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "powerplatform_application_user" "application_user" {
+					environment_id = powerplatform_environment.env.id
+					application_id = azuread_application_registration.example_app.client_id
+				}
+
+				resource "powerplatform_role_assignment" "example" {
+					environment_id     = powerplatform_environment.env.id
+					principal_id       = powerplatform_application_user.application_user.id
+					security_role_name = "Basic User"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.example", "id"),
+					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.example", "environment_id"),
+					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.example", "principal_id"),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.example", "security_role_name", "Basic User"),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 	httpmock.Activate()

@@ -1,4 +1,28 @@
-resource "powerplatform_application_user" "example" {
-  environment_id = "00000000-0000-0000-0000-000000000001"
-  application_id = "00000000-0000-0000-0000-000000000002"
+terraform {
+  required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
+  }
 }
+
+provider "powerplatform" {
+  use_cli = true
+}
+
+resource "powerplatform_environment" "env" {
+  display_name     = "Example Environment"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
+}
+
+resource "powerplatform_application_user" "application_user" {
+  environment_id = powerplatform_environment.env.id
+  application_id = var.application_id
+}
+
