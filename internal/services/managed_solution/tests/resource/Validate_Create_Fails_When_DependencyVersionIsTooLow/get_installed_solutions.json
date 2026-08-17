@@ -1,0 +1,14 @@
+{
+    "value": [
+        {
+            "solutionid": "base-id",
+            "uniquename": "BaseLib",
+            "friendlyname": "Base Lib",
+            "ismanaged": true,
+            "createdon": "2024-01-01T00:00:00Z",
+            "version": "1.0.0.0",
+            "modifiedon": "2024-01-01T00:00:00Z",
+            "installedon": "2024-01-01T00:00:00Z"
+        }
+    ]
+}
