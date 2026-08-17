@@ -677,31 +677,24 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
+// Attributes the practitioner did not configure stay out of the payload so the service keeps their current value.
 func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) (*EnvironmentDto, error) {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
-			BingChatEnabled: knownBoolPointer(plan.AllowBingSearch),
-			M365Enabled:     knownBoolPointer(plan.AllowMicrosoft365Services),
+			BingChatEnabled: helpers.BoolPointer(plan.AllowBingSearch),
+			M365Enabled:     helpers.BoolPointer(plan.AllowMicrosoft365Services),
 		},
 	}
 
 	copilotPolicies := CopilotPoliciesDto{
-		CrossGeoCopilotDataMovementEnabled:      knownBoolPointer(plan.AllowMovingDataAcrossRegions),
-		CrossBoundaryCopilotDataMovementEnabled: knownBoolPointer(plan.AllowFlexRouting),
+		CrossGeoCopilotDataMovementEnabled:      helpers.BoolPointer(plan.AllowMovingDataAcrossRegions),
+		CrossBoundaryCopilotDataMovementEnabled: helpers.BoolPointer(plan.AllowFlexRouting),
 	}
 	if copilotPolicies.CrossGeoCopilotDataMovementEnabled != nil || copilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil {
 		featuresDto.Properties.CopilotPolicies = &copilotPolicies
 	}
 
 	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
-}
-
-// Attributes the practitioner did not configure must stay out of the payload so the service keeps their current value.
-func knownBoolPointer(value types.Bool) *bool {
-	if !helpers.IsKnown(value) {
-		return nil
-	}
-	return value.ValueBoolPointer()
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {

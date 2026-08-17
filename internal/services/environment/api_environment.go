@@ -561,8 +561,7 @@ func (client *Client) waitForEnvironmentAiFeatures(ctx context.Context, environm
 		}
 
 		if retry >= maxRetries {
-			tflog.Warn(ctx, fmt.Sprintf("Environment '%s' still does not report the requested generative AI features after %s", environmentId, constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT))
-			return env, nil
+			return nil, fmt.Errorf("environment '%s' did not report the requested generative AI features within %s", environmentId, constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT)
 		}
 
 		tflog.Debug(ctx, "Environment generative AI features are not visible yet, retrying read")
