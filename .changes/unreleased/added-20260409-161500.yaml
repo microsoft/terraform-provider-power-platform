@@ -1,0 +1,5 @@
+kind: added
+body: Add `powerplatform_managed_solution` resource for identity-driven managed solution deployment with apply-time package validation for managed state, connection references, environment variable satisfiability, and dependency versions
+time: 2026-04-09T16:15:00Z
+custom:
+    Issue: "1143"

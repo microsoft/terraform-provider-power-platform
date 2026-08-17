@@ -1,0 +1,9 @@
+{
+    "id": "00000000-0000-0000-0000-000000000001",
+    "name": "env",
+    "properties": {
+        "linkedEnvironmentMetadata": {
+            "instanceURL": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
+        }
+    }
+}

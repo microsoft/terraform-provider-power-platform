@@ -6,6 +6,7 @@ package api_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -17,6 +18,31 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestUnitApiClient_ExecuteWithoutRetry_DoesNotReplayTransientMutation(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "ambiguous import start", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.ExecuteWithoutRetry(
+		context.Background(),
+		[]string{"test"},
+		http.MethodPost,
+		server.URL,
+		http.Header{},
+		map[string]string{"operation": "start"},
+		[]int{http.StatusOK},
+		nil,
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, 1, attempts, "an ambiguous non-idempotent mutation start must never be replayed")
+}
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
 	t.Parallel()
