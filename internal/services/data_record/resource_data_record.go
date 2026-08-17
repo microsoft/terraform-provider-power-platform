@@ -332,7 +332,6 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 
 	// During import the prior state holds no columns at all, so there is nothing to project.
 	if *columnsAsString == nullDynamicValue {
-
 		return nil, nil
 	}
 
