@@ -5,6 +5,7 @@ package environment_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -49,12 +50,12 @@ func decodeEnvironmentAiFeaturesRequest(req *http.Request) (*environmentAiFeatur
 		return nil, err
 	}
 	if body.Properties.BingChatEnabled == nil || body.Properties.M365Enabled == nil {
-		return nil, fmt.Errorf("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
+		return nil, errors.New("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
 	}
 	if body.Properties.CopilotPolicies == nil ||
 		body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled == nil ||
 		body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled == nil {
-		return nil, fmt.Errorf("expected both copilot policies to be present in the generative ai features request body")
+		return nil, errors.New("expected both copilot policies to be present in the generative ai features request body")
 	}
 	return &environmentAiFeaturesState{
 		bingChatEnabled: *body.Properties.BingChatEnabled,
