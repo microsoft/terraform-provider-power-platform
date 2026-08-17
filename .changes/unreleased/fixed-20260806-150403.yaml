@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed `powerplatform_environment_group_rule_set` returning "Provider produced inconsistent result after apply" for `share_max_limit` when `share_mode` was changed to `no limit`
+time: 2026-08-06T15:04:03.487062767Z
+custom:
+    Issue: "1210"
