@@ -93,7 +93,30 @@ type applicationUsersResponseDto struct {
 }
 
 type applicationUserDto struct {
-	FullName      string `json:"fullname"`
-	ApplicationId string `json:"applicationid"`
-	SystemUserId  string `json:"systemuserid"`
+	FullName       string                       `json:"fullname"`
+	ApplicationId  string                       `json:"applicationid"`
+	SystemUserId   string                       `json:"systemuserid"`
+	BusinessUnitId string                       `json:"_businessunitid_value"`
+	IsDisabled     bool                         `json:"isdisabled"`
+	DeletedState   int64                        `json:"deletedstate"`
+	SecurityRoles  []applicationSecurityRoleDto `json:"systemuserroles_association,omitempty"`
+}
+
+type applicationSecurityRoleDto struct {
+	RoleId         string `json:"roleid"`
+	Name           string `json:"name"`
+	BusinessUnitId string `json:"_businessunitid_value"`
+}
+
+type applicationSecurityRoleArrayDto struct {
+	Value []applicationSecurityRoleDto `json:"value"`
+}
+
+type applicationBusinessUnitArrayDto struct {
+	Value []applicationBusinessUnitDto `json:"value"`
+}
+
+type applicationBusinessUnitDto struct {
+	BusinessUnitId string `json:"businessunitid"`
+	Name           string `json:"name"`
 }
