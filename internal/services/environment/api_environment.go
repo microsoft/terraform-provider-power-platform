@@ -538,8 +538,73 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	return env, err
 }
 
-func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) error {
-	return client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0)
+func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) (*EnvironmentDto, error) {
+	if err := client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0); err != nil {
+		return nil, err
+	}
+	return client.waitForEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig.Properties)
+}
+
+// A successful lifecycle operation does not guarantee that the regional write is already visible on the
+// BAP read endpoint, so the environment is re-read until it reports the values that were just applied.
+func (client *Client) waitForEnvironmentAiFeatures(ctx context.Context, environmentId string, expected GenerativeAiFeaturesPropertiesDto) (*EnvironmentDto, error) {
+	maxRetries := int(constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT / constants.ENVIRONMENT_AI_FEATURES_POLL_INTERVAL)
+
+	for retry := 0; ; retry++ {
+		env, err := client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+
+		if environmentAiFeaturesMatch(env, expected) {
+			return env, nil
+		}
+
+		if retry >= maxRetries {
+			tflog.Warn(ctx, fmt.Sprintf("Environment '%s' still does not report the requested generative AI features after %s", environmentId, constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT))
+			return env, nil
+		}
+
+		tflog.Debug(ctx, "Environment generative AI features are not visible yet, retrying read")
+		if err := client.Api.SleepWithContext(ctx, constants.ENVIRONMENT_AI_FEATURES_POLL_INTERVAL); err != nil {
+			return nil, err
+		}
+	}
+}
+
+// Only the values that were sent are compared, because omitted values are left untouched by the API.
+func environmentAiFeaturesMatch(env *EnvironmentDto, expected GenerativeAiFeaturesPropertiesDto) bool {
+	if env == nil || env.Properties == nil {
+		return false
+	}
+
+	if expected.BingChatEnabled != nil && env.Properties.BingChatEnabled != *expected.BingChatEnabled {
+		return false
+	}
+	if expected.M365Enabled != nil && env.Properties.M365Enabled != *expected.M365Enabled {
+		return false
+	}
+	if expected.CopilotPolicies == nil {
+		return true
+	}
+
+	var actualCrossGeo, actualCrossBoundary bool
+	if env.Properties.CopilotPolicies != nil {
+		actualCrossGeo = isBoolPointerTrue(env.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled)
+		actualCrossBoundary = isBoolPointerTrue(env.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled)
+	}
+
+	if expected.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && actualCrossGeo != *expected.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
+		return false
+	}
+	if expected.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil && actualCrossBoundary != *expected.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled {
+		return false
+	}
+	return true
+}
+
+func isBoolPointerTrue(value *bool) bool {
+	return value != nil && *value
 }
 
 func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto, retryCount int) error {

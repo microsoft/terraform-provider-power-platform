@@ -460,19 +460,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
-		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
-			return
-		}
-
-		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, envDto.Name)
+		envDto, err = r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
 		if err != nil {
 			if errors.Is(err, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
 				return
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
@@ -642,20 +636,22 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	err = r.updateGenerativeAiFeatures(ctx, plan)
+	envDto, err := r.updateGenerativeAiFeatures(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when updating generative ai features", err.Error())
 		return
 	}
 
-	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
-	if err != nil {
-		if errors.Is(err, customerrors.ErrObjectNotFound) {
-			resp.State.RemoveResource(ctx)
+	if envDto == nil {
+		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
+		if err != nil {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
-		return
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -681,28 +677,31 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) error {
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) (*EnvironmentDto, error) {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
-			BingChatEnabled: plan.AllowBingSearch.ValueBool(),
-			M365Enabled:     plan.AllowMicrosoft365Services.ValueBool(),
+			BingChatEnabled: knownBoolPointer(plan.AllowBingSearch),
+			M365Enabled:     knownBoolPointer(plan.AllowMicrosoft365Services),
 		},
 	}
 
 	copilotPolicies := CopilotPoliciesDto{
-		CrossGeoCopilotDataMovementEnabled:      plan.AllowMovingDataAcrossRegions.ValueBoolPointer(),
-		CrossBoundaryCopilotDataMovementEnabled: plan.AllowFlexRouting.ValueBoolPointer(),
+		CrossGeoCopilotDataMovementEnabled:      knownBoolPointer(plan.AllowMovingDataAcrossRegions),
+		CrossBoundaryCopilotDataMovementEnabled: knownBoolPointer(plan.AllowFlexRouting),
 	}
 	if copilotPolicies.CrossGeoCopilotDataMovementEnabled != nil || copilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil {
 		featuresDto.Properties.CopilotPolicies = &copilotPolicies
 	}
 
-	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
-	if err != nil {
-		return err
-	}
+	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
+}
 
-	return nil
+// Attributes the practitioner did not configure must stay out of the payload so the service keeps their current value.
+func knownBoolPointer(value types.Bool) *bool {
+	if !helpers.IsKnown(value) {
+		return nil
+	}
+	return value.ValueBoolPointer()
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
@@ -823,14 +822,12 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) error {
+// Returns nil when the environment does not manage any generative AI attribute, leaving the caller to read it.
+func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) (*EnvironmentDto, error) {
 	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
-		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
-		if err != nil {
-			return err
-		}
+		return r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
 	}
-	return nil
+	return nil, nil
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
