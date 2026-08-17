@@ -1,0 +1,5 @@
+kind: added
+body: Add `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies` rules to `powerplatform_environment_group_rule_set`, along with a computed `policy_id` attribute. These rules are served by the rule-based policies API rather than the rule sets API used by the remaining rules. An existing policy already assigned to the environment group is adopted rather than replaced, and a policy created by the resource is deleted again when the resource is destroyed.
+time: 2026-06-23T12:19:15.004Z
+custom:
+    Issue: "1210"
