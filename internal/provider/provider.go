@@ -48,6 +48,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
+	managedsolution "github.com/microsoft/terraform-provider-power-platform/internal/services/managed_solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/publisher"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
@@ -406,6 +407,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
+		func() resource.Resource { return managedsolution.NewManagedSolutionResource() },
 		func() resource.Resource { return environmentvariable.NewEnvironmentVariableResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
@@ -425,6 +427,8 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
 		},
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
+		func() resource.Resource { return application.NewApplicationUserResource() },
+		func() resource.Resource { return application.NewRoleAssignmentResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
 		func() resource.Resource { return role_based_access.NewRoleBasedAccessAssignmentResource() },

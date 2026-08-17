@@ -106,6 +106,14 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 }
 
 func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
+	return client.listSolutions(ctx, environmentId, "(isvisible eq true)")
+}
+
+func (client *Client) GetInstalledSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
+	return client.listSolutions(ctx, environmentId, "")
+}
+
+func (client *Client) listSolutions(ctx context.Context, environmentId, filter string) ([]SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -118,7 +126,9 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 	}
 	values := url.Values{}
 	values.Add("$expand", "publisherid")
-	values.Add("$filter", "(isvisible eq true)")
+	if filter != "" {
+		values.Add("$filter", filter)
+	}
 	values.Add("$orderby", "createdon desc")
 	apiUrl.RawQuery = values.Encode()
 
