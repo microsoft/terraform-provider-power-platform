@@ -119,6 +119,8 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
 		environment_wave.NewEnvironmentWaveResource(),
 		application.NewEnvironmentApplicationAdminResource(),
+		application.NewApplicationUserResource(),
+		application.NewRoleAssignmentResource(),
 		disaster_recovery.NewDisasterRecoveryResource(),
 		role_based_access.NewRoleBasedAccessAssignmentResource(),
 		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource(),
