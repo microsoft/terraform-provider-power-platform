@@ -29,10 +29,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-const (
-	nullDynamicValue    = "<null>"
-	unknownDynamicValue = "<unknown>"
-)
+const nullDynamicValue = "<null>"
 
 // Import id format: <environment_id>/<table_logical_name>(<data_record_id>).
 var importIdRegex = regexp.MustCompile(`^([^/]+)/([^/()]+)\(([^/()]+)\)$`)
@@ -334,7 +331,7 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 	}
 
 	// During import the prior state holds no columns at all, so there is nothing to project.
-	if *columnsAsString == nullDynamicValue || *columnsAsString == unknownDynamicValue {
+	if *columnsAsString == nullDynamicValue {
 		return nil, nil
 	}
 
