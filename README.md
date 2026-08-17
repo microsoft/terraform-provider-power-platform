@@ -14,7 +14,6 @@ The following resources are in **preview**:
 - powerplatform_analytics_data_exports
 - powerplatform_copilot_studio_application_insights
 - powerplatform_environment (only when creating developer environment types)
-- powerplatform_environment_group_rule_set
 - powerplatform_environment_wave
 - powerplatform_tenant_capacity
 

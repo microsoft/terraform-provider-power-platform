@@ -1,0 +1,5 @@
+kind: added
+body: Added `powerplatform_environment_group_role_based_access_assignments` data source to list role assignments scoped to an environment group
+time: 2026-08-06T20:11:10.130244872Z
+custom:
+    Issue: "1190"

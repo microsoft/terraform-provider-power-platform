@@ -51,6 +51,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/publisher"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
@@ -428,6 +429,13 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return application.NewRoleAssignmentResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
+		func() resource.Resource { return role_based_access.NewRoleBasedAccessAssignmentResource() },
+		func() resource.Resource {
+			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource()
+		},
+		func() resource.Resource {
+			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentResource()
+		},
 	}
 }
 
@@ -458,6 +466,14 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRoleDefinitionsDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRoleBasedAccessAssignmentsDataSource() },
+		func() datasource.DataSource {
+			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource()
+		},
+		func() datasource.DataSource {
+			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource()
+		},
 	}
 }
 
