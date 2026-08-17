@@ -3679,3 +3679,115 @@ func TestUnitEnvironmentsResource_Validate_Delete_With_Lifecycle_404(t *testing.
 		},
 	})
 }
+
+func TestUnitEnvironmentsResource_Validate_Create_Waits_For_Dataverse_Metadata(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Waits_For_Dataverse_Metadata/get_lifecycle_delete.json").String()), nil
+		})
+
+	// BAPI reports the create lifecycle operation as succeeded before the Dataverse metadata of the
+	// environment becomes readable, so the first reads come back without a linkedEnvironmentMetadata.
+	getEnvironmentCallCount := 0
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			getEnvironmentCallCount++
+			file := "tests/resource/Validate_Create_Waits_For_Dataverse_Metadata/get_environment_with_dataverse.json"
+			if getEnvironmentCallCount <= 2 {
+				file = "tests/resource/Validate_Create_Waits_For_Dataverse_Metadata/get_environment_without_dataverse.json"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(file).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Waits_For_Dataverse_Metadata/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "00000000-0000-0000-0000-000000000001"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.organization_id", "orgid"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.version", "9.2.23092.00206"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Create_Lifecycle_Failed(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Lifecycle_Failed/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "00000000-0000-0000-0000-000000000001"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				ExpectError: regexp.MustCompile(`lifecycle operation state: Failed`),
+			},
+		},
+	})
+}

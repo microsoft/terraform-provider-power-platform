@@ -502,15 +502,16 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		if err != nil {
 			return nil, err
 		}
-
-		if lifecycleResponse.State.Id == "Succeeded" {
-			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-			if len(parts) == 0 {
-				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
-			}
-			createdEnvironmentId = parts[len(parts)-1]
-			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
+		if lifecycleResponse == nil {
+			return nil, errors.New("environment creation failed. the create request did not return a lifecycle operation to wait for")
 		}
+		if lifecycleResponse.State.Id != "Succeeded" {
+			return nil, fmt.Errorf("environment creation failed. lifecycle operation state: %s", lifecycleResponse.State.Id)
+		}
+
+		parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+		createdEnvironmentId = parts[len(parts)-1]
+		tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 
 	case http.StatusCreated:
 		envCreatedResponse := lifecycleCreatedDto{}
@@ -526,16 +527,56 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		return nil, fmt.Errorf("unexpected HTTP status code: %d", apiResponse.HttpResponse.StatusCode)
 	}
 
+	// Guard against reading the environment with an empty id, which resolves to the environment
+	// list endpoint and would silently return an empty environment.
+	if createdEnvironmentId == "" {
+		return nil, errors.New("environment creation failed. the API did not return an id for the created environment")
+	}
+
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
 		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
+
+	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil {
+		env, err = client.waitForDataverseMetadata(ctx, createdEnvironmentId, env)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
 	return env, err
+}
+
+// waitForDataverseMetadata polls the environment until its Dataverse metadata is readable. BAPI
+// reports the environment lifecycle operation as succeeded before that metadata is exposed, and
+// without it the provider would write a null `dataverse` block into state.
+func (client *Client) waitForDataverseMetadata(ctx context.Context, environmentId string, env *EnvironmentDto) (*EnvironmentDto, error) {
+	for attempt := 0; ; attempt++ {
+		if env.Properties != nil && env.Properties.LinkedEnvironmentMetadata != nil {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_DATAVERSE_METADATA_RETRY_COUNT {
+			return nil, fmt.Errorf("dataverse was requested for environment '%s' but its metadata was still not returned by the API after %d attempts", environmentId, attempt)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse metadata for environment '%s' is not available yet. Retrying", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
 }
 
 func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) error {
