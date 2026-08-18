@@ -689,9 +689,18 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 		},
 	}
 
-	copilotPolicies := CopilotPoliciesDto{
-		CrossGeoCopilotDataMovementEnabled:      plan.AllowMovingDataAcrossRegions.ValueBoolPointer(),
-		CrossBoundaryCopilotDataMovementEnabled: plan.AllowFlexRouting.ValueBoolPointer(),
+	// Only send a copilot policy the configuration actually specifies. Both attributes are
+	// Optional+Computed, so on create an unset attribute is UNKNOWN, and ValueBoolPointer()
+	// returns nil only for null - an unknown value yields a pointer to false. Sending
+	// crossBoundaryCopilotDataMovementEnabled at all is rejected outside the EU data boundary
+	// ("can only be set for environments within an EU data boundary location"), so an unset
+	// attribute would otherwise fail every environment creation outside the EU.
+	copilotPolicies := CopilotPoliciesDto{}
+	if !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown() {
+		copilotPolicies.CrossGeoCopilotDataMovementEnabled = plan.AllowMovingDataAcrossRegions.ValueBoolPointer()
+	}
+	if !plan.AllowFlexRouting.IsNull() && !plan.AllowFlexRouting.IsUnknown() {
+		copilotPolicies.CrossBoundaryCopilotDataMovementEnabled = plan.AllowFlexRouting.ValueBoolPointer()
 	}
 	if copilotPolicies.CrossGeoCopilotDataMovementEnabled != nil || copilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil {
 		featuresDto.Properties.CopilotPolicies = &copilotPolicies
