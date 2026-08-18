@@ -457,6 +457,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
+		// If the environment was created but could not be read back, keep the id so Terraform owns it
+		// and can retry or destroy it on the next run.
+		if envDto != nil && envDto.Name != "" {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), envDto.Name)...)
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
