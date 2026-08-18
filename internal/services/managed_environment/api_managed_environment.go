@@ -60,7 +60,10 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		if envErr != nil {
 			return envErr
 		}
-		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.Settings != nil {
+		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == protectionLevelStandard {
+			// Already managed, so there is nothing to enable and retrying cannot help. This also covers
+			// an environment that is in an environment group, where the group made it managed and the
+			// governance configuration is locked; the caller reports that when it reads the settings.
 			tflog.Debug(ctx, "Managed Environment is already enabled, nothing to do")
 			return nil
 		}

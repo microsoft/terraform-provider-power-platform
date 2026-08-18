@@ -834,6 +834,63 @@ func TestUnitManagedEnvironmentsResource_Validate_Create_Conflict_When_Already_M
 	})
 }
 
+// An environment in a group is already managed and its governance configuration is locked, so the
+// enablement 409 is permanent. The provider must not retry it, and must say what is actually wrong
+// rather than claiming the managed environment feature is not enabled.
+func TestUnitManagedEnvironmentsResource_Validate_Create_In_Environment_Group(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	enableAttempts := 0
+
+	httpmock.RegisterResponder("GET", "https://europe.api.advisor.powerapps.com/api/rule?api-version=2.0&ruleset=0ad12346-e108-40b8-a956-9a8f95ea18c9",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/get_rulesset.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Update/get_environments_0.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			enableAttempts++
+			return httpmock.NewStringResponse(http.StatusConflict, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_environment_in_group.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = "00000000-0000-0000-0000-000000000001"
+					is_usage_insights_disabled = true
+					is_group_sharing_disabled  = true
+					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+					max_limit_user_sharing     = 10
+					solution_checker_mode      = "None"
+					suppress_validation_emails = true
+				}`,
+				ExpectError: regexp.MustCompile(`in an environment group`),
+			},
+		},
+	})
+
+	if enableAttempts > 1 {
+		t.Errorf("expected no retries for an environment that is already managed, got %d attempts", enableAttempts)
+	}
+}
+
 func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

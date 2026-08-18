@@ -299,8 +299,11 @@
       ]
     },
     "governanceConfiguration": {
-      "protectionLevel": "Basic"
+      "protectionLevel": "Standard"
     },
-    "bingChatEnabled": false
+    "bingChatEnabled": false,
+    "parentEnvironmentGroup": {
+      "id": "11111111-1111-1111-1111-111111111111"
+    }
   }
 }

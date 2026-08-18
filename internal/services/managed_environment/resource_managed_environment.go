@@ -475,9 +475,13 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 	// what you see when the environment is in an environment group, because the group's rules govern
 	// these settings and the environment level ones are not returned.
 	if env.Properties.GovernanceConfiguration.Settings == nil {
+		detail := fmt.Sprintf("environment '%s' is a managed environment but returned no managed environment settings.", env.Name)
+		if env.Properties.ParentEnvironmentGroup != nil {
+			detail = fmt.Sprintf("%s It is in an environment group, where the group's rules govern these settings instead.", detail)
+		}
 		diagnostics.AddError(
 			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
-			fmt.Sprintf("environment '%s' is a managed environment but returned no managed environment settings. This happens when the environment is in an environment group, where the group's rules govern these settings instead.", env.Name),
+			detail,
 		)
 		return
 	}
