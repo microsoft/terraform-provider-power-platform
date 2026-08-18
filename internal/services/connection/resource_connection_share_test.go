@@ -17,7 +17,7 @@ import (
 
 func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 	t.Skip("No Dynamics 365 licenses left in the test tenant, skipping acceptance test for now. Will re-enable once we have a new test tenant with available licenses.")
-	
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
