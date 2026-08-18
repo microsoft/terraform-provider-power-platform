@@ -1,0 +1,5 @@
+kind: fixed
+body: Enabling a managed environment no longer treats a 409 response as success, which silently skipped the enablement and then failed with "doesn't have managed environment feature enabled" when creating a managed environment on a newly created environment
+time: 2026-08-18T22:45:00.000000+10:00
+custom:
+    Issue: "1239"
