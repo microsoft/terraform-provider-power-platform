@@ -144,6 +144,58 @@ func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
 	})
 }
 
+func TestUnitUserResource_Validate_Create_Environment_User_Delayed_Display_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	// the principal of a freshly created Entra user is not resolvable yet, so the display name comes back empty
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	queryUserInx := 0
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			queryUserInx++
+			if queryUserInx < 3 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/role_assignments_00000000-0000-0000-0000-000000000001_no_display_name.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
+				),
+			},
+		},
+	})
+}
+
 func TestUnitUserResource_Validate_Read_Removes_State_When_Parent_Environment_Is_Deleted(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

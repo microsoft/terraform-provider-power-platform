@@ -303,6 +303,9 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		if user.AadObjectId == "" {
 			user.Id = state.AadId.ValueString()
 			user.AadObjectId = state.AadId.ValueString()
+		}
+		// the principal display name is not always resolvable, keep the known one instead of clearing it
+		if user.DomainName == "" {
 			user.DomainName = state.UserPrincipalName.ValueString()
 		}
 

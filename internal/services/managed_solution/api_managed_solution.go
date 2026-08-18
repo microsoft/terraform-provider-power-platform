@@ -732,7 +732,7 @@ func resolveSourceToPath(ctx context.Context, source *SourceModel) (string, func
 	defer tempFile.Close()
 
 	if _, err := io.Copy(tempFile, response.Body); err != nil {
-		os.Remove(tempFile.Name())
+		_ = os.Remove(tempFile.Name())
 		return "", nil, err
 	}
 
