@@ -1601,6 +1601,12 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 
 	mocks.ActivateEnvironmentHttpMocks()
 
+	// The provider confirms billing policy membership with the licensing service after create.
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([\d-]+)/environments\?api-version=2022-03-01-preview\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
+		})
+
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
@@ -1696,6 +1702,16 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000002/environments?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments/add?api-version=2022-03-01-preview",
