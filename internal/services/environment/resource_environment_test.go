@@ -1602,7 +1602,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 	mocks.ActivateEnvironmentHttpMocks()
 
 	// The provider confirms billing policy membership with the licensing service after create.
-	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([\d-]+)/environments\?api-version=2022-03-01-preview\z`,
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([0-9a-fA-F-]+)/environments\?api-version=2022-03-01-preview\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
 		})
