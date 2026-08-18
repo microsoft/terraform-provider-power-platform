@@ -521,7 +521,6 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 
 						allow_bing_search                = true
 						allow_microsoft_365_services     = true
-						allow_flex_routing               = true
 						//on usa region, moving data across regions is not allowed and always false
 						allow_moving_data_across_regions = false
 					}
@@ -529,7 +528,6 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
 			},
@@ -542,16 +540,37 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 
 						allow_bing_search                = false
 						allow_microsoft_365_services     = false
-						allow_flex_routing               = false
 						allow_moving_data_across_regions = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_Flex_Routing_Expect_Fail(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*flex routing can only be set for environments within the EU data boundary.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+
+						allow_flex_routing               = true
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
 	})
@@ -2393,6 +2412,45 @@ func TestUnitEnvironmentsResource_Validate_Flex_Routing_Requires_Moving_Data_Acr
 					environment_type                          = "Sandbox"
 					allow_flex_routing                        = true
 					allow_moving_data_across_regions          = false
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Flex_Routing_Outside_Eu_Data_Boundary(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*flex routing can only be set for environments within the EU data boundary.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					allow_flex_routing                        = true
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(),
+			},
+			{
+				// the api rejects the copilot policy altogether, so disabling flex routing is not possible either
+				ExpectError: regexp.MustCompile(".*flex routing can only be set for environments within the EU data boundary.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					allow_flex_routing                        = false
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(),

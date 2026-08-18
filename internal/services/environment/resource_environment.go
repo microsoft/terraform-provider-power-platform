@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -900,6 +902,10 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	}
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("moving data across regions is not supported in the unitedstates location")
+	}
+	// the api rejects the copilot policy altogether, so even disabling flex routing is not possible outside of the boundary
+	if helpers.IsKnown(plan.AllowFlexRouting) && !slices.Contains(EuDataBoundaryLocations, plan.Location.ValueString()) {
+		return fmt.Errorf("flex routing can only be set for environments within the EU data boundary (%s), not in the %s location", strings.Join(EuDataBoundaryLocations, ", "), plan.Location.ValueString())
 	}
 	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
