@@ -60,7 +60,7 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		if envErr != nil {
 			return envErr
 		}
-		if env.Properties.GovernanceConfiguration.Settings != nil {
+		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.Settings != nil {
 			tflog.Debug(ctx, "Managed Environment is already enabled, nothing to do")
 			return nil
 		}

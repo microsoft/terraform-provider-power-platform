@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -674,6 +675,159 @@ func TestUnitManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "copilot_allow_grant_editor_permissions_when_shared", "false"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "copilot_limit_sharing_mode", "ExcludeSharingToSecurityGroups"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "copilot_max_limit_user_sharing", "55"),
+				),
+			},
+		},
+	})
+}
+
+// A 409 from the enablement POST means the request was rejected, not applied. It is common straight
+// after an environment is created. The provider must retry rather than report success, otherwise the
+// environment is left unmanaged and reading state back fails.
+func TestUnitManagedEnvironmentsResource_Validate_Create_Retries_When_Enablement_Conflicts(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	enableAttempts := 0
+	environmentReads := 0
+
+	httpmock.RegisterResponder("GET", "https://europe.api.advisor.powerapps.com/api/rule?api-version=2.0&ruleset=0ad12346-e108-40b8-a956-9a8f95ea18c9",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/get_rulesset.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Update/get_environments_0.json").String()), nil
+		})
+
+	// First enablement attempt is rejected, the retry is accepted.
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			enableAttempts++
+			if enableAttempts == 1 {
+				return httpmock.NewStringResponse(http.StatusConflict, ""), nil
+			}
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle.json").String()), nil
+		})
+
+	// The read taken while handling the 409 shows an environment that is not managed yet.
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			environmentReads++
+			// The environment only becomes managed once an enablement request is accepted, so until
+			// then every read shows an environment without governance settings. That is what makes the
+			// provider retry the rejected request rather than treat the 409 as success.
+			if enableAttempts < 2 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_environment_create_response_not_managed.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_environment_create_response.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = "00000000-0000-0000-0000-000000000001"
+					is_usage_insights_disabled = true
+					is_group_sharing_disabled  = true
+					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+					max_limit_user_sharing     = 10
+					solution_checker_mode      = "None"
+					suppress_validation_emails = true
+					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+					power_automate_is_sharing_disabled                 = true
+					copilot_allow_grant_editor_permissions_when_shared = false
+					copilot_limit_sharing_mode                         = "ExcludeSharingToSecurityGroups"
+					copilot_max_limit_user_sharing                     = 55
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "protection_level", "Standard"),
+					func(_ *terraform.State) error {
+						if enableAttempts < 2 {
+							return fmt.Errorf("expected the rejected enablement to be retried, got %d attempt(s) across %d environment read(s)", enableAttempts, environmentReads)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A 409 is also returned when the environment is already managed. That is not a failure, and it must
+// not be retried: the environment already has the governance settings we asked for.
+func TestUnitManagedEnvironmentsResource_Validate_Create_Conflict_When_Already_Managed(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	enableAttempts := 0
+
+	httpmock.RegisterResponder("GET", "https://europe.api.advisor.powerapps.com/api/rule?api-version=2.0&ruleset=0ad12346-e108-40b8-a956-9a8f95ea18c9",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/get_rulesset.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Update/get_environments_0.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			enableAttempts++
+			return httpmock.NewStringResponse(http.StatusConflict, ""), nil
+		})
+
+	// The environment is already managed, so the 409 is a no-op rather than a rejection.
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_environment_create_response.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = "00000000-0000-0000-0000-000000000001"
+					is_usage_insights_disabled = true
+					is_group_sharing_disabled  = true
+					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+					max_limit_user_sharing     = 10
+					solution_checker_mode      = "None"
+					suppress_validation_emails = true
+					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+					power_automate_is_sharing_disabled                 = true
+					copilot_allow_grant_editor_permissions_when_shared = false
+					copilot_limit_sharing_mode                         = "ExcludeSharingToSecurityGroups"
+					copilot_max_limit_user_sharing                     = 55
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					func(_ *terraform.State) error {
+						if enableAttempts != 1 {
+							return fmt.Errorf("expected no retry when the environment is already managed, got %d attempt(s)", enableAttempts)
+						}
+						return nil
+					},
 				),
 			},
 		},
