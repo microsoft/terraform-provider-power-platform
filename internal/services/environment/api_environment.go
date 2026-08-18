@@ -231,6 +231,9 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	if err != nil {
 		return "", err
 	}
+	if env.Properties.LinkedEnvironmentMetadata == nil {
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
+	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
 		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
@@ -244,6 +247,11 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
+	// Without an id the request degrades into a "list environments" call that returns HTTP 200 with a collection body.
+	if environmentId == "" {
+		return nil, errors.New("environment id must not be empty")
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -261,6 +269,10 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
+	}
+
+	if env.Properties == nil {
+		return nil, fmt.Errorf("unexpected response when reading environment '%s': the response contains no environment properties", environmentId)
 	}
 
 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
