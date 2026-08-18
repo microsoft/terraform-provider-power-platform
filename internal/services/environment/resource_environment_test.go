@@ -393,7 +393,7 @@ func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
+					display_name                              = "` + mocks.TestName() + `_updated"
 					location                                  = "unitedstates"
 					environment_type                       	  = "Sandbox"
 					dataverse = {
@@ -403,7 +403,7 @@ func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "` + mocks.TestName() + `"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()+"_updated"),
 				),
 			},
 		},
