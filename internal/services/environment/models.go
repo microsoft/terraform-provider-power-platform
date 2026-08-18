@@ -129,7 +129,12 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 	}
 
-	if helpers.IsKnown(environmentSource.EnvironmentGroupId) {
+	// The empty guid means "remove this environment from its group", which only makes sense when
+	// updating an environment that is already in one. Sending it on create still records a parent
+	// environment group, and the environment can then never have its governance configuration set:
+	// every attempt is refused with GovernanceConfigurationChangeBlockedByGroup, so creating an
+	// environment and a powerplatform_managed_environment together always fails.
+	if helpers.IsKnown(environmentSource.EnvironmentGroupId) && environmentSource.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 

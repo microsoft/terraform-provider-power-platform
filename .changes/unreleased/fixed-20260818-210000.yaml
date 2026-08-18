@@ -1,5 +1,5 @@
 kind: fixed
-body: Environment creation now saves state as soon as the environment exists, so a failure in a later step no longer leaves an untracked environment that blocks the next apply with `DomainNameAlreadyInUse`; `billing_policy_id` is confirmed against the licensing service instead of the environment record, fixing "Provider produced inconsistent result after apply"
+body: Environment creation now saves state as soon as the environment exists, so a failure in a later step no longer leaves an untracked environment that blocks the next apply with `DomainNameAlreadyInUse`; `billing_policy_id` is confirmed against the licensing service instead of the environment record, fixing "Provider produced inconsistent result after apply"; and an `environment_group_id` of the empty guid is no longer sent when creating an environment, which previously put the environment in a group and blocked `powerplatform_managed_environment` from ever being enabled on it
 time: 2026-08-18T21:00:00.000000+10:00
 custom:
     Issue: "1238"

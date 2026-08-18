@@ -116,7 +116,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. To remove the environment from the environment group, set this attribute to `00000000-0000-0000-0000-000000000000`",
+				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. To remove an environment from its environment group, set this attribute to `00000000-0000-0000-0000-000000000000`. That only applies to an environment that is already in a group: on create the empty guid is ignored, because an environment created with a parent environment group cannot have its governance configuration set afterwards, which would stop `powerplatform_managed_environment` from working on it.",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
