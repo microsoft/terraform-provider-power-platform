@@ -1,0 +1,5 @@
+kind: fixed
+body: Environment creation outside the EU data boundary no longer fails when `allow_flex_routing` is unset; unknown Optional+Computed copilot policy attributes are no longer sent as `false`
+time: 2026-08-18T19:35:00.000000+10:00
+custom:
+    Issue: "1237"
