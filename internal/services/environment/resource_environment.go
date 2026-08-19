@@ -831,11 +831,10 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 				fmt.Sprintf("Timeout when deleting %s", r.FullTypeName()),
 				fmt.Sprintf("Deletion of environment '%s' did not complete within the timeout: %s. The environment may still be deleting or left behind in the tenant.", state.Id.ValueString(), err.Error()),
 			)
-			resp.State.RemoveResource(ctx)
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
-		return
 	}
 	resp.State.RemoveResource(ctx)
 }
