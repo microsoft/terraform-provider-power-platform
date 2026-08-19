@@ -1,0 +1,5 @@
+kind: documentation
+body: Removed the service principal limitation and preview notes from `powerplatform_environment_group_rule_set`; the full create, read, update and delete lifecycle is verified against service principal authentication by acceptance tests
+time: 2026-08-06T15:04:03.496614294Z
+custom:
+    Issue: "1210"

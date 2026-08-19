@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -204,8 +206,18 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Optional:            true,
 				Computed:            true,
 			},
+			"allow_microsoft_365_services": schema.BoolAttribute{
+				MarkdownDescription: "Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.",
+				Optional:            true,
+				Computed:            true,
+			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
+				Optional:            true,
+				Computed:            true,
+			},
+			"allow_flex_routing": schema.BoolAttribute{
+				MarkdownDescription: "Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -445,28 +457,19 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
+		// If the environment was created but could not be read back, keep the id so Terraform owns it
+		// and can retry or destroy it on the next run.
+		if envDto != nil && envDto.Name != "" {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), envDto.Name)...)
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
-	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
-		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
-			return
-		}
-
-		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, envDto.Name)
-		if err != nil {
-			if errors.Is(err, customerrors.ErrObjectNotFound) {
-				resp.State.RemoveResource(ctx)
-				return
-			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
-			return
-		}
-	}
-
+	// The environment exists from here on, so persist it before any follow-up call. If a later step
+	// fails, Terraform then knows about the environment and can retry or destroy it. Without this an
+	// error after creation leaves an environment that Terraform never recorded: it keeps its domain
+	// name, so the next apply fails with DomainNameAlreadyInUse and it can only be removed by hand.
 	var currencyCode string
 	var templateMetadata *createTemplateMetadataDto
 	var templates []string
@@ -478,14 +481,51 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
+	createdState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &createdState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
+		envDto, err = r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
+		if err != nil {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+			return
+		}
+	}
+
+	// billing_policy_id is sent in the create request, but the environment record's billingPolicy
+	// projection is not guaranteed to reflect it by the time we read the environment back. Confirm
+	// membership with the licensing service, which owns the association, instead of trusting that
+	// projection: otherwise the created environment reports a zero billing policy id and Terraform
+	// fails the apply with "Provider produced inconsistent result after apply".
+	if err := r.confirmBillingPolicy(ctx, plan.BillingPolicyId, envDto.Name); err != nil {
+		resp.Diagnostics.AddError("Error when confirming the environment's billing policy", err.Error())
+		return
+	}
+
 	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
+
+	if helpers.IsKnown(plan.BillingPolicyId) && plan.BillingPolicyId.ValueString() != constants.ZERO_UUID {
+		// Confirmed above against the licensing service.
+		newState.BillingPolicyId = plan.BillingPolicyId
+	}
 
 	if !plan.AzureRegion.IsNull() && plan.AzureRegion.ValueString() != "" && (plan.AzureRegion.ValueString() != newState.AzureRegion.ValueString()) {
 		resp.Diagnostics.AddAttributeError(path.Root("azure_region"), fmt.Sprintf("Provisioning environment in azure region '%s' failed", plan.AzureRegion.ValueString()), "Provisioning environment in azure region was not successful, please try other region in that location or try again later")
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
 	}
 
@@ -582,6 +622,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		DisplayName:     plan.DisplayName.ValueString(),
 		EnvironmentSku:  plan.EnvironmentType.ValueString(),
 		BingChatEnabled: plan.AllowBingSearch.ValueBool(),
+		M365Enabled:     plan.AllowMicrosoft365Services.ValueBool(),
 	}
 
 	environmentDto := EnvironmentDto{
@@ -631,20 +672,22 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	err = r.updateAllowBingSearch(ctx, plan)
+	envDto, err := r.updateGenerativeAiFeatures(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		resp.Diagnostics.AddError("Error when updating generative ai features", err.Error())
 		return
 	}
 
-	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
-	if err != nil {
-		if errors.Is(err, customerrors.ErrObjectNotFound) {
-			resp.State.RemoveResource(ctx)
+	if envDto == nil {
+		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
+		if err != nil {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
-		return
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -670,25 +713,33 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowMovingData *bool) error {
+// Attributes the practitioner did not configure stay out of the payload so the service keeps their current value.
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) (*EnvironmentDto, error) {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
-			BingChatEnabled: allowBingSearch,
+			BingChatEnabled: helpers.BoolPointer(plan.AllowBingSearch),
+			M365Enabled:     helpers.BoolPointer(plan.AllowMicrosoft365Services),
 		},
 	}
 
-	if allowMovingData != nil {
-		featuresDto.Properties.CopilotPolicies = &CopilotPoliciesDto{
-			CrossGeoCopilotDataMovementEnabled: allowMovingData,
-		}
+	// Only send a copilot policy the configuration actually specifies. Both attributes are
+	// Optional+Computed, so on create an unset attribute is UNKNOWN, and ValueBoolPointer()
+	// returns nil only for null - an unknown value yields a pointer to false. Sending
+	// crossBoundaryCopilotDataMovementEnabled at all is rejected outside the EU data boundary
+	// ("can only be set for environments within an EU data boundary location"), so an unset
+	// attribute would otherwise fail every environment creation outside the EU.
+	copilotPolicies := CopilotPoliciesDto{}
+	if !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown() {
+		copilotPolicies.CrossGeoCopilotDataMovementEnabled = plan.AllowMovingDataAcrossRegions.ValueBoolPointer()
+	}
+	if !plan.AllowFlexRouting.IsNull() && !plan.AllowFlexRouting.IsUnknown() {
+		copilotPolicies.CrossBoundaryCopilotDataMovementEnabled = plan.AllowFlexRouting.ValueBoolPointer()
+	}
+	if copilotPolicies.CrossGeoCopilotDataMovementEnabled != nil || copilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil {
+		featuresDto.Properties.CopilotPolicies = &copilotPolicies
 	}
 
-	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
@@ -809,17 +860,12 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
-	allowBingSearchSet := !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown()
-	allowMovingDataSet := !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown()
-
-	if allowBingSearchSet || allowMovingDataSet {
-		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
-		if err != nil {
-			return err
-		}
+// Returns nil when the environment does not manage any generative AI attribute, leaving the caller to read it.
+func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) (*EnvironmentDto, error) {
+	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
+		return r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
 	}
-	return nil
+	return nil, nil
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
@@ -863,6 +909,48 @@ func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) 
 	return nil
 }
 
+// confirmBillingPolicy verifies that the environment is a member of the requested billing policy,
+// reading membership back from the licensing service that owns the association. If the create request
+// did not take effect the environment is added explicitly and re-checked, so the outcome is confirmed
+// rather than assumed. A no-op when no billing policy is configured.
+func (r *Resource) confirmBillingPolicy(ctx context.Context, billingPolicyId types.String, environmentId string) error {
+	if !helpers.IsKnown(billingPolicyId) || billingPolicyId.ValueString() == constants.ZERO_UUID {
+		return nil
+	}
+	policyId := billingPolicyId.ValueString()
+
+	isMember := func() (bool, error) {
+		environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, policyId)
+		if err != nil {
+			return false, err
+		}
+		// GetEnvironmentsForBillingPolicy lower-cases the ids it returns.
+		return slices.Contains(environments, strings.ToLower(environmentId)), nil
+	}
+
+	member, err := isMember()
+	if err != nil {
+		return err
+	}
+	if member {
+		return nil
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment %s is not yet in billing policy %s, adding it", environmentId, policyId))
+	if err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, policyId, []string{environmentId}); err != nil {
+		return err
+	}
+
+	member, err = isMember()
+	if err != nil {
+		return err
+	}
+	if !member {
+		return fmt.Errorf("environment %s was not added to billing policy %s", environmentId, policyId)
+	}
+	return nil
+}
+
 func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) error {
 	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
@@ -881,7 +969,7 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("moving data across regions is not supported in the unitedstates location")
 	}
-	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil

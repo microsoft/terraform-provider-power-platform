@@ -49,7 +49,9 @@ type SourceModel struct {
 	OwnerId                      types.String       `tfsdk:"owner_id"`
 	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
 	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowMicrosoft365Services    types.Bool         `tfsdk:"allow_microsoft_365_services"`
 	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	AllowFlexRouting             types.Bool         `tfsdk:"allow_flex_routing"`
 	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
@@ -127,12 +129,21 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 	}
 
-	if helpers.IsKnown(environmentSource.EnvironmentGroupId) {
+	// The empty guid means "remove this environment from its group", which only makes sense when
+	// updating an environment that is already in one. Sending it on create still records a parent
+	// environment group, and the environment can then never have its governance configuration set:
+	// every attempt is refused with GovernanceConfigurationChangeBlockedByGroup, so creating an
+	// environment and a powerplatform_managed_environment together always fails.
+	if helpers.IsKnown(environmentSource.EnvironmentGroupId) && environmentSource.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 
 	if helpers.IsKnown(environmentSource.AllowBingSearch) {
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
+	}
+
+	if helpers.IsKnown(environmentSource.AllowMicrosoft365Services) {
+		environmentDto.Properties.M365Enabled = environmentSource.AllowMicrosoft365Services.ValueBool()
 	}
 
 	if helpers.IsKnown(environmentSource.OwnerId) {
@@ -200,15 +211,16 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 
 func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
 	model := &SourceModel{
-		Timeouts:        timeout,
-		Description:     types.StringValue(environmentDto.Properties.Description),
-		Id:              types.StringValue(environmentDto.Name),
-		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
-		Location:        types.StringValue(environmentDto.Location),
-		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
-		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
-		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
-		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		Timeouts:                  timeout,
+		Description:               types.StringValue(environmentDto.Properties.Description),
+		Id:                        types.StringValue(environmentDto.Name),
+		DisplayName:               types.StringValue(environmentDto.Properties.DisplayName),
+		Location:                  types.StringValue(environmentDto.Location),
+		AzureRegion:               types.StringValue(environmentDto.Properties.AzureRegion),
+		EnvironmentType:           types.StringValue(environmentDto.Properties.EnvironmentSku),
+		Cadence:                   types.StringValue(environmentDto.Properties.UpdateCadence.Id),
+		AllowBingSearch:           types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		AllowMicrosoft365Services: types.BoolValue(environmentDto.Properties.M365Enabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)
@@ -216,7 +228,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
-	convertCrossRegionDataMovementFromDto(environmentDto, model)
+	convertCopilotPoliciesFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -363,12 +375,10 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 	}
 }
 
-func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
-	} else {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
-	}
+func convertCopilotPoliciesFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	policies := environmentDto.Properties.CopilotPolicies
+	model.AllowMovingDataAcrossRegions = types.BoolValue(policies != nil && policies.CrossGeoCopilotDataMovementEnabled != nil && *policies.CrossGeoCopilotDataMovementEnabled)
+	model.AllowFlexRouting = types.BoolValue(policies != nil && policies.CrossBoundaryCopilotDataMovementEnabled != nil && *policies.CrossBoundaryCopilotDataMovementEnabled)
 }
 
 func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {

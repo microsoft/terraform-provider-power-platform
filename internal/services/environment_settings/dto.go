@@ -94,6 +94,7 @@ type environmentOrgSettingsValueDto struct {
 
 type environmentOrgSettingsDto struct {
 	MaxUploadFileSize                                    *int64  `json:"maxuploadfilesize,omitempty"`
+	BlockedAttachments                                   *string `json:"blockedattachments,omitempty"`
 	PluginTraceLogSetting                                *int64  `json:"plugintracelogsetting,omitempty"`
 	IsAuditEnabled                                       *bool   `json:"isauditenabled,omitempty"`
 	IsUserAccessAuditEnabled                             *bool   `json:"isuseraccessauditenabled,omitempty"`

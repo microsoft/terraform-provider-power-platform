@@ -15,7 +15,6 @@ The following resources are in **preview**:
 - powerplatform_copilot_studio_application_insights
 - powerplatform_environment (only when creating developer environment types)
 - powerplatform_environment_git_integration (requires delegated user authentication; non-interactive identities such as service principals are not supported)
-- powerplatform_environment_group_rule_set
 - powerplatform_environment_wave
 - powerplatform_solution_git_branch (requires delegated user authentication; non-interactive identities such as service principals are not supported)
 - powerplatform_tenant_capacity
