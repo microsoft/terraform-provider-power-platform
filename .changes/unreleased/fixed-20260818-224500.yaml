@@ -1,5 +1,5 @@
 kind: fixed
-body: Enabling a managed environment no longer treats a 409 response as success, which silently skipped the enablement and then failed with "doesn't have managed environment feature enabled". Whether an environment is already managed is now decided from `protectionLevel` rather than from whether settings are present, so a 409 on an environment that is already managed stops retrying, and a managed environment that returns no settings reports that rather than claiming the feature is not enabled
+body: Enabling a managed environment no longer treats a 409 as success, which silently skipped enablement. Whether an environment is already managed is now read from `protectionLevel` rather than from whether settings are present.
 time: 2026-08-18T22:45:00.000000+10:00
 custom:
     Issue: "1239"

@@ -90,4 +90,3 @@ examples/temp
 .userstory.prompt.md
 
 .codeqldb
-internal/services/solution/test_acc_settings_*.json

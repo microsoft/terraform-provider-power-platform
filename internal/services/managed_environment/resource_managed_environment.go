@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
@@ -400,7 +401,7 @@ func (r *ManagedEnvironmentResource) validateAndPrepareSolutionCheckerRules(ctx 
 // buildManagedEnvironmentDto creates the GovernanceConfigurationDto from the plan.
 func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnvironmentResourceModel, solutionCheckerRuleOverrides *string) environment.GovernanceConfigurationDto {
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: protectionLevelStandard,
+		ProtectionLevel: constants.PROTECTION_LEVEL_STANDARD,
 		Settings: &environment.SettingsDto{
 			ExtendedSettings: environment.ExtendedSettingsDto{
 				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
@@ -448,8 +449,6 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 	return managedEnvironmentDto
 }
 
-const protectionLevelStandard = "Standard"
-
 func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) {
 	if env.Properties.LinkedEnvironmentMetadata == nil {
 		diagnostics.AddError(
@@ -462,7 +461,7 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 
 	// protectionLevel is what says whether the environment is managed. "Standard" is managed and
 	// "Basic" is not, which is what this provider writes when enabling and disabling it.
-	if env.Properties.GovernanceConfiguration == nil || env.Properties.GovernanceConfiguration.ProtectionLevel != protectionLevelStandard {
+	if env.Properties.GovernanceConfiguration == nil || env.Properties.GovernanceConfiguration.ProtectionLevel != constants.PROTECTION_LEVEL_STANDARD {
 		diagnostics.AddError(
 			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
 			fmt.Sprintf("environment '%s' doesn't have managed environment feature enabled", env.Name),

@@ -145,6 +145,10 @@ const (
 	MAX_RETRY_COUNT                               = 10
 )
 
+// PROTECTION_LEVEL_STANDARD is the governance configuration protection level of a
+// managed environment. Anything else (for example "Basic") is not managed.
+const PROTECTION_LEVEL_STANDARD = "Standard"
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"
