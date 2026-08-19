@@ -145,6 +145,13 @@ const (
 	MAX_RETRY_COUNT                               = 10
 )
 
+// The BAP read endpoint is eventually consistent with the regional lifecycle operation that applies
+// generative AI settings, so the values are re-read until they converge.
+const (
+	ENVIRONMENT_AI_FEATURES_POLL_INTERVAL = 3 * time.Second
+	ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT  = 20 * time.Second
+)
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"
