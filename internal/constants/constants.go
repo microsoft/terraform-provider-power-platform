@@ -145,6 +145,10 @@ const (
 	MAX_RETRY_COUNT                               = 10
 )
 
+// PROTECTION_LEVEL_STANDARD is the governance configuration protection level of a
+// managed environment. Anything else (for example "Basic") is not managed.
+const PROTECTION_LEVEL_STANDARD = "Standard"
+
 // The BAP read endpoint is eventually consistent with the regional lifecycle operation that applies
 // generative AI settings, so the values are re-read until they converge.
 const (
