@@ -19,7 +19,6 @@
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
         "go.useLanguageServer": true,
-        "go.goroot": "/usr/local/go",
         "editor.formatOnSave": true,
         "files.insertFinalNewline": true,
         "[makefile]": {
@@ -44,6 +43,10 @@
     "TF_CLI_CONFIG_FILE": "/workspaces/terraform-provider-power-platform/.terraformrc",
     "POWER_PLATFORM_USE_CLI": "true",
     "ARM_USE_CLI": "true",
-    "REQUESTS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt"
+    "REQUESTS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt",
+    // Cleared so each go binary resolves its own GOROOT. The base image pins GOROOT to
+    // its Go install, which the newer toolchain that go.mod requires then inherits,
+    // producing "compile: version ... does not match go tool version" on every build.
+    "GOROOT": ""
   }
 }

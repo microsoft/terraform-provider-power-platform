@@ -1,0 +1,23 @@
+{
+    "publisherid": "11111111-1111-1111-1111-111111111111",
+    "friendlyname": "Contoso Publisher",
+    "uniquename": "contoso",
+    "customizationprefix": "cts",
+    "customizationoptionvalueprefix": 77074,
+    "description": "Initial publisher",
+    "emailaddress": "publisher@contoso.example",
+    "supportingwebsiteurl": "https://contoso.example",
+    "isreadonly": false,
+    "address1_addressid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "address1_city": "Melbourne",
+    "address1_country": "Australia",
+    "address1_line1": "1 Collins Street",
+    "address1_postalcode": "3000",
+    "address1_telephone1": "+61-3-5555-0101",
+    "address2_addressid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "address2_city": "Auckland",
+    "address2_country": "New Zealand",
+    "address2_line1": "100 Queen Street",
+    "address2_postalcode": "1010",
+    "address2_telephone1": "+64-9-555-0102"
+}

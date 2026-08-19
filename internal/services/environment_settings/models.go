@@ -45,20 +45,22 @@ type EnvironmentSettingsResource struct {
 }
 
 type EnvironmentSettingsResourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
-	Id            types.String   `tfsdk:"id"`
-	EnvironmentId types.String   `tfsdk:"environment_id"`
-	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
-	Email         types.Object   `tfsdk:"email"`
-	Product       types.Object   `tfsdk:"product"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Id                 types.String   `tfsdk:"id"`
+	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	AuditAndLogs       types.Object   `tfsdk:"audit_and_logs"`
+	Email              types.Object   `tfsdk:"email"`
+	PrivacyAndSecurity types.Object   `tfsdk:"privacy_and_security"`
+	Product            types.Object   `tfsdk:"product"`
 }
 
 type EnvironmentSettingsDataSourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
-	EnvironmentId types.String   `tfsdk:"environment_id"`
-	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
-	Email         types.Object   `tfsdk:"email"`
-	Product       types.Object   `tfsdk:"product"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	AuditAndLogs       types.Object   `tfsdk:"audit_and_logs"`
+	Email              types.Object   `tfsdk:"email"`
+	PrivacyAndSecurity types.Object   `tfsdk:"privacy_and_security"`
+	Product            types.Object   `tfsdk:"product"`
 }
 
 type AuditAndLogsSourceModel struct {
@@ -178,6 +180,9 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
+	if err := convertFromEnvironmentPrivacyAndSecuritySettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
+		return nil, err
+	}
 	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
@@ -210,6 +215,31 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
 	}
+	return nil
+}
+
+func convertFromEnvironmentPrivacyAndSecuritySettings(_ context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
+	privacyAndSecurity := environmentSettings.PrivacyAndSecurity
+	if privacyAndSecurity.IsNull() || privacyAndSecurity.IsUnknown() {
+		return nil
+	}
+
+	blockedAttachmentExtensions := privacyAndSecurity.Attributes()["blocked_attachment_extensions"]
+	if blockedAttachmentExtensions == nil || !helpers.IsKnown(blockedAttachmentExtensions) {
+		// The attribute was omitted from the configuration (or is not yet known), so it must be
+		// left out of the PATCH entirely to avoid clearing the server-side setting.
+		return nil
+	}
+
+	setValue, ok := blockedAttachmentExtensions.(basetypes.SetValue)
+	if !ok {
+		return fmt.Errorf("failed to convert blocked attachment extensions to SetValue, got %T: %+v", blockedAttachmentExtensions, blockedAttachmentExtensions)
+	}
+
+	// An explicitly empty set intentionally clears the setting by sending an empty string.
+	value := strings.Join(helpers.SetToStringSlice(setValue), ";")
+	environmentSettingsDto.BlockedAttachments = &value
+
 	return nil
 }
 
@@ -434,6 +464,8 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"max_upload_file_size_in_bytes": types.Int64Type,
 	}
 
+	blockedAttachmentExtensions := convertBlockedAttachmentsToSetValues(environmentOrgSettingsDto.BlockedAttachments)
+
 	attrValuesEmailProperties := map[string]attr.Value{
 		"email_settings": types.ObjectValueMust(attrEmailSettingsObject, map[string]attr.Value{
 			"max_upload_file_size_in_bytes": types.Int64Value(*environmentOrgSettingsDto.MaxUploadFileSize),
@@ -442,6 +474,10 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 
 	attrTypesEmailObject := map[string]attr.Type{
 		"email_settings": types.ObjectType{AttrTypes: attrEmailSettingsObject},
+	}
+
+	attrTypesPrivacyAndSecurityObject := map[string]attr.Type{
+		"blocked_attachment_extensions": types.SetType{ElemType: types.StringType},
 	}
 
 	attrBahaviorSettingsObject := map[string]attr.Type{
@@ -548,14 +584,20 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			Timeouts:     timeout,
 			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
 			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
-			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+			PrivacyAndSecurity: types.ObjectValueMust(attrTypesPrivacyAndSecurityObject, map[string]attr.Value{
+				"blocked_attachment_extensions": types.SetValueMust(types.StringType, blockedAttachmentExtensions),
+			}),
+			Product: types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
 		}).(T)
 	case EnvironmentSettingsDataSourceModel:
 		environmentSettings, ok = any(EnvironmentSettingsDataSourceModel{
 			Timeouts:     timeout,
 			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
 			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
-			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+			PrivacyAndSecurity: types.ObjectValueMust(attrTypesPrivacyAndSecurityObject, map[string]attr.Value{
+				"blocked_attachment_extensions": types.SetValueMust(types.StringType, blockedAttachmentExtensions),
+			}),
+			Product: types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
 		}).(T)
 	default:
 		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
@@ -564,6 +606,24 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
 	}
 	return environmentSettings, nil
+}
+
+// convertBlockedAttachmentsToSetValues splits the API's semicolon-separated blocked attachments
+// string into set element values, trimming whitespace around tokens and skipping empty tokens
+// (e.g. from trailing semicolons or "exe; dll;").
+func convertBlockedAttachmentsToSetValues(blockedAttachments *string) []attr.Value {
+	values := []attr.Value{}
+	if blockedAttachments == nil {
+		return values
+	}
+	for _, extension := range strings.Split(*blockedAttachments, ";") {
+		extension = strings.TrimSpace(extension)
+		if extension == "" {
+			continue
+		}
+		values = append(values, types.StringValue(extension))
+	}
+	return values
 }
 
 func convertStringToEnum(value string, mapping map[string]string) types.String {

@@ -1,0 +1,5 @@
+kind: added
+body: Added `powerplatform_role_definitions` data source to list the Power Platform roles that can be assigned at tenant, environment group or environment scope
+time: 2026-08-06T20:10:55.996330627Z
+custom:
+    Issue: "1190"

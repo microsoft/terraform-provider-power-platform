@@ -63,6 +63,8 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *t
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "5242880"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "96"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "js"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "Off"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
@@ -134,6 +136,8 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "5242880"),
+					// The platform manages the default list of blocked extensions, so only assert that the attribute is populated.
+					resource.TestCheckResourceAttrSet("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "Off"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
@@ -212,8 +216,11 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						email_settings = {
 						  max_upload_file_size_in_bytes = 100
 						}
-					}
-					product = {
+					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
+					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
 						}
@@ -254,6 +261,10 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "true"),
@@ -393,6 +404,9 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  max_upload_file_size_in_bytes = 100
 						}
 					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
 					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
@@ -433,6 +447,10 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
@@ -675,6 +693,9 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 						  max_upload_file_size_in_bytes = 100
 						}
 					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
 					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
@@ -715,6 +736,10 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
@@ -766,6 +791,9 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 						  max_upload_file_size_in_bytes = 100
 						}
 					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
 					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
@@ -806,6 +834,10 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
@@ -900,6 +932,9 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 						  max_upload_file_size_in_bytes = 100
 						}
 					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
 					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
@@ -940,6 +975,10 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
@@ -1018,6 +1057,9 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 						  max_upload_file_size_in_bytes = 100
 						}
 					  }
+					  privacy_and_security = {
+						blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+					  }
 					  product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
@@ -1058,6 +1100,10 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "3"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "exe"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "dll"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "ps1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
