@@ -1,0 +1,5 @@
+kind: fixed
+body: Environment creation now saves state as soon as the environment exists, so a failure in a later step no longer leaves an untracked environment that blocks the next apply with `DomainNameAlreadyInUse`.
+time: 2026-08-18T21:00:00.000000+10:00
+custom:
+    Issue: "1238"

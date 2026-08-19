@@ -1,0 +1,5 @@
+kind: fixed
+body: '`billing_policy_id` is confirmed against the licensing service instead of the environment record, fixing "Provider produced inconsistent result after apply".'
+time: 2026-08-18T21:01:00.000000+10:00
+custom:
+    Issue: "1238"
