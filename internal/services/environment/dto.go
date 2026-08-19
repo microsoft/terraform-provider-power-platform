@@ -72,13 +72,13 @@ type GenerativeAiFeaturesDto struct {
 
 type GenerativeAiFeaturesPropertiesDto struct {
 	CopilotPolicies *CopilotPoliciesDto `json:"copilotPolicies,omitempty"`
-	BingChatEnabled bool                `json:"bingChatEnabled"`
-	M365Enabled     bool                `json:"m365Enabled"`
+	BingChatEnabled *bool               `json:"bingChatEnabled,omitempty"`
+	M365Enabled     *bool               `json:"m365Enabled,omitempty"`
 }
 
 type CopilotPoliciesDto struct {
-	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled"`
-	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
+	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled,omitempty"`
+	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled,omitempty"`
 }
 
 type ClusterDto struct {
