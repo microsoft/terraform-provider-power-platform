@@ -149,6 +149,7 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		return nil, customerrors.NewUrlFormatError(url, e)
 	}
 
+	var lastRetryableResponse *Response
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
 
@@ -168,6 +169,12 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
+			// If the operation deadline/cancellation stops a retry loop, retain the last real HTTP
+			// failure. doRequest synthesizes an empty 503 for a transport cancellation, which would
+			// otherwise erase the service status/body that caused the retries.
+			if lastRetryableResponse != nil && (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) {
+				return lastRetryableResponse, err
+			}
 			return resp, err
 		}
 
@@ -192,6 +199,7 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		if retry == retryNever || !isRetryable {
 			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
+		lastRetryableResponse = resp
 
 		waitFor := retryAfter(ctx, resp.HttpResponse)
 
@@ -232,6 +240,11 @@ func DefaultRetryAfter() time.Duration {
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.
 func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
+	// Cancellation is part of the API contract even in test mode. Check it before bypassing the
+	// physical sleep so retry-loop tests cannot spin forever after their deadline has elapsed.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if helpers.IsTestContext(ctx) {
 		return nil
 	}
