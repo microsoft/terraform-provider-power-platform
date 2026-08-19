@@ -428,7 +428,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		},
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
 		func() resource.Resource { return application.NewApplicationUserResource() },
-		func() resource.Resource { return application.NewDataRoleAssignmentResource() },
+		func() resource.Resource { return application.NewSecurityRoleAssignmentResource() },
 		func() resource.Resource { return role_based_access.NewRoleAssignmentResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },

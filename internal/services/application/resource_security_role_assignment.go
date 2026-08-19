@@ -23,15 +23,15 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-var _ resource.Resource = &DataRoleAssignmentResource{}
-var _ resource.ResourceWithImportState = &DataRoleAssignmentResource{}
+var _ resource.Resource = &SecurityRoleAssignmentResource{}
+var _ resource.ResourceWithImportState = &SecurityRoleAssignmentResource{}
 
-type DataRoleAssignmentResource struct {
+type SecurityRoleAssignmentResource struct {
 	helpers.TypeInfo
 	ApplicationClient client
 }
 
-type DataRoleAssignmentResourceModel struct {
+type SecurityRoleAssignmentResourceModel struct {
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	Id               types.String   `tfsdk:"id"`
 	EnvironmentId    types.String   `tfsdk:"environment_id"`
@@ -41,15 +41,15 @@ type DataRoleAssignmentResourceModel struct {
 	RoleId           types.String   `tfsdk:"role_id"`
 }
 
-func NewDataRoleAssignmentResource() resource.Resource {
-	return &DataRoleAssignmentResource{
+func NewSecurityRoleAssignmentResource() resource.Resource {
+	return &SecurityRoleAssignmentResource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "data_role_assignment",
+			TypeName: "security_role_assignment",
 		},
 	}
 }
 
-func (r *DataRoleAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *SecurityRoleAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	r.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
@@ -59,7 +59,7 @@ func (r *DataRoleAssignmentResource) Metadata(ctx context.Context, req resource.
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (r *DataRoleAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -120,7 +120,7 @@ func (r *DataRoleAssignmentResource) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *DataRoleAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *SecurityRoleAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
@@ -138,11 +138,11 @@ func (r *DataRoleAssignmentResource) Configure(ctx context.Context, req resource
 	r.ApplicationClient = newApplicationClient(client.Api)
 }
 
-func (r *DataRoleAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan DataRoleAssignmentResourceModel
+	var plan SecurityRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,11 +180,11 @@ func (r *DataRoleAssignmentResource) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *DataRoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state DataRoleAssignmentResourceModel
+	var state SecurityRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -219,11 +219,11 @@ func (r *DataRoleAssignmentResource) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *DataRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan DataRoleAssignmentResourceModel
+	var plan SecurityRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -250,11 +250,11 @@ func (r *DataRoleAssignmentResource) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *DataRoleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state DataRoleAssignmentResourceModel
+	var state SecurityRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -290,7 +290,7 @@ func (r *DataRoleAssignmentResource) Delete(ctx context.Context, req resource.De
 	}
 }
 
-func (r *DataRoleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -315,7 +315,7 @@ type resolvedRoleAssignment struct {
 	businessUnitID string
 }
 
-func (r *DataRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID, principalID, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
+func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID, principalID, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {
 		return nil, err

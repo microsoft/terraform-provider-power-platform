@@ -27,7 +27,7 @@ func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ResourceName: "powerplatform_data_role_assignment.example",
+				ResourceName: "powerplatform_security_role_assignment.example",
 				Config: `
 				resource "azuread_application_registration" "example_app" {
 					display_name = "TestAccAdminManagementApplicationResource Application"
@@ -53,17 +53,17 @@ func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 					application_id = azuread_application_registration.example_app.client_id
 				}
 
-				resource "powerplatform_data_role_assignment" "example" {
+				resource "powerplatform_security_role_assignment" "example" {
 					environment_id     = powerplatform_environment.env.id
 					principal_id       = powerplatform_application_user.application_user.id
 					security_role_name = "Basic User"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("powerplatform_data_role_assignment.example", "id"),
-					resource.TestCheckResourceAttrSet("powerplatform_data_role_assignment.example", "environment_id"),
-					resource.TestCheckResourceAttrSet("powerplatform_data_role_assignment.example", "principal_id"),
-					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.example", "security_role_name", "Basic User"),
+					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "id"),
+					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "environment_id"),
+					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "principal_id"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.example", "security_role_name", "Basic User"),
 				),
 			},
 		},

@@ -26,7 +26,7 @@ resource "powerplatform_application_user" "application_user" {
   application_id = var.application_id
 }
 
-resource "powerplatform_data_role_assignment" "example" {
+resource "powerplatform_security_role_assignment" "example" {
   environment_id     = powerplatform_environment.env.id
   principal_id       = powerplatform_application_user.application_user.id
   security_role_name = "Basic User"
