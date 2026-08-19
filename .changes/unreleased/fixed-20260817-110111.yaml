@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_environment no longer returns stale allow_bing_search and allow_moving_data_across_regions values after apply, and no longer disables allow_microsoft_365_services and allow_flex_routing when they are not configured
+time: 2026-08-17T11:01:11.242332266Z
+custom:
+    Issue: "1193"
