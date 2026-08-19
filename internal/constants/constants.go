@@ -156,6 +156,13 @@ const (
 	ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT  = 20 * time.Second
 )
 
+// The connectivity endpoint is eventually consistent with environment provisioning, so a freshly
+// created environment is not immediately addressable there.
+const (
+	CONNECTIVITY_ENVIRONMENT_POLL_INTERVAL = 15 * time.Second
+	CONNECTIVITY_ENVIRONMENT_POLL_TIMEOUT  = 10 * time.Minute
+)
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"

@@ -28,10 +28,15 @@ func TestAccManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 	}
 
 	guid := strings.Trim(helpers.GuidRegex, "^$")
-	idRegex := regexp.MustCompile(fmt.Sprintf(`^%s_%s$`, guid, guid))
+	idRegex := regexp.MustCompile(fmt.Sprintf(`^%s/%s$`, guid, guid))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -44,6 +49,14 @@ resource "powerplatform_environment" "environment" {
     currency_code     = "USD"
     security_group_id = "00000000-0000-0000-0000-000000000000"
   }
+}
+
+# A freshly provisioned Dataverse organization rejects solution imports with
+# "Async operations are currently disabled for this organization" for a few minutes.
+resource "time_sleep" "wait_for_dataverse" {
+  create_duration = "240s"
+
+  depends_on = [powerplatform_environment.environment]
 }
 
 resource "powerplatform_connection" "dataverse_connection" {
@@ -59,6 +72,8 @@ resource "powerplatform_connection" "dataverse_connection" {
       connection_parameters
     ]
   }
+
+  depends_on = [time_sleep.wait_for_dataverse]
 }
 
 resource "powerplatform_managed_solution" "solution" {
