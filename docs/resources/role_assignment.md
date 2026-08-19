@@ -3,12 +3,15 @@
 page_title: "powerplatform_role_assignment Resource - Power Platform"
 subcategory: ""
 description: |-
-  Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.
+  Manages a role assignment https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control in Power Platform. Use this resource to assign roles to service principals or users.
+  The assignment is scoped by which identifier you set. Set environment_id to scope it to an environment, or environment_group_id to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
 ---
 
 # powerplatform_role_assignment (Resource)
 
-Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.
+Manages a [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control) in Power Platform. Use this resource to assign roles to service principals or users.
+
+The assignment is scoped by which identifier you set. Set `environment_id` to scope it to an environment, or `environment_group_id` to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
 
 ## Example Usage
 
@@ -25,26 +28,61 @@ provider "powerplatform" {
   use_cli = true
 }
 
-resource "powerplatform_environment" "env" {
-  display_name     = "Example Environment"
-  location         = "europe"
-  environment_type = "Sandbox"
-  dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
-  }
+# Fetch all available role definitions so we can look up the one we need by name
+data "powerplatform_role_definitions" "all" {
 }
 
-resource "powerplatform_application_user" "application_user" {
-  environment_id = powerplatform_environment.env.id
-  application_id = var.application_id
+variable "role_definition_name" {
+  default     = "Power Platform Role Based Access Control Administrator"
+  description = "Display name of the role definition to assign"
+  type        = string
 }
 
+variable "enterprise_application_object_id" {
+  default     = "00000000-0000-0000-0000-000000000000"
+  description = "Object id of the enterprise application that will be granted the role"
+  type        = string
+}
+
+locals {
+  role_definition_id = [
+    for role in data.powerplatform_role_definitions.all.role_definitions :
+    role.role_definition_id if role.role_definition_name == var.role_definition_name
+  ][0]
+}
+
+# Assign a role to a service principal at the tenant level
 resource "powerplatform_role_assignment" "example" {
-  environment_id     = powerplatform_environment.env.id
-  principal_id       = powerplatform_application_user.application_user.id
-  security_role_name = "Basic User"
+  enterprise_application_object_id = var.enterprise_application_object_id
+  principal_type                   = "ApplicationUser"
+  role_definition_id               = local.role_definition_id
+}
+
+# The same resource scopes the assignment by which identifier you set.
+# Set environment_id for an environment:
+resource "powerplatform_role_assignment" "environment" {
+  environment_id                   = var.environment_id
+  enterprise_application_object_id = var.enterprise_application_object_id
+  principal_type                   = "ApplicationUser"
+  role_definition_id               = local.role_definition_id
+}
+
+# Set environment_group_id for an environment group:
+resource "powerplatform_role_assignment" "environment_group" {
+  environment_group_id             = var.environment_group_id
+  enterprise_application_object_id = var.enterprise_application_object_id
+  principal_type                   = "ApplicationUser"
+  role_definition_id               = local.role_definition_id
+}
+
+variable "environment_id" {
+  description = "Id of the environment to scope an assignment to"
+  type        = string
+}
+
+variable "environment_group_id" {
+  description = "Id of the environment group to scope an assignment to"
+  type        = string
 }
 ```
 
@@ -53,19 +91,21 @@ resource "powerplatform_role_assignment" "example" {
 
 ### Required
 
-- `environment_id` (String) Dataverse environment ID.
-- `principal_id` (String) Dataverse principal ID (system user ID) to which the security role is assigned.
-- `security_role_name` (String) Dataverse security role name to assign.
+- `enterprise_application_object_id` (String) The object ID of the enterprise application (service principal) or user to assign the role to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
+- `principal_type` (String) The type of principal (e.g., `ApplicationUser`, `User`)
+- `role_definition_id` (String) The ID of the role definition to assign
 
 ### Optional
 
-- `business_unit_id` (String) Business unit ID used to resolve the requested security role name. Defaults to the principal's current business unit.
+- `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Conflicts with `environment_id`. Leave both unset to assign at tenant scope
+- `environment_id` (String) The unique identifier of the environment to scope the assignment to. Conflicts with `environment_group_id`. Leave both unset to assign at tenant scope
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
-- `id` (String) Composite ID `{environment_id}/{principal_id}/{security_role_name}`.
-- `role_id` (String) Resolved Dataverse role ID for the assigned security role.
+- `created_on` (String) The timestamp when the role assignment was created
+- `id` (String) The unique identifier of the role assignment
+- `scope` (String) The fully qualified scope of the role assignment (computed by the API)
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -75,7 +115,6 @@ Optional:
 - `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
-- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 
@@ -84,6 +123,12 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Role assignment resource can be imported using the composite ID '{environment_id}/{principal_id}/{security_role_name}' (replace with real values)
-terraform import powerplatform_role_assignment.example "00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002/Basic User"
+# Tenant scope: the role assignment id on its own
+terraform import powerplatform_role_assignment.example 00000000-0000-0000-0000-000000000000
+
+# Environment scope
+terraform import powerplatform_role_assignment.environment environments/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000000
+
+# Environment group scope
+terraform import powerplatform_role_assignment.environment_group environmentGroups/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000000
 ```

@@ -1,0 +1,5 @@
+kind: changed
+body: '`powerplatform_role_based_access_assignment`, `powerplatform_environment_role_based_access_assignment` and `powerplatform_environment_group_role_based_access_assignment` are replaced by a single `powerplatform_role_assignment`. Set `environment_id` or `environment_group_id` to scope the assignment, or neither for tenant scope. Their three data sources are likewise replaced by `powerplatform_role_assignments`.'
+time: 2026-08-20T04:00:00.000000+10:00
+custom:
+    Issue: "1190"

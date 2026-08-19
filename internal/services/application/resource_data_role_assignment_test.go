@@ -16,7 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestUnitEnvironmentApplicationUserRoleAssignmentResource_CreateReplaceDelete(t *testing.T) {
+func TestUnitEnvironmentApplicationUserDataRoleAssignmentResource_CreateReplaceDelete(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -117,39 +117,39 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_CreateReplaceDelet
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_id", principalID),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "business_unit_id", rootBusinessID),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "principal_id", principalID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "business_unit_id", rootBusinessID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "role_id", roleAdminID),
 				),
 			},
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "MetaForm User"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm User"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_id", principalID),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "business_unit_id", rootBusinessID),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleUserID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm User"),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "principal_id", principalID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "business_unit_id", rootBusinessID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "role_id", roleUserID),
 				),
 			},
 		},
 	})
 }
 
-func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.T) {
+func TestUnitEnvironmentApplicationUserDataRoleAssignmentResource_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -199,7 +199,7 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
@@ -207,7 +207,7 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.
 				`,
 			},
 			{
-				ResourceName:      "powerplatform_role_assignment.test",
+				ResourceName:      "powerplatform_data_role_assignment.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateId:     environmentID + "/" + principalID + "/MetaForm Global Admin",
@@ -216,7 +216,7 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.
 	})
 }
 
-func TestUnitEnvironmentApplicationUserRoleAssignmentResource_ImportRoleNameWithSlash(t *testing.T) {
+func TestUnitEnvironmentApplicationUserDataRoleAssignmentResource_ImportRoleNameWithSlash(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -267,21 +267,21 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_ImportRoleNameWith
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "` + roleName + `"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/"+roleName),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "security_role_name", roleName),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "id", environmentID+"/"+principalID+"/"+roleName),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "security_role_name", roleName),
 				),
 			},
 			{
 				// The import ID contains "/" inside the security role name; SplitN must keep
 				// the role name's trailing segments intact.
-				ResourceName:      "powerplatform_role_assignment.test",
+				ResourceName:      "powerplatform_data_role_assignment.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateId:     environmentID + "/" + principalID + "/" + roleName,
@@ -290,7 +290,7 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_ImportRoleNameWith
 	})
 }
 
-func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Read_RoleDeletedOutOfBand(t *testing.T) {
+func TestUnitEnvironmentApplicationUserDataRoleAssignmentResource_Read_RoleDeletedOutOfBand(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -343,15 +343,15 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Read_RoleDeletedOu
 			{
 				// Step 1: create the role assignment successfully.
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "role_id", roleAdminID),
 				),
 			},
 			{
@@ -367,7 +367,7 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Read_RoleDeletedOu
 	})
 }
 
-func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Validate_Read_ParentDeleted(t *testing.T) {
+func TestUnitEnvironmentApplicationUserDataRoleAssignmentResource_Validate_Read_ParentDeleted(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -422,15 +422,15 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Validate_Read_Pare
 			{
 				// Step 1: create the role assignment successfully.
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_data_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
 					principal_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_data_role_assignment.test", "role_id", roleAdminID),
 				),
 			},
 			{

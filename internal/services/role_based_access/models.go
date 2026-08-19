@@ -11,36 +11,17 @@ import (
 
 // Resource structs
 
-type roleBasedAccessAssignmentResource struct {
-	helpers.TypeInfo
-	Client client
-}
-
-type environmentGroupRoleBasedAccessAssignmentResource struct {
-	helpers.TypeInfo
-	Client client
-}
-
-type environmentRoleBasedAccessAssignmentResource struct {
+type roleAssignmentResource struct {
 	helpers.TypeInfo
 	Client client
 }
 
 // Resource models
 
-type roleBasedAccessAssignmentResourceModel struct {
+type roleAssignmentResourceModel struct {
 	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
 	Id                            types.String   `tfsdk:"id"`
-	EnterpriseApplicationObjectId types.String   `tfsdk:"enterprise_application_object_id"`
-	PrincipalType                 types.String   `tfsdk:"principal_type"`
-	RoleDefinitionId              types.String   `tfsdk:"role_definition_id"`
-	Scope                         types.String   `tfsdk:"scope"`
-	CreatedOn                     types.String   `tfsdk:"created_on"`
-}
-
-type environmentGroupRoleBasedAccessAssignmentResourceModel struct {
-	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
-	Id                            types.String   `tfsdk:"id"`
+	EnvironmentId                 types.String   `tfsdk:"environment_id"`
 	EnvironmentGroupId            types.String   `tfsdk:"environment_group_id"`
 	EnterpriseApplicationObjectId types.String   `tfsdk:"enterprise_application_object_id"`
 	PrincipalType                 types.String   `tfsdk:"principal_type"`
@@ -49,15 +30,16 @@ type environmentGroupRoleBasedAccessAssignmentResourceModel struct {
 	CreatedOn                     types.String   `tfsdk:"created_on"`
 }
 
-type environmentRoleBasedAccessAssignmentResourceModel struct {
-	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
-	Id                            types.String   `tfsdk:"id"`
-	EnvironmentId                 types.String   `tfsdk:"environment_id"`
-	EnterpriseApplicationObjectId types.String   `tfsdk:"enterprise_application_object_id"`
-	PrincipalType                 types.String   `tfsdk:"principal_type"`
-	RoleDefinitionId              types.String   `tfsdk:"role_definition_id"`
-	Scope                         types.String   `tfsdk:"scope"`
-	CreatedOn                     types.String   `tfsdk:"created_on"`
+// scope derives where the assignment applies from whichever identifier is set.
+func (m roleAssignmentResourceModel) scope() assignmentScope {
+	switch {
+	case helpers.IsKnown(m.EnvironmentId):
+		return environmentAssignmentScope(m.EnvironmentId.ValueString())
+	case helpers.IsKnown(m.EnvironmentGroupId):
+		return environmentGroupAssignmentScope(m.EnvironmentGroupId.ValueString())
+	default:
+		return tenantAssignmentScope()
+	}
 }
 
 // Data source structs
@@ -72,17 +54,7 @@ type roleDefinitionsDataSourceModel struct {
 	RoleDefinitions types.List     `tfsdk:"role_definitions"`
 }
 
-type roleBasedAccessAssignmentsDataSource struct {
-	helpers.TypeInfo
-	Client client
-}
-
-type environmentRoleBasedAccessAssignmentsDataSource struct {
-	helpers.TypeInfo
-	Client client
-}
-
-type environmentGroupRoleBasedAccessAssignmentsDataSource struct {
+type roleAssignmentsDataSource struct {
 	helpers.TypeInfo
 	Client client
 }
@@ -101,21 +73,23 @@ type roleAssignmentDataSourceModel struct {
 	ExpiresOn                     types.String `tfsdk:"expires_on"`
 }
 
-type roleBasedAccessAssignmentsDataSourceModel struct {
-	Timeouts        timeouts.Value                  `tfsdk:"timeouts"`
-	RoleAssignments []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
-}
-
-type environmentRoleBasedAccessAssignmentsDataSourceModel struct {
-	Timeouts        timeouts.Value                  `tfsdk:"timeouts"`
-	EnvironmentId   types.String                    `tfsdk:"environment_id"`
-	RoleAssignments []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
-}
-
-type environmentGroupRoleBasedAccessAssignmentsDataSourceModel struct {
+type roleAssignmentsDataSourceModel struct {
 	Timeouts           timeouts.Value                  `tfsdk:"timeouts"`
+	EnvironmentId      types.String                    `tfsdk:"environment_id"`
 	EnvironmentGroupId types.String                    `tfsdk:"environment_group_id"`
 	RoleAssignments    []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
+}
+
+// scope derives which assignments to read from whichever identifier is set.
+func (m roleAssignmentsDataSourceModel) scope() assignmentScope {
+	switch {
+	case helpers.IsKnown(m.EnvironmentId):
+		return environmentAssignmentScope(m.EnvironmentId.ValueString())
+	case helpers.IsKnown(m.EnvironmentGroupId):
+		return environmentGroupAssignmentScope(m.EnvironmentGroupId.ValueString())
+	default:
+		return tenantAssignmentScope()
+	}
 }
 
 func convertRoleAssignmentDtoToDataSourceModel(assignment roleAssignmentDto) roleAssignmentDataSourceModel {

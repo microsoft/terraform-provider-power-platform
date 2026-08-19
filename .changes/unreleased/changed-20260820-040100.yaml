@@ -1,0 +1,5 @@
+kind: changed
+body: '`powerplatform_role_assignment` is renamed to `powerplatform_data_role_assignment`. It assigns a Dataverse security role, and the old name clashed with the new platform RBAC resource.'
+time: 2026-08-20T04:01:00.000000+10:00
+custom:
+    Issue: "1224"

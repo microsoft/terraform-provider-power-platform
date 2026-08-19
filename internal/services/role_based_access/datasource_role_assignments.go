@@ -8,16 +8,19 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
-	_ datasource.DataSource              = &roleBasedAccessAssignmentsDataSource{}
-	_ datasource.DataSourceWithConfigure = &roleBasedAccessAssignmentsDataSource{}
+	_ datasource.DataSource              = &roleAssignmentsDataSource{}
+	_ datasource.DataSourceWithConfigure = &roleAssignmentsDataSource{}
 )
 
 // roleAssignmentsAttribute returns the shared schema of the list of role assignments returned by the RBAC API.
@@ -68,15 +71,15 @@ func roleAssignmentsAttribute(markdownDescription string) schema.ListNestedAttri
 	}
 }
 
-func NewRoleBasedAccessAssignmentsDataSource() datasource.DataSource {
-	return &roleBasedAccessAssignmentsDataSource{
+func NewRoleAssignmentsDataSource() datasource.DataSource {
+	return &roleAssignmentsDataSource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "role_based_access_assignments",
+			TypeName: "role_assignments",
 		},
 	}
 }
 
-func (d *roleBasedAccessAssignmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *roleAssignmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	d.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
@@ -86,23 +89,39 @@ func (d *roleBasedAccessAssignmentsDataSource) Metadata(ctx context.Context, req
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *roleBasedAccessAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches the tenant scoped [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform. " +
-			"Use this data source to discover which principals are assigned tenant level roles.",
+		MarkdownDescription: "Fetches the [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform. " +
+			"Use this data source to discover which principals are assigned roles.\n\n" +
+			"Set `environment_id` to read the assignments on an environment, or `environment_group_id` to read those on an " +
+			"environment group. Set neither and the tenant scoped assignments are returned.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"role_assignments": roleAssignmentsAttribute("List of tenant scoped role assignments"),
+			"environment_id": schema.StringAttribute{
+				MarkdownDescription: "The unique identifier of the environment to read assignments from. Conflicts with `environment_group_id`. Leave both unset to read tenant scoped assignments",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("environment_group_id")),
+				},
+			},
+			"environment_group_id": schema.StringAttribute{
+				MarkdownDescription: "The unique identifier of the environment group to read assignments from. Conflicts with `environment_id`. Leave both unset to read tenant scoped assignments",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
+				},
+			},
+			"role_assignments": roleAssignmentsAttribute("List of role assignments at the requested scope"),
 		},
 	}
 }
 
-func (d *roleBasedAccessAssignmentsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *roleAssignmentsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
@@ -113,7 +132,7 @@ func (d *roleBasedAccessAssignmentsDataSource) Configure(ctx context.Context, re
 	providerClient, ok := req.ProviderData.(*api.ProviderClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected DataSource Configure Type",
 			fmt.Sprintf("Expected *api.ProviderClient, got: %T.", req.ProviderData),
 		)
 		return
@@ -121,21 +140,22 @@ func (d *roleBasedAccessAssignmentsDataSource) Configure(ctx context.Context, re
 	d.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
-func (d *roleBasedAccessAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *roleAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	var state roleBasedAccessAssignmentsDataSourceModel
+	var state roleAssignmentsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Listing tenant role assignments")
+	scope := state.scope()
+	tflog.Debug(ctx, fmt.Sprintf("Reading role assignments at %s scope", scope))
 
-	assignments, err := d.Client.ListRoleAssignments(ctx)
+	assignments, err := d.Client.ListRoleAssignments(ctx, scope)
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to list role assignments", err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Failed to list role assignments at %s scope", scope), err.Error())
 		return
 	}
 
