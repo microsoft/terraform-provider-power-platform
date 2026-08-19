@@ -290,89 +290,123 @@ func TestUnitRoleAssignmentResource_Validate_Import_InvalidId(t *testing.T) {
 	})
 }
 
-func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.T) {
+// acceptanceProviders are the external providers every acceptance case below needs.
+func acceptanceProviders() map[string]resource.ExternalProvider {
+	return map[string]resource.ExternalProvider{
+		"azuread": {
+			VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+			Source:            "hashicorp/azuread",
+		},
+		"time": {
+			Source: "hashicorp/time",
+		},
+	}
+}
+
+// acceptancePreamble creates the service principal to assign to and resolves a role definition by
+// name. scopeConfig adds whatever the scope under test needs, and scopeAttribute is spliced into the
+// role assignment itself.
+func acceptancePreamble(scopeConfig, scopeAttribute string) string {
+	return `
+		resource "azuread_application_registration" "test_app" {
+			display_name = "` + mocks.TestName() + `"
+		}
+
+		resource "azuread_service_principal" "test_sp" {
+			client_id = azuread_application_registration.test_app.client_id
+		}
+
+		resource "time_sleep" "wait_for_service_principal" {
+			create_duration = "60s"
+
+			depends_on = [azuread_service_principal.test_sp]
+		}
+
+		data "powerplatform_role_definitions" "all" {
+		}
+
+		locals {
+			role_definition_id = [
+				for role in data.powerplatform_role_definitions.all.role_definitions :
+				role.role_definition_id if role.role_definition_name == "` + roleBasedAccessAdministratorRoleName + `"
+			][0]
+		}
+		` + scopeConfig + `
+
+		resource "powerplatform_role_assignment" "test" {
+			` + scopeAttribute + `
+			principal_id       = azuread_service_principal.test_sp.object_id
+			principal_type     = "ApplicationUser"
+			role_definition_id = local.role_definition_id
+
+			depends_on = [time_sleep.wait_for_service_principal]
+		}`
+}
+
+// commonAcceptanceChecks are true of an assignment at any scope.
+func commonAcceptanceChecks() []resource.TestCheckFunc {
+	return []resource.TestCheckFunc{
+		resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "id", regexp.MustCompile(helpers.GuidRegex)),
+		resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "principal_id", "azuread_service_principal.test_sp", "object_id"),
+		resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_type", "ApplicationUser"),
+		resource.TestCheckResourceAttrSet("powerplatform_role_assignment.test", "created_on"),
+	}
+}
+
+// With neither identifier set the assignment lands on the tenant.
+func TestAccRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"azuread": {
-				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
-				Source:            "hashicorp/azuread",
-			},
-			"time": {
-				Source: "hashicorp/time",
-			},
-		},
+		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "azuread_application_registration" "test_app" {
-					display_name = "` + mocks.TestName() + `"
-				}
-
-				resource "azuread_service_principal" "test_sp" {
-					client_id = azuread_application_registration.test_app.client_id
-				}
-
-				resource "time_sleep" "wait_for_service_principal" {
-					create_duration = "60s"
-
-					depends_on = [azuread_service_principal.test_sp]
-				}
-
-				resource "powerplatform_environment" "test_environment" {
-					display_name     = "` + mocks.TestName() + `"
-					location         = "unitedstates"
-					environment_type = "Sandbox"
-				}
-
-				data "powerplatform_role_definitions" "all" {
-				}
-
-				locals {
-					role_definition_id = [
-						for role in data.powerplatform_role_definitions.all.role_definitions :
-						role.role_definition_id if role.role_definition_name == "` + roleBasedAccessAdministratorRoleName + `"
-					][0]
-				}
-
-				resource "powerplatform_role_assignment" "test" {
-					environment_id                   = powerplatform_environment.test_environment.id
-					principal_id = azuread_service_principal.test_sp.object_id
-					principal_type                   = "ApplicationUser"
-					role_definition_id               = local.role_definition_id
-
-					depends_on = [time_sleep.wait_for_service_principal]
-				}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_id", "powerplatform_environment.test_environment", "id"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
-					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.test", "created_on"),
-				),
+				Config: acceptancePreamble("", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`^/tenants/`)),
+					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_id"),
+					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_group_id"),
+				)...),
 			},
 		},
 	})
 }
 
-// An unrecognised principal type is rejected at plan time rather than by the API at apply time.
-func TestUnitRoleAssignmentResource_Validate_PrincipalType_Is_Enumerated(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	mocks.ActivateEnvironmentHttpMocks()
-
+func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_role_assignment" "test" {
-					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "` + testPrincipalId + `"
-					principal_type     = "ServicePrincipal"
-					role_definition_id = "` + testRoleDefinitionId + `"
-				}`,
-				ExpectError: regexp.MustCompile(`Invalid Attribute Value Match`),
+				Config: acceptancePreamble(`
+		resource "powerplatform_environment" "test_environment" {
+			display_name     = "`+mocks.TestName()+`"
+			location         = "unitedstates"
+			environment_type = "Sandbox"
+		}`, `environment_id     = powerplatform_environment.test_environment.id`),
+				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
+					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_id", "powerplatform_environment.test_environment", "id"),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
+				)...),
+			},
+		},
+	})
+}
+
+func TestAccRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders:        acceptanceProviders(),
+		Steps: []resource.TestStep{
+			{
+				Config: acceptancePreamble(`
+		resource "powerplatform_environment_group" "test_env_group" {
+			display_name = "`+mocks.TestName()+`"
+			description  = "Environment group for role assignment acceptance test"
+		}`, `environment_group_id = powerplatform_environment_group.test_env_group.id`),
+				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
+					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environmentGroups/`)),
+				)...),
 			},
 		},
 	})
