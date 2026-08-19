@@ -1,2 +1,8 @@
-# Role assignment resource can be imported using the composite ID '{environment_id}/{principal_id}/{security_role_name}' (replace with real values)
-terraform import powerplatform_security_role_assignment.example "00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002/Basic User"
+# The composite id names the table the principal lives in, because a system user id and a
+# team id are rows in different tables.
+
+# assignment to a user or application user
+terraform import powerplatform_security_role_assignment.example "00000000-0000-0000-0000-000000000001/systemusers/00000000-0000-0000-0000-000000000002/Basic User"
+
+# assignment to a team
+terraform import powerplatform_security_role_assignment.team_admin "00000000-0000-0000-0000-000000000001/teams/00000000-0000-0000-0000-000000000003/System Administrator"

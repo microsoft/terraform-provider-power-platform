@@ -10,11 +10,13 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,9 +38,26 @@ type SecurityRoleAssignmentResourceModel struct {
 	Id               types.String   `tfsdk:"id"`
 	EnvironmentId    types.String   `tfsdk:"environment_id"`
 	SystemUserId     types.String   `tfsdk:"system_user_id"`
+	TeamId           types.String   `tfsdk:"team_id"`
 	BusinessUnitId   types.String   `tfsdk:"business_unit_id"`
 	SecurityRoleName types.String   `tfsdk:"security_role_name"`
 	RoleId           types.String   `tfsdk:"role_id"`
+}
+
+// holder is the Dataverse principal this assignment targets, chosen by whichever id is set.
+func (m SecurityRoleAssignmentResourceModel) holder() roleHolder {
+	if helpers.IsKnown(m.TeamId) {
+		return teamRoleHolder(m.TeamId.ValueString())
+	}
+	return systemUserRoleHolder(m.SystemUserId.ValueString())
+}
+
+// compositeId identifies the assignment as {environment}/{entity set}/{principal}/{role}. The entity
+// set is included because a system user id and a team id are rows in different tables, so without it
+// an imported id would be ambiguous.
+func (m SecurityRoleAssignmentResourceModel) compositeId() string {
+	h := m.holder()
+	return fmt.Sprintf("%s/%s/%s/%s", m.EnvironmentId.ValueString(), h.entitySet(), h.id(), m.SecurityRoleName.ValueString())
 }
 
 func NewSecurityRoleAssignmentResource() resource.Resource {
@@ -73,7 +92,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite ID `{environment_id}/{system_user_id}/{security_role_name}`.",
+				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_name}`, where entity set is `systemusers` or `teams`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -87,8 +106,18 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			"system_user_id": schema.StringAttribute{
-				MarkdownDescription: "Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`.",
-				Required:            true,
+				MarkdownDescription: "Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRoot("system_user_id"), path.MatchRoot("team_id")),
+				},
+			},
+			"team_id": schema.StringAttribute{
+				MarkdownDescription: "Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.",
+				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -151,7 +180,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
-		plan.SystemUserId.ValueString(),
+		plan.holder(),
 		plan.BusinessUnitId.ValueString(),
 		plan.SecurityRoleName.ValueString(),
 	)
@@ -164,7 +193,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	}
 
 	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
-		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId})
+		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
@@ -174,7 +203,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		}
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.SystemUserId.ValueString(), plan.SecurityRoleName.ValueString()))
+	plan.Id = types.StringValue(plan.compositeId())
 	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
 	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -193,7 +222,7 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
-		state.SystemUserId.ValueString(),
+		state.holder(),
 		state.BusinessUnitId.ValueString(),
 		state.SecurityRoleName.ValueString(),
 	)
@@ -232,7 +261,7 @@ func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
-		plan.SystemUserId.ValueString(),
+		plan.holder(),
 		plan.BusinessUnitId.ValueString(),
 		plan.SecurityRoleName.ValueString(),
 	)
@@ -244,7 +273,7 @@ func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.SystemUserId.ValueString(), plan.SecurityRoleName.ValueString()))
+	plan.Id = types.StringValue(plan.compositeId())
 	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
 	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -263,7 +292,7 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
-		state.SystemUserId.ValueString(),
+		state.holder(),
 		state.BusinessUnitId.ValueString(),
 		state.SecurityRoleName.ValueString(),
 	)
@@ -282,7 +311,7 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId}); err != nil {
+	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{resolved.role.RoleId}); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Failed to remove security role '%s' from principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
 			err.Error(),
@@ -294,28 +323,33 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	idParts := strings.SplitN(req.ID, "/", 3)
-	if len(idParts) != 3 {
+	idParts := strings.SplitN(req.ID, "/", 4)
+	if len(idParts) != 4 || (idParts[1] != "systemusers" && idParts[1] != "teams") {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
-			fmt.Sprintf("Expected import ID in format 'environment_id/system_user_id/security_role_name', got '%s'", req.ID),
+			fmt.Sprintf("Expected import ID in format 'environment_id/systemusers/{system_user_id}/security_role_name' or 'environment_id/teams/{team_id}/security_role_name', got '%s'", req.ID),
 		)
 		return
 	}
 
+	principalAttribute := "system_user_id"
+	if idParts[1] == "teams" {
+		principalAttribute = "team_id"
+	}
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("system_user_id"), idParts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_name"), idParts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), idParts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_name"), idParts[3])...)
 }
 
 type resolvedRoleAssignment struct {
-	principal      *applicationUserDto
+	principal      *roleHolderDto
 	role           applicationSecurityRoleDto
 	businessUnitID string
 }
 
-func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID, principalID, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
+func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {
 		return nil, err
@@ -324,7 +358,7 @@ func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Contex
 		return nil, fmt.Errorf("environment '%s' does not have Dataverse", environmentID)
 	}
 
-	currentPrincipal, err := r.ApplicationClient.GetPrincipalBySystemUserId(ctx, environmentID, principalID)
+	currentPrincipal, err := r.ApplicationClient.GetRoleHolder(ctx, environmentID, holder)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +383,7 @@ func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Contex
 	}, nil
 }
 
-func principalHasRole(principal *applicationUserDto, roleID string) bool {
+func principalHasRole(principal *roleHolderDto, roleID string) bool {
 	for _, role := range principal.SecurityRoles {
 		if role.RoleId == roleID {
 			return true

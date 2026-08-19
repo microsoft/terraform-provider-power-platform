@@ -354,6 +354,51 @@ func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmen
 	return &response, nil
 }
 
+// GetRoleHolder reads a principal that holds security roles, resolving its business unit and its
+// currently assigned roles. Users and teams live in different tables, so the holder picks the shape.
+func (client *client) GetRoleHolder(ctx context.Context, environmentId string, holder roleHolder) (*roleHolderDto, error) {
+	if !holder.isTeam() {
+		user, err := client.GetPrincipalBySystemUserId(ctx, environmentId, holder.id())
+		if err != nil {
+			return nil, err
+		}
+		return &roleHolderDto{Id: user.SystemUserId, BusinessUnitId: user.BusinessUnitId, SecurityRoles: user.SecurityRoles}, nil
+	}
+
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   holder.path(constants.DATAVERSE_API_VERSION),
+	}
+	values := url.Values{}
+	values.Add("$select", holder.selectFields())
+	values.Add("$expand", fmt.Sprintf("%s($select=roleid,name,_businessunitid_value)", holder.association()))
+	apiUrl.RawQuery = values.Encode()
+
+	var response teamDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &response)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for %s", holder))
+	}
+
+	sort.Slice(response.SecurityRoles, func(i, j int) bool {
+		return response.SecurityRoles[i].RoleId < response.SecurityRoles[j].RoleId
+	})
+
+	return &roleHolderDto{Id: response.TeamId, BusinessUnitId: response.BusinessUnitId, SecurityRoles: response.SecurityRoles}, nil
+}
+
 func (client *client) GetDataverseSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]applicationSecurityRoleDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
@@ -417,7 +462,7 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	return resolved, nil
 }
 
-func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) (*roleHolderDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -426,7 +471,7 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)/systemuserroles_association/$ref", constants.DATAVERSE_API_VERSION, systemUserId),
+		Path:   holder.associationPath(constants.DATAVERSE_API_VERSION),
 	}
 
 	for _, roleId := range roleIds {
@@ -445,10 +490,10 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 		}
 	}
 
-	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
+	return client.GetRoleHolder(ctx, environmentId, holder)
 }
 
-func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) (*roleHolderDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -458,7 +503,7 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 		apiUrl := &url.URL{
 			Scheme: constants.HTTPS,
 			Host:   environmentHost,
-			Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)/systemuserroles_association/$ref", constants.DATAVERSE_API_VERSION, systemUserId),
+			Path:   holder.associationPath(constants.DATAVERSE_API_VERSION),
 		}
 		values := url.Values{}
 		values.Add("$id", fmt.Sprintf("https://%s/api/data/%s/roles(%s)", environmentHost, constants.DATAVERSE_API_VERSION, roleId))
@@ -476,7 +521,7 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 		}
 	}
 
-	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
+	return client.GetRoleHolder(ctx, environmentId, holder)
 }
 
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
