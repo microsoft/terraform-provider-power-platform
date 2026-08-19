@@ -1,5 +1,0 @@
-kind: added
-body: Added `powerplatform_environment_role_based_access_assignment` resource to assign a Power Platform role to an enterprise application or user at the environment scope
-time: 2026-08-06T20:10:21.79080372Z
-custom:
-    Issue: "1190"

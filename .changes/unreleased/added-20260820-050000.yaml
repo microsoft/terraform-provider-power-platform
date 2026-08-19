@@ -1,5 +1,0 @@
-kind: added
-body: '`powerplatform_security_role_assignment` can now assign a security role to a team. Set `team_id` instead of `system_user_id`; exactly one of the two is required.'
-time: 2026-08-20T05:00:00.000000+10:00
-custom:
-    Issue: "1224"
