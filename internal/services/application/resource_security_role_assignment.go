@@ -35,7 +35,7 @@ type SecurityRoleAssignmentResourceModel struct {
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	Id               types.String   `tfsdk:"id"`
 	EnvironmentId    types.String   `tfsdk:"environment_id"`
-	PrincipalId      types.String   `tfsdk:"principal_id"`
+	SystemUserId     types.String   `tfsdk:"system_user_id"`
 	BusinessUnitId   types.String   `tfsdk:"business_unit_id"`
 	SecurityRoleName types.String   `tfsdk:"security_role_name"`
 	RoleId           types.String   `tfsdk:"role_id"`
@@ -73,7 +73,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite ID `{environment_id}/{principal_id}/{security_role_name}`.",
+				MarkdownDescription: "Composite ID `{environment_id}/{system_user_id}/{security_role_name}`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -86,8 +86,8 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"principal_id": schema.StringAttribute{
-				MarkdownDescription: "Dataverse principal ID (system user ID) to which the security role is assigned.",
+			"system_user_id": schema.StringAttribute{
+				MarkdownDescription: "Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`.",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -151,13 +151,13 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
-		plan.PrincipalId.ValueString(),
+		plan.SystemUserId.ValueString(),
 		plan.BusinessUnitId.ValueString(),
 		plan.SecurityRoleName.ValueString(),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.PrincipalId.ValueString()),
+			fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
 			err.Error(),
 		)
 		return
@@ -167,14 +167,14 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId})
 		if err != nil {
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.PrincipalId.ValueString()),
+				fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
 				err.Error(),
 			)
 			return
 		}
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.PrincipalId.ValueString(), plan.SecurityRoleName.ValueString()))
+	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.SystemUserId.ValueString(), plan.SecurityRoleName.ValueString()))
 	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
 	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -193,7 +193,7 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
-		state.PrincipalId.ValueString(),
+		state.SystemUserId.ValueString(),
 		state.BusinessUnitId.ValueString(),
 		state.SecurityRoleName.ValueString(),
 	)
@@ -203,7 +203,7 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 			return
 		}
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.PrincipalId.ValueString()),
+			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
 			err.Error(),
 		)
 		return
@@ -232,19 +232,19 @@ func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		plan.EnvironmentId.ValueString(),
-		plan.PrincipalId.ValueString(),
+		plan.SystemUserId.ValueString(),
 		plan.BusinessUnitId.ValueString(),
 		plan.SecurityRoleName.ValueString(),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to refresh security role assignment '%s' for principal '%s'", plan.SecurityRoleName.ValueString(), plan.PrincipalId.ValueString()),
+			fmt.Sprintf("Failed to refresh security role assignment '%s' for principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.PrincipalId.ValueString(), plan.SecurityRoleName.ValueString()))
+	plan.Id = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.EnvironmentId.ValueString(), plan.SystemUserId.ValueString(), plan.SecurityRoleName.ValueString()))
 	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
 	plan.RoleId = types.StringValue(resolved.role.RoleId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -263,7 +263,7 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 	resolved, err := r.resolveRequestedRole(
 		ctx,
 		state.EnvironmentId.ValueString(),
-		state.PrincipalId.ValueString(),
+		state.SystemUserId.ValueString(),
 		state.BusinessUnitId.ValueString(),
 		state.SecurityRoleName.ValueString(),
 	)
@@ -272,7 +272,7 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 			return
 		}
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.PrincipalId.ValueString()),
+			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
 			err.Error(),
 		)
 		return
@@ -284,7 +284,7 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 
 	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), resolved.principal.SystemUserId, []string{resolved.role.RoleId}); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to remove security role '%s' from principal '%s'", state.SecurityRoleName.ValueString(), state.PrincipalId.ValueString()),
+			fmt.Sprintf("Failed to remove security role '%s' from principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
 			err.Error(),
 		)
 	}
@@ -298,14 +298,14 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 	if len(idParts) != 3 {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
-			fmt.Sprintf("Expected import ID in format 'environment_id/principal_id/security_role_name', got '%s'", req.ID),
+			fmt.Sprintf("Expected import ID in format 'environment_id/system_user_id/security_role_name', got '%s'", req.ID),
 		)
 		return
 	}
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal_id"), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("system_user_id"), idParts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_name"), idParts[2])...)
 }
 

@@ -54,8 +54,8 @@ resource "powerplatform_security_role_assignment" "example" {
 ### Required
 
 - `environment_id` (String) Dataverse environment ID.
-- `principal_id` (String) Dataverse principal ID (system user ID) to which the security role is assigned.
 - `security_role_name` (String) Dataverse security role name to assign.
+- `system_user_id` (String) Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`.
 
 ### Optional
 
@@ -64,7 +64,7 @@ resource "powerplatform_security_role_assignment" "example" {
 
 ### Read-Only
 
-- `id` (String) Composite ID `{environment_id}/{principal_id}/{security_role_name}`.
+- `id` (String) Composite ID `{environment_id}/{system_user_id}/{security_role_name}`.
 - `role_id` (String) Resolved Dataverse role ID for the assigned security role.
 
 <a id="nestedatt--timeouts"></a>

@@ -1,5 +1,5 @@
 kind: changed
-body: '`powerplatform_role_assignment` is renamed to `powerplatform_security_role_assignment`. It assigns a Dataverse security role, pairs with the existing `powerplatform_security_roles` data source, and the old name clashed with the new platform RBAC resource.'
+body: '`powerplatform_role_assignment` is renamed to `powerplatform_security_role_assignment`, and its `principal_id` becomes `system_user_id`. It assigns a Dataverse security role to a Dataverse `systemuserid`, which is a different identifier space from the Entra object id the platform RBAC resource takes.'
 time: 2026-08-20T04:01:00.000000+10:00
 custom:
     Issue: "1224"

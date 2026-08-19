@@ -119,13 +119,13 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "principal_id", principalID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
 				),
@@ -134,13 +134,13 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "MetaForm User"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm User"),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "principal_id", principalID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleUserID),
 				),
@@ -201,7 +201,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Import(t *
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
@@ -269,7 +269,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "` + roleName + `"
 				}
 				`,
@@ -345,7 +345,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Read_RoleD
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,
@@ -424,7 +424,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Validate_R
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
-					principal_id       = "` + principalID + `"
+					system_user_id       = "` + principalID + `"
 					security_role_name = "MetaForm Global Admin"
 				}
 				`,

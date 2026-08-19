@@ -55,14 +55,14 @@ func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 
 				resource "powerplatform_security_role_assignment" "example" {
 					environment_id     = powerplatform_environment.env.id
-					principal_id       = powerplatform_application_user.application_user.id
+					system_user_id       = powerplatform_application_user.application_user.id
 					security_role_name = "Basic User"
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "id"),
 					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "environment_id"),
-					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "principal_id"),
+					resource.TestCheckResourceAttrSet("powerplatform_security_role_assignment.example", "system_user_id"),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.example", "security_role_name", "Basic User"),
 				),
 			},
