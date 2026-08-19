@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -27,6 +28,11 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
+
+const nullDynamicValue = "<null>"
+
+// Import id format: <environment_id>/<table_logical_name>(<data_record_id>).
+var importIdRegex = regexp.MustCompile(`^([^/]+)/([^/()]+)\(([^/()]+)\)$`)
 
 func NewDataRecordResource() resource.Resource {
 	return &DataRecordResource{
@@ -305,11 +311,27 @@ func (r *DataRecordResource) ImportState(ctx context.Context, req resource.Impor
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	parts := importIdRegex.FindStringSubmatch(req.ID)
+	if parts == nil {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Expected import ID in format 'environment_id/table_logical_name(data_record_id)', got '%s'", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("table_logical_name"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[3])...)
 }
 
 func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]any, err error) {
 	if columnsAsString == nil {
+		return nil, nil
+	}
+
+	// During import the prior state holds no columns at all, so there is nothing to project.
+	if *columnsAsString == nullDynamicValue {
 		return nil, nil
 	}
 

@@ -457,28 +457,19 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
+		// If the environment was created but could not be read back, keep the id so Terraform owns it
+		// and can retry or destroy it on the next run.
+		if envDto != nil && envDto.Name != "" {
+			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), envDto.Name)...)
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
-	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
-		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
-			return
-		}
-
-		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, envDto.Name)
-		if err != nil {
-			if errors.Is(err, customerrors.ErrObjectNotFound) {
-				resp.State.RemoveResource(ctx)
-				return
-			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
-			return
-		}
-	}
-
+	// The environment exists from here on, so persist it before any follow-up call. If a later step
+	// fails, Terraform then knows about the environment and can retry or destroy it. Without this an
+	// error after creation leaves an environment that Terraform never recorded: it keeps its domain
+	// name, so the next apply fails with DomainNameAlreadyInUse and it can only be removed by hand.
 	var currencyCode string
 	var templateMetadata *createTemplateMetadataDto
 	var templates []string
@@ -490,14 +481,51 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
+	createdState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &createdState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
+		envDto, err = r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan)
+		if err != nil {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+			return
+		}
+	}
+
+	// billing_policy_id is sent in the create request, but the environment record's billingPolicy
+	// projection is not guaranteed to reflect it by the time we read the environment back. Confirm
+	// membership with the licensing service, which owns the association, instead of trusting that
+	// projection: otherwise the created environment reports a zero billing policy id and Terraform
+	// fails the apply with "Provider produced inconsistent result after apply".
+	if err := r.confirmBillingPolicy(ctx, plan.BillingPolicyId, envDto.Name); err != nil {
+		resp.Diagnostics.AddError("Error when confirming the environment's billing policy", err.Error())
+		return
+	}
+
 	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
+
+	if helpers.IsKnown(plan.BillingPolicyId) && plan.BillingPolicyId.ValueString() != constants.ZERO_UUID {
+		// Confirmed above against the licensing service.
+		newState.BillingPolicyId = plan.BillingPolicyId
+	}
 
 	if !plan.AzureRegion.IsNull() && plan.AzureRegion.ValueString() != "" && (plan.AzureRegion.ValueString() != newState.AzureRegion.ValueString()) {
 		resp.Diagnostics.AddAttributeError(path.Root("azure_region"), fmt.Sprintf("Provisioning environment in azure region '%s' failed", plan.AzureRegion.ValueString()), "Provisioning environment in azure region was not successful, please try other region in that location or try again later")
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
 	}
 
@@ -644,20 +672,22 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	err = r.updateGenerativeAiFeatures(ctx, plan)
+	envDto, err := r.updateGenerativeAiFeatures(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when updating generative ai features", err.Error())
 		return
 	}
 
-	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
-	if err != nil {
-		if errors.Is(err, customerrors.ErrObjectNotFound) {
-			resp.State.RemoveResource(ctx)
+	if envDto == nil {
+		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
+		if err != nil {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
-		return
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -683,11 +713,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) error {
+// Attributes the practitioner did not configure stay out of the payload so the service keeps their current value.
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, plan *SourceModel) (*EnvironmentDto, error) {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
-			BingChatEnabled: plan.AllowBingSearch.ValueBool(),
-			M365Enabled:     plan.AllowMicrosoft365Services.ValueBool(),
+			BingChatEnabled: helpers.BoolPointer(plan.AllowBingSearch),
+			M365Enabled:     helpers.BoolPointer(plan.AllowMicrosoft365Services),
 		},
 	}
 
@@ -708,12 +739,7 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 		featuresDto.Properties.CopilotPolicies = &copilotPolicies
 	}
 
-	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
@@ -834,14 +860,12 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) error {
+// Returns nil when the environment does not manage any generative AI attribute, leaving the caller to read it.
+func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) (*EnvironmentDto, error) {
 	if helpers.IsKnown(plan.AllowBingSearch) || helpers.IsKnown(plan.AllowMicrosoft365Services) || helpers.IsKnown(plan.AllowMovingDataAcrossRegions) || helpers.IsKnown(plan.AllowFlexRouting) {
-		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
-		if err != nil {
-			return err
-		}
+		return r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan)
 	}
-	return nil
+	return nil, nil
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
@@ -881,6 +905,48 @@ func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) 
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// confirmBillingPolicy verifies that the environment is a member of the requested billing policy,
+// reading membership back from the licensing service that owns the association. If the create request
+// did not take effect the environment is added explicitly and re-checked, so the outcome is confirmed
+// rather than assumed. A no-op when no billing policy is configured.
+func (r *Resource) confirmBillingPolicy(ctx context.Context, billingPolicyId types.String, environmentId string) error {
+	if !helpers.IsKnown(billingPolicyId) || billingPolicyId.ValueString() == constants.ZERO_UUID {
+		return nil
+	}
+	policyId := billingPolicyId.ValueString()
+
+	isMember := func() (bool, error) {
+		environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, policyId)
+		if err != nil {
+			return false, err
+		}
+		// GetEnvironmentsForBillingPolicy lower-cases the ids it returns.
+		return slices.Contains(environments, strings.ToLower(environmentId)), nil
+	}
+
+	member, err := isMember()
+	if err != nil {
+		return err
+	}
+	if member {
+		return nil
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Environment %s is not yet in billing policy %s, adding it", environmentId, policyId))
+	if err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, policyId, []string{environmentId}); err != nil {
+		return err
+	}
+
+	member, err = isMember()
+	if err != nil {
+		return err
+	}
+	if !member {
+		return fmt.Errorf("environment %s was not added to billing policy %s", environmentId, policyId)
 	}
 	return nil
 }

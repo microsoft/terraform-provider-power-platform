@@ -5,11 +5,15 @@ package environment_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"io"
 	"math/rand"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,6 +38,52 @@ type generativeAiFeaturesProperties struct {
 type generativeAiCopilotPolicy struct {
 	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled"`
 	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
+}
+
+type environmentAiFeaturesState struct {
+	bingChatEnabled bool
+	m365Enabled     bool
+	crossGeo        bool
+	crossBoundary   bool
+}
+
+func decodeEnvironmentAiFeaturesRequest(req *http.Request) (*environmentAiFeaturesState, error) {
+	var body generativeAiFeaturesRequestBody
+	if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	if body.Properties.BingChatEnabled == nil || body.Properties.M365Enabled == nil {
+		return nil, errors.New("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
+	}
+	if body.Properties.CopilotPolicies == nil ||
+		body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled == nil ||
+		body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled == nil {
+		return nil, errors.New("expected both copilot policies to be present in the generative ai features request body")
+	}
+	return &environmentAiFeaturesState{
+		bingChatEnabled: *body.Properties.BingChatEnabled,
+		m365Enabled:     *body.Properties.M365Enabled,
+		crossGeo:        *body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled,
+		crossBoundary:   *body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled,
+	}, nil
+}
+
+func environmentAiFeaturesResponse(fixture string, features environmentAiFeaturesState) (*http.Response, error) {
+	var environment map[string]any
+	if err := json.Unmarshal([]byte(httpmock.File(fixture).String()), &environment); err != nil {
+		return nil, err
+	}
+	properties, ok := environment["properties"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("expected environment properties to be a JSON object, got %T", environment["properties"])
+	}
+	properties["bingChatEnabled"] = features.bingChatEnabled
+	properties["m365Enabled"] = features.m365Enabled
+	properties["copilotPolicies"] = map[string]any{
+		"crossGeoCopilotDataMovementEnabled":      features.crossGeo,
+		"crossBoundaryCopilotDataMovementEnabled": features.crossBoundary,
+	}
+	return httpmock.NewJsonResponse(http.StatusOK, environment)
 }
 
 func TestUnitEnvironmentsResource_Validate_Attribute_Validators(t *testing.T) {
@@ -1614,11 +1664,167 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	})
 }
 
+// Sending the empty guid on create records a parentEnvironmentGroup on the environment and silently
+// upgrades it to a managed environment, after which powerplatform_managed_environment can never be
+// enabled on it. The create body must not contain parentEnvironmentGroup at all.
+func TestUnitEnvironmentsResource_Validate_Create_Omits_Empty_Environment_Group(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	var createBody string
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			createBody = string(body)
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/delete-op?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/delete-op?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name         = "displayname"
+					location             = "europe"
+					environment_type     = "Sandbox"
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					func(_ *terraform.State) error {
+						if strings.Contains(createBody, "parentEnvironmentGroup") {
+							return fmt.Errorf("create body must not send parentEnvironmentGroup for the empty guid, got: %s", createBody)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// The environment record does not always show the billing policy straight after create. When that
+// happens the provider used to write the zero guid into state and Terraform failed the apply with
+// "Provider produced inconsistent result after apply". Membership is confirmed with the licensing
+// service instead, and the configured value is kept.
+func TestUnitEnvironmentsResource_Validate_Create_Billing_Policy_Not_Yet_On_Environment(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_With_Billing_Policy/get_lifecycle.json").String()), nil
+		})
+
+	// The environment record lags: the read taken during create shows no billing policy, and later
+	// reads show it. That lag is what used to put the zero guid into state and fail the apply.
+	environmentReads := 0
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			environmentReads++
+			file := "tests/resource/Validate_Create_With_Billing_Policy/get_environment_00000000-0000-0000-0000-000000000001.json"
+			if environmentReads == 1 {
+				file = "tests/resource/Validate_Create_With_Billing_Policy/get_environment_without_billing_policy.json"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(file).String()), nil
+		})
+
+	// The licensing service says the environment is in the policy, so the association really exists.
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([0-9a-fA-F-]+)/environments\?api-version=2022-03-01-preview\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/bp-delete?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/bp-delete?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_With_Billing_Policy/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name      = "displayname"
+					location          = "europe"
+					environment_type  = "Sandbox"
+					billing_policy_id = "00000000-0000-0000-0000-000000000002"
+
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000002"),
+			},
+		},
+	})
+}
+
 func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	mocks.ActivateEnvironmentHttpMocks()
+
+	// The provider confirms billing policy membership with the licensing service after create.
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([0-9a-fA-F-]+)/environments\?api-version=2022-03-01-preview\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
+		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
@@ -1715,6 +1921,16 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000002/environments?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments/add?api-version=2022-03-01-preview",
@@ -2117,30 +2333,11 @@ func TestUnitEnvironmentsResource_Validate_Update_Generative_Ai_Features(t *test
 	mocks.ActivateEnvironmentHttpMocks()
 
 	// the mocked service stores what was last patched so that each toggle can be verified independently
-	aiFeatures := struct {
-		bingChatEnabled bool
-		m365Enabled     bool
-		crossGeo        bool
-		crossBoundary   bool
-	}{true, true, true, true}
+	aiFeatures := environmentAiFeaturesState{bingChatEnabled: true, m365Enabled: true, crossGeo: true, crossBoundary: true}
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-			var environment map[string]any
-			if err := json.Unmarshal([]byte(httpmock.File("tests/resource/Validate_Update_Generative_Ai_Features/get_environment.json").String()), &environment); err != nil {
-				return nil, err
-			}
-			properties, ok := environment["properties"].(map[string]any)
-			if !ok {
-				return nil, fmt.Errorf("expected environment properties to be a JSON object, got %T", environment["properties"])
-			}
-			properties["bingChatEnabled"] = aiFeatures.bingChatEnabled
-			properties["m365Enabled"] = aiFeatures.m365Enabled
-			properties["copilotPolicies"] = map[string]any{
-				"crossGeoCopilotDataMovementEnabled":      aiFeatures.crossGeo,
-				"crossBoundaryCopilotDataMovementEnabled": aiFeatures.crossBoundary,
-			}
-			return httpmock.NewJsonResponse(http.StatusOK, environment)
+			return environmentAiFeaturesResponse("tests/resource/Validate_Update_Generative_Ai_Features/get_environment.json", aiFeatures)
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
@@ -2164,26 +2361,14 @@ func TestUnitEnvironmentsResource_Validate_Update_Generative_Ai_Features(t *test
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
-			var body generativeAiFeaturesRequestBody
-			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
-				return nil, err
-			}
 			// every toggle must always be serialized, otherwise a feature cannot be turned off
-			if body.Properties.BingChatEnabled == nil || body.Properties.M365Enabled == nil {
-				t.Error("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
-				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
-			}
-			if body.Properties.CopilotPolicies == nil ||
-				body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled == nil ||
-				body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled == nil {
-				t.Error("expected both copilot policies to be present in the generative ai features request body")
+			features, err := decodeEnvironmentAiFeaturesRequest(req)
+			if err != nil {
+				t.Error(err)
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			}
 
-			aiFeatures.bingChatEnabled = *body.Properties.BingChatEnabled
-			aiFeatures.m365Enabled = *body.Properties.M365Enabled
-			aiFeatures.crossGeo = *body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled
-			aiFeatures.crossBoundary = *body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled
+			aiFeatures = *features
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
@@ -2364,6 +2549,169 @@ func TestUnitEnvironmentsResource_Validate_Update_Copilot_Policies_Not_In_Config
 	if aiFeaturesPatchCount == 0 {
 		t.Fatal("expected the generative ai features to be updated")
 	}
+}
+
+func TestUnitEnvironmentsResource_Validate_Generative_Ai_Features_Eventual_Consistency(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	const fixtures = "tests/resource/Validate_Generative_Ai_Features_Eventual_Consistency"
+	const staleReadsAfterPatch = 2
+
+	// the read endpoint keeps reporting the tenant defaults for a few reads after the patch was applied
+	tenantDefaults := environmentAiFeaturesState{bingChatEnabled: true, m365Enabled: true, crossGeo: true, crossBoundary: true}
+	applied := tenantDefaults
+	staleReadsLeft := 0
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			if staleReadsLeft > 0 {
+				staleReadsLeft--
+				return environmentAiFeaturesResponse(fixtures+"/get_environment.json", tenantDefaults)
+			}
+			return environmentAiFeaturesResponse(fixtures+"/get_environment.json", applied)
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			features, err := decodeEnvironmentAiFeaturesRequest(req)
+			if err != nil {
+				t.Error(err)
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			applied = *features
+			staleReadsLeft = staleReadsAfterPatch
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                     = "displayname"
+					description                      = "description"
+					cadence                          = "Moderate"
+					location                         = "europe"
+					environment_type                 = "Sandbox"
+					allow_bing_search                = true
+					allow_moving_data_across_regions = true
+					allow_microsoft_365_services     = false
+					allow_flex_routing               = false
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "false"),
+				),
+			},
+		},
+	})
+
+	if staleReadsLeft != 0 {
+		t.Errorf("expected the environment to be read back until the generative ai features converged, %d stale reads were not consumed", staleReadsLeft)
+	}
+}
+
+func TestUnitEnvironmentsResource_Validate_Generative_Ai_Features_Never_Converge(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	const fixtures = "tests/resource/Validate_Generative_Ai_Features_Never_Converge"
+
+	// the read endpoint never reflects the patch, so the provider must give up and report an error
+	tenantDefaults := environmentAiFeaturesState{bingChatEnabled: true, m365Enabled: true, crossGeo: true, crossBoundary: true}
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return environmentAiFeaturesResponse(fixtures+"/get_environment.json", tenantDefaults)
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	// The step fails on purpose, but the test framework still destroys the resource afterwards,
+	// so the delete path needs mocking too.
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// terraform wraps long diagnostics, so the message must be matched across line breaks
+				ExpectError: regexp.MustCompile(`did not report the\s+requested generative AI features`),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                     = "displayname"
+					description                      = "description"
+					cadence                          = "Moderate"
+					location                         = "europe"
+					environment_type                 = "Sandbox"
+					allow_bing_search                = true
+					allow_moving_data_across_regions = true
+					allow_microsoft_365_services     = false
+					allow_flex_routing               = false
+				}`,
+			},
+		},
+	})
 }
 
 func TestUnitEnvironmentsResource_Validate_Microsoft_365_Services_Requires_Moving_Data_Across_Regions(t *testing.T) {
