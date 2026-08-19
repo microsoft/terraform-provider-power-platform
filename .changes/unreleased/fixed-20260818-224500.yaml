@@ -1,0 +1,5 @@
+kind: fixed
+body: Enabling a managed environment no longer treats a 409 as success, which silently skipped enablement. Whether an environment is already managed is now read from `protectionLevel` rather than from whether settings are present.
+time: 2026-08-18T22:45:00.000000+10:00
+custom:
+    Issue: "1239"
