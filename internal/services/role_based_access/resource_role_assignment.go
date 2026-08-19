@@ -22,11 +22,12 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-// principalTypes are the principal kinds the RBAC API accepts. Microsoft documents the three kinds
-// (a person, a security enabled group, and a service principal or managed identity) but publishes no
-// enum. `ApplicationUser` is the only value confirmed against the API, from the role assignment
-// tutorial; the other two follow the documented kinds. Extend this list rather than removing the
-// validator if the API turns out to accept more.
+// principalTypes are the principal kinds the RBAC API accepts. The API models this as an enum
+// (RoleAssignmentPrincipalType) but publishes no values, so these were confirmed against it: a
+// request carrying an unknown value is rejected while converting the body, whereas a known value
+// with an unknown principal gets as far as PrincipalDoesNotExist. All three below reach the latter.
+// Note that ServicePrincipal, the azurerm spelling, is NOT accepted; a service principal is
+// `ApplicationUser` here.
 var principalTypes = []string{"ApplicationUser", "Group", "User"}
 
 var _ resource.Resource = &roleAssignmentResource{}
