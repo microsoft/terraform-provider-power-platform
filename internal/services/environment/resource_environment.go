@@ -824,17 +824,17 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		// During acceptance tests the live API frequently keeps the delete lifecycle operation running past the
-		// operation timeout, which would fail the test run even though the deletion itself was accepted.
-		if errors.Is(err, context.DeadlineExceeded) && os.Getenv("TF_ACC") != "" {
-			resp.Diagnostics.AddWarning(
-				fmt.Sprintf("Timeout when deleting %s", r.FullTypeName()),
-				fmt.Sprintf("Deletion of environment '%s' did not complete within the timeout: %s. The environment may still be deleting or left behind in the tenant.", state.Id.ValueString(), err.Error()),
-			)
-		} else {
+		isAcceptanceTestTimeout := errors.Is(err, context.DeadlineExceeded) && os.Getenv("TF_ACC") != ""
+		if !isAcceptanceTestTimeout {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
+		// During acceptance tests the live API frequently keeps the delete lifecycle operation running past the
+		// operation timeout, which would fail the test run even though the deletion itself was accepted.
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Timeout when deleting %s", r.FullTypeName()),
+			fmt.Sprintf("Deletion of environment '%s' did not complete within the timeout: %s. The environment may still be deleting or left behind in the tenant.", state.Id.ValueString(), err.Error()),
+		)
 	}
 	resp.State.RemoveResource(ctx)
 }
