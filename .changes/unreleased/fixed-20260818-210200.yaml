@@ -1,0 +1,5 @@
+kind: fixed
+body: An `environment_group_id` of the empty guid is no longer sent when creating an environment. It previously put the environment in a group, which blocked `powerplatform_managed_environment` from ever being enabled on it.
+time: 2026-08-18T21:02:00.000000+10:00
+custom:
+    Issue: "1238"
