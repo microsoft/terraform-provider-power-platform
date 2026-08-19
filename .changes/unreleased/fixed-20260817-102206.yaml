@@ -1,0 +1,5 @@
+kind: fixed
+body: Importing an existing `powerplatform_data_record` failed with ENVIRONMENT_URL_NOT_FOUND because the import id was not parsed into `environment_id` and `table_logical_name`
+time: 2026-08-17T10:22:06.494277478Z
+custom:
+    Issue: "1211"

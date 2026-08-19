@@ -74,6 +74,11 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
+	// Without an id the request degrades into a "list environments" call that returns HTTP 200 with a collection body.
+	if environmentId == "" {
+		return nil, errors.New("environment id must not be empty")
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
