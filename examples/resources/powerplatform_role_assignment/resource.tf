@@ -20,7 +20,7 @@ variable "role_definition_name" {
   type        = string
 }
 
-variable "enterprise_application_object_id" {
+variable "principal_id" {
   default     = "00000000-0000-0000-0000-000000000000"
   description = "Object id of the enterprise application that will be granted the role"
   type        = string
@@ -35,26 +35,26 @@ locals {
 
 # Assign a role to a service principal at the tenant level
 resource "powerplatform_role_assignment" "example" {
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  principal_id       = var.principal_id
+  principal_type     = "ApplicationUser"
+  role_definition_id = local.role_definition_id
 }
 
 # The same resource scopes the assignment by which identifier you set.
 # Set environment_id for an environment:
 resource "powerplatform_role_assignment" "environment" {
-  environment_id                   = var.environment_id
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  environment_id     = var.environment_id
+  principal_id       = var.principal_id
+  principal_type     = "ApplicationUser"
+  role_definition_id = local.role_definition_id
 }
 
 # Set environment_group_id for an environment group:
 resource "powerplatform_role_assignment" "environment_group" {
-  environment_group_id             = var.environment_group_id
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  environment_group_id = var.environment_group_id
+  principal_id         = var.principal_id
+  principal_type       = "ApplicationUser"
+  role_definition_id   = local.role_definition_id
 }
 
 variable "environment_id" {

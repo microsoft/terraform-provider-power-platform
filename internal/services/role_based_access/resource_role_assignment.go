@@ -22,6 +22,13 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+// principalTypes are the principal kinds the RBAC API accepts. Microsoft documents the three kinds
+// (a person, a security enabled group, and a service principal or managed identity) but publishes no
+// enum. `ApplicationUser` is the only value confirmed against the API, from the role assignment
+// tutorial; the other two follow the documented kinds. Extend this list rather than removing the
+// validator if the API turns out to accept more.
+var principalTypes = []string{"ApplicationUser", "Group", "User"}
+
 var _ resource.Resource = &roleAssignmentResource{}
 var _ resource.ResourceWithImportState = &roleAssignmentResource{}
 
@@ -82,18 +89,21 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
 				},
 			},
-			"enterprise_application_object_id": schema.StringAttribute{
-				MarkdownDescription: "The object ID of the enterprise application (service principal) or user to assign the role to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID",
+			"principal_id": schema.StringAttribute{
+				MarkdownDescription: "The Microsoft Entra object ID of the principal to assign the role to. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"principal_type": schema.StringAttribute{
-				MarkdownDescription: "The type of principal (e.g., `ApplicationUser`, `User`)",
+				MarkdownDescription: "The kind of principal being assigned the role. One of `ApplicationUser` for a service principal or managed identity, `Group` for a security enabled Microsoft Entra group, or `User` for a person",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(principalTypes...),
 				},
 			},
 			"role_definition_id": schema.StringAttribute{
@@ -151,10 +161,10 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 	}
 
 	scope := plan.scope()
-	tflog.Debug(ctx, fmt.Sprintf("Creating role assignment for principal %s at %s scope", plan.EnterpriseApplicationObjectId.ValueString(), scope))
+	tflog.Debug(ctx, fmt.Sprintf("Creating role assignment for principal %s at %s scope", plan.PrincipalId.ValueString(), scope))
 
 	assignment, err := r.Client.CreateRoleAssignment(ctx, scope, roleAssignmentRequestDto{
-		PrincipalObjectId: plan.EnterpriseApplicationObjectId.ValueString(),
+		PrincipalObjectId: plan.PrincipalId.ValueString(),
 		PrincipalType:     plan.PrincipalType.ValueString(),
 		RoleDefinitionId:  plan.RoleDefinitionId.ValueString(),
 	})
@@ -195,7 +205,7 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state.EnterpriseApplicationObjectId = types.StringValue(found.PrincipalObjectId)
+	state.PrincipalId = types.StringValue(found.PrincipalObjectId)
 	state.PrincipalType = types.StringValue(found.PrincipalType)
 	state.RoleDefinitionId = types.StringValue(found.RoleDefinitionId)
 	state.Scope = types.StringValue(found.Scope)

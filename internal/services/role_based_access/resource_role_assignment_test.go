@@ -68,7 +68,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -105,7 +105,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = "` + testEnvironmentId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -140,7 +140,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *te
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
 					environment_group_id             = "` + testEnvironmentGroupId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -175,7 +175,7 @@ func TestUnitRoleAssignmentResource_Validate_Scopes_Are_Mutually_Exclusive(t *te
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = "` + testEnvironmentId + `"
 					environment_group_id             = "` + testEnvironmentGroupId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -217,7 +217,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = "` + testEnvironmentId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -253,7 +253,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Error(t *testing.T) {
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = "` + testEnvironmentId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -277,7 +277,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_InvalidId(t *testing.T) {
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = "` + testEnvironmentId + `"
-					enterprise_application_object_id = "` + testPrincipalId + `"
+					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -337,7 +337,7 @@ func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.
 
 				resource "powerplatform_role_assignment" "test" {
 					environment_id                   = powerplatform_environment.test_environment.id
-					enterprise_application_object_id = azuread_service_principal.test_sp.object_id
+					principal_id = azuread_service_principal.test_sp.object_id
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = local.role_definition_id
 
@@ -349,6 +349,30 @@ func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
 					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.test", "created_on"),
 				),
+			},
+		},
+	})
+}
+
+// An unrecognised principal type is rejected at plan time rather than by the API at apply time.
+func TestUnitRoleAssignmentResource_Validate_PrincipalType_Is_Enumerated(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ServicePrincipal"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`Invalid Attribute Value Match`),
 			},
 		},
 	})

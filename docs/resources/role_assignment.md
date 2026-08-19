@@ -38,7 +38,7 @@ variable "role_definition_name" {
   type        = string
 }
 
-variable "enterprise_application_object_id" {
+variable "principal_id" {
   default     = "00000000-0000-0000-0000-000000000000"
   description = "Object id of the enterprise application that will be granted the role"
   type        = string
@@ -53,26 +53,26 @@ locals {
 
 # Assign a role to a service principal at the tenant level
 resource "powerplatform_role_assignment" "example" {
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  principal_id       = var.principal_id
+  principal_type     = "ApplicationUser"
+  role_definition_id = local.role_definition_id
 }
 
 # The same resource scopes the assignment by which identifier you set.
 # Set environment_id for an environment:
 resource "powerplatform_role_assignment" "environment" {
-  environment_id                   = var.environment_id
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  environment_id     = var.environment_id
+  principal_id       = var.principal_id
+  principal_type     = "ApplicationUser"
+  role_definition_id = local.role_definition_id
 }
 
 # Set environment_group_id for an environment group:
 resource "powerplatform_role_assignment" "environment_group" {
-  environment_group_id             = var.environment_group_id
-  enterprise_application_object_id = var.enterprise_application_object_id
-  principal_type                   = "ApplicationUser"
-  role_definition_id               = local.role_definition_id
+  environment_group_id = var.environment_group_id
+  principal_id         = var.principal_id
+  principal_type       = "ApplicationUser"
+  role_definition_id   = local.role_definition_id
 }
 
 variable "environment_id" {
@@ -91,8 +91,8 @@ variable "environment_group_id" {
 
 ### Required
 
-- `enterprise_application_object_id` (String) The object ID of the enterprise application (service principal) or user to assign the role to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
-- `principal_type` (String) The type of principal (e.g., `ApplicationUser`, `User`)
+- `principal_id` (String) The Microsoft Entra object ID of the principal to assign the role to. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID
+- `principal_type` (String) The kind of principal being assigned the role. One of `ApplicationUser` for a service principal or managed identity, `Group` for a security enabled Microsoft Entra group, or `User` for a person
 - `role_definition_id` (String) The ID of the role definition to assign
 
 ### Optional

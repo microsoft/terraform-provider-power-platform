@@ -42,7 +42,7 @@ func roleAssignmentsAttribute(markdownDescription string) schema.ListNestedAttri
 					MarkdownDescription: "The type of principal the role is assigned to (e.g., `ApplicationUser`, `User`)",
 					Computed:            true,
 				},
-				"enterprise_application_object_id": schema.StringAttribute{
+				"principal_id": schema.StringAttribute{
 					MarkdownDescription: "The object ID of the enterprise application (service principal) or user the role is assigned to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID",
 					Computed:            true,
 				},

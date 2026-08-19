@@ -49,9 +49,9 @@ Read-Only:
 - `created_by_principal_object_id` (String) The object ID of the principal that created the role assignment
 - `created_by_principal_type` (String) The type of principal that created the role assignment
 - `created_on` (String) The timestamp when the role assignment was created
-- `enterprise_application_object_id` (String) The object ID of the enterprise application (service principal) or user the role is assigned to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
 - `expires_on` (String) The timestamp when the role assignment expires, or `null` if it does not expire
 - `id` (String) The unique identifier of the role assignment
+- `principal_id` (String) The object ID of the enterprise application (service principal) or user the role is assigned to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
 - `principal_type` (String) The type of principal the role is assigned to (e.g., `ApplicationUser`, `User`)
 - `role_definition_id` (String) The ID of the assigned role definition
 - `scope` (String) The scope the role assignment applies to

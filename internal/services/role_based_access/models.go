@@ -19,15 +19,15 @@ type roleAssignmentResource struct {
 // Resource models
 
 type roleAssignmentResourceModel struct {
-	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
-	Id                            types.String   `tfsdk:"id"`
-	EnvironmentId                 types.String   `tfsdk:"environment_id"`
-	EnvironmentGroupId            types.String   `tfsdk:"environment_group_id"`
-	EnterpriseApplicationObjectId types.String   `tfsdk:"enterprise_application_object_id"`
-	PrincipalType                 types.String   `tfsdk:"principal_type"`
-	RoleDefinitionId              types.String   `tfsdk:"role_definition_id"`
-	Scope                         types.String   `tfsdk:"scope"`
-	CreatedOn                     types.String   `tfsdk:"created_on"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Id                 types.String   `tfsdk:"id"`
+	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
+	PrincipalId        types.String   `tfsdk:"principal_id"`
+	PrincipalType      types.String   `tfsdk:"principal_type"`
+	RoleDefinitionId   types.String   `tfsdk:"role_definition_id"`
+	Scope              types.String   `tfsdk:"scope"`
+	CreatedOn          types.String   `tfsdk:"created_on"`
 }
 
 // scope derives where the assignment applies from whichever identifier is set.
@@ -62,15 +62,15 @@ type roleAssignmentsDataSource struct {
 // Data source models
 
 type roleAssignmentDataSourceModel struct {
-	Id                            types.String `tfsdk:"id"`
-	Scope                         types.String `tfsdk:"scope"`
-	PrincipalType                 types.String `tfsdk:"principal_type"`
-	EnterpriseApplicationObjectId types.String `tfsdk:"enterprise_application_object_id"`
-	RoleDefinitionId              types.String `tfsdk:"role_definition_id"`
-	CreatedByPrincipalType        types.String `tfsdk:"created_by_principal_type"`
-	CreatedByPrincipalObjectId    types.String `tfsdk:"created_by_principal_object_id"`
-	CreatedOn                     types.String `tfsdk:"created_on"`
-	ExpiresOn                     types.String `tfsdk:"expires_on"`
+	Id                         types.String `tfsdk:"id"`
+	Scope                      types.String `tfsdk:"scope"`
+	PrincipalType              types.String `tfsdk:"principal_type"`
+	PrincipalId                types.String `tfsdk:"principal_id"`
+	RoleDefinitionId           types.String `tfsdk:"role_definition_id"`
+	CreatedByPrincipalType     types.String `tfsdk:"created_by_principal_type"`
+	CreatedByPrincipalObjectId types.String `tfsdk:"created_by_principal_object_id"`
+	CreatedOn                  types.String `tfsdk:"created_on"`
+	ExpiresOn                  types.String `tfsdk:"expires_on"`
 }
 
 type roleAssignmentsDataSourceModel struct {
@@ -94,15 +94,15 @@ func (m roleAssignmentsDataSourceModel) scope() assignmentScope {
 
 func convertRoleAssignmentDtoToDataSourceModel(assignment roleAssignmentDto) roleAssignmentDataSourceModel {
 	model := roleAssignmentDataSourceModel{
-		Id:                            types.StringValue(assignment.RoleAssignmentId),
-		Scope:                         types.StringValue(assignment.Scope),
-		PrincipalType:                 types.StringValue(assignment.PrincipalType),
-		EnterpriseApplicationObjectId: types.StringValue(assignment.PrincipalObjectId),
-		RoleDefinitionId:              types.StringValue(assignment.RoleDefinitionId),
-		CreatedByPrincipalType:        types.StringValue(assignment.CreatedByPrincipalType),
-		CreatedByPrincipalObjectId:    types.StringValue(assignment.CreatedByPrincipalObjectId),
-		CreatedOn:                     types.StringValue(assignment.CreatedOn),
-		ExpiresOn:                     types.StringNull(),
+		Id:                         types.StringValue(assignment.RoleAssignmentId),
+		Scope:                      types.StringValue(assignment.Scope),
+		PrincipalType:              types.StringValue(assignment.PrincipalType),
+		PrincipalId:                types.StringValue(assignment.PrincipalObjectId),
+		RoleDefinitionId:           types.StringValue(assignment.RoleDefinitionId),
+		CreatedByPrincipalType:     types.StringValue(assignment.CreatedByPrincipalType),
+		CreatedByPrincipalObjectId: types.StringValue(assignment.CreatedByPrincipalObjectId),
+		CreatedOn:                  types.StringValue(assignment.CreatedOn),
+		ExpiresOn:                  types.StringNull(),
 	}
 	if assignment.ExpiresOn != nil {
 		model.ExpiresOn = types.StringValue(*assignment.ExpiresOn)
