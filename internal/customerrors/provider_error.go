@@ -20,6 +20,7 @@ var (
 	ErrPolicyAssignedToEnvGroup  = ProviderError{ErrorCode: ErrorCode(constants.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP)}
 	ErrEnvironmentSettingsFailed = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED)}
 	ErrEnvironmentCreation       = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_CREATION)}
+	ErrEnvironmentDeletion       = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_DELETION)}
 )
 
 var _ error = ProviderError{}
