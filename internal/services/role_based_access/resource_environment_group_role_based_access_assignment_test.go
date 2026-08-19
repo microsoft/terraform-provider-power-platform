@@ -72,7 +72,7 @@ func TestAccEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Create(t 
 					resource.TestCheckResourceAttrPair("powerplatform_environment_group_role_based_access_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
 					resource.TestCheckResourceAttrPair("powerplatform_environment_group_role_based_access_assignment.test", "enterprise_application_object_id", "azuread_service_principal.test_sp", "object_id"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "principal_type", "ApplicationUser"),
-					resource.TestMatchResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", regexp.MustCompile(`/environmentGroups/`)),
+					resource.TestMatchResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
 					resource.TestCheckResourceAttrSet("powerplatform_environment_group_role_based_access_assignment.test", "created_on"),
 				),
 			},
