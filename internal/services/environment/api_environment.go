@@ -319,7 +319,7 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
 		if retryCount >= constants.MAX_RETRY_COUNT {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
+			return customerrors.NewProviderError(constants.ERROR_ENVIRONMENT_DELETION, "maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
 		body := string(response.BodyAsBytes)
 		if body == "" {
@@ -348,7 +348,7 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
 		if retryCount >= constants.MAX_RETRY_COUNT {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+			return customerrors.NewProviderError(constants.ERROR_ENVIRONMENT_DELETION, "maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err

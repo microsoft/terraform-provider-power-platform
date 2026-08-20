@@ -260,10 +260,15 @@ func (client *client) AddEnvironmentUserSecurityRoles(ctx context.Context, envir
 		return nil, err
 	}
 
+	displayName := respObj.Add[0].RoleAssignment.Properties.Principal.DisplayName
+	if displayName == "" {
+		displayName = client.pollEnvironmentUserDisplayName(ctx, environmentId, aadObjectId)
+	}
+
 	user := userDto{
 		Id:            aadObjectId,
 		AadObjectId:   aadObjectId,
-		DomainName:    respObj.Add[0].RoleAssignment.Properties.Principal.DisplayName,
+		DomainName:    displayName,
 		SecurityRoles: []securityRoleDto{},
 	}
 
@@ -274,6 +279,28 @@ func (client *client) AddEnvironmentUserSecurityRoles(ctx context.Context, envir
 		})
 	}
 	return &user, nil
+}
+
+// pollEnvironmentUserDisplayName re-reads the role assignments because a freshly created Entra principal
+// is not resolvable right away and comes back without a display name. Returns an empty string when the
+// display name never shows up, as it is not essential to managing the role assignment.
+func (client *client) pollEnvironmentUserDisplayName(ctx context.Context, environmentId, aadObjectId string) string {
+	for attempt := 0; attempt < ENVIRONMENT_USER_DISPLAY_NAME_RETRY_COUNT; attempt++ {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return ""
+		}
+
+		user, err := client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
+		if err != nil {
+			tflog.Debug(ctx, fmt.Sprintf("Error reading display name of environment user '%s': %s", aadObjectId, err.Error()))
+			return ""
+		}
+		if user.DomainName != "" {
+			return user.DomainName
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Display name of environment user '%s' not available yet (attempt %d)", aadObjectId, attempt+1))
+	}
+	return ""
 }
 
 func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, aadObjectId string, securityRoles []string) (*userDto, error) {

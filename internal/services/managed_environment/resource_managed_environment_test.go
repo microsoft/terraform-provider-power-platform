@@ -1083,7 +1083,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 					suppress_validation_emails = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
 				}`,
-				ExpectError: regexp.MustCompile(".*EnableGovernanceConfiguration.*"),
+				ExpectError: regexp.MustCompile("(?s).*requires Dataverse.*"),
 			},
 		},
 	})

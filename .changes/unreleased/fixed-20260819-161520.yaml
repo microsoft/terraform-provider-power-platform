@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_connection now retries while the connectivity endpoint has not yet caught up with a newly created environment
+time: 2026-08-19T16:15:20.311326423Z
+custom:
+    Issue: "1236"
