@@ -501,6 +501,14 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
+
+		if helpers.IsKnown(plan.Dataverse) {
+			envDto, err = r.EnvironmentClient.waitForDataverseMetadata(ctx, envDto.Name, envDto)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+				return
+			}
+		}
 	}
 
 	// billing_policy_id is sent in the create request, but the environment record's billingPolicy
@@ -685,6 +693,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			return
+		}
+	}
+
+	if helpers.IsKnown(plan.Dataverse) {
+		envDto, err = r.EnvironmentClient.waitForDataverseMetadata(ctx, plan.Id.ValueString(), envDto)
+		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
