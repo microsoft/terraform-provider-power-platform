@@ -65,7 +65,8 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"Tenant scope is the broadest grant available, so it must be named explicitly.\n\n" +
 			"The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. " +
 			"If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. " +
-			"If several duplicates exist the create fails: deduplicate them or import one first.",
+			"If several duplicates exist the create fails: deduplicate them or import one first. " +
+			"Expiring assignments are not adopted: this resource represents a non-expiring relationship, so configuring the same principal, role and scope alongside an expiring assignment creates a separate permanent assignment.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

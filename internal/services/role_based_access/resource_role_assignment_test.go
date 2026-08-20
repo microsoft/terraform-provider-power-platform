@@ -4,6 +4,8 @@
 package role_based_access_test //nolint:revive // the underscored package name predates this file and matches every service in the repo
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -629,34 +631,33 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 	})
 }
 
-// The create POST is not idempotent, so a transient failure must not replay it. Instead the scope
-// is re-listed and the assignment that was not in the pre-create baseline is adopted, because the
-// failed-looking request may have committed.
-func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles_Without_Replay(t *testing.T) {
+// The create POST is not idempotent and the API issues no correlation token, so when a transport
+// failure hides the outcome the provider must not replay the POST, must not go looking for an
+// assignment to adopt, and must not write state. The mock commits the assignment to prove the
+// deliberate gap: the grant exists remotely while Terraform has claimed nothing.
+func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Commit_Is_Unknown_Outcome(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 
+	envSuffix := "/environments/" + testEnvironmentId
 	postAttempts := 0
 	gets := 0
+	committed := false
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			postAttempts++
-			// The server commits the assignment but the response is lost in a 500.
-			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"socket hang up"}`), nil
+			// The server commits the assignment but the response never arrives.
+			committed = true
+			return nil, errors.New("connection reset by peer")
 		})
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			gets++
-			if gets == 1 {
-				// the preflight baseline: nothing there yet
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			if committed {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
-		})
-	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -672,11 +673,23 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles
 					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
+				ExpectError: regexp.MustCompile(`(?s)the create outcome is\s+unknown`),
+			},
+			{
+				Config: `# empty`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
-					func(_ *terraform.State) error {
+					func(state *terraform.State) error {
+						if len(state.RootModule().Resources) != 0 {
+							return fmt.Errorf("no assignment may reach state after an unknown outcome, found %d resources", len(state.RootModule().Resources))
+						}
 						if postAttempts != 1 {
 							return fmt.Errorf("the non-idempotent create must be sent exactly once, got %d attempts", postAttempts)
+						}
+						if gets != 1 {
+							return fmt.Errorf("nothing may be listed after the failed POST, got %d list calls", gets)
+						}
+						if !committed {
+							return errors.New("the mock must hold the committed assignment for this test to prove the deliberate gap")
 						}
 						return nil
 					},
@@ -815,8 +828,8 @@ func TestUnitRoleAssignmentResource_Validate_Create_Definitive_Failure_Does_Not_
 	})
 }
 
-// scope_type must arrive with its matching id// scope_type must arrive with its matching id: the per-attribute validators cannot catch an id that
-// is absent entirely, so ValidateConfig covers that side.
+// scope_type must arrive with its matching id: the per-attribute validators cannot catch an id
+// that is absent entirely, so ValidateConfig covers that side.
 func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -983,9 +996,9 @@ func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testi
 	})
 }
 
-// Without an authoritative baseline the ownership rules are unsound, so a failed preflight stops
-// the create before any POST.
-func TestUnitRoleAssignmentResource_Validate_Create_Fails_Without_Preflight_Baseline(t *testing.T) {
+// Adopting or refusing duplicates is only sound against a real listing, so a failed preflight
+// stops the create before any POST.
+func TestUnitRoleAssignmentResource_Validate_Create_Fails_When_Preflight_List_Fails(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
@@ -1021,7 +1034,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Fails_Without_Preflight_Base
 				Check: resource.ComposeAggregateTestCheckFunc(
 					func(_ *terraform.State) error {
 						if postAttempts != 0 {
-							return fmt.Errorf("create must not POST without a baseline, got %d attempts", postAttempts)
+							return fmt.Errorf("create must not POST when the preflight list fails, got %d attempts", postAttempts)
 						}
 						return nil
 					},
@@ -1040,73 +1053,82 @@ func assignmentJSON(id, principal, role, scopeSuffix, expiresOn string) string {
 	return `{"roleAssignmentId":"` + id + `","scope":"/tenants/00000000-0000-0000-0000-000000000001` + scopeSuffix + `","principalType":"ApplicationUser","principalObjectId":"` + principal + `","roleDefinitionId":"` + role + `","createdByPrincipalType":"User","createdByPrincipalObjectId":"cccccccc-cccc-cccc-cccc-cccccccccccc","createdOn":"2026-06-22T17:00:00Z","expiresOn":` + expires + `}`
 }
 
-// Two new matching assignments after an ambiguous failure mean one may belong to a concurrent
-// caller, so neither is adopted and the create fails explicitly.
-func TestUnitRoleAssignmentResource_Validate_Reconcile_Refuses_Multiple_New_Candidates(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	mocks.ActivateEnvironmentHttpMocks()
+// Every status that hides the create outcome (timeout, throttle, server error) yields the explicit
+// unknown-outcome error: exactly one POST, no listing afterwards, nothing adopted.
+func TestUnitRoleAssignmentResource_Validate_Create_Retryable_Statuses_Are_Unknown_Outcome(t *testing.T) {
+	for _, status := range []int{http.StatusRequestTimeout, http.StatusTooManyRequests, http.StatusBadGateway} {
+		t.Run(fmt.Sprintf("status_%d", status), func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			mocks.ActivateEnvironmentHttpMocks()
 
-	envSuffix := "/environments/" + testEnvironmentId
-	gets := 0
-	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			gets++
-			if gets == 1 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
-			}
-			// one candidate on the first reconcile poll, two afterwards: no premature adoption
-			if gets == 2 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON("33333333-3333-3333-3333-333333333333", testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
-			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+
-				assignmentJSON("33333333-3333-3333-3333-333333333333", testPrincipalId, testRoleDefinitionId, envSuffix, "")+","+
-				assignmentJSON("55555555-5555-5555-5555-555555555555", testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
-		})
-	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
-		})
+			postAttempts := 0
+			gets := 0
+			httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+				func(_ *http.Request) (*http.Response, error) {
+					gets++
+					return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				})
+			httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+				func(_ *http.Request) (*http.Response, error) {
+					postAttempts++
+					return httpmock.NewStringResponse(status, `{"error":"outcome hidden"}`), nil
+				})
 
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-				resource "powerplatform_role_assignment" "test" {
-					scope_type         = "environment"
-					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "` + testPrincipalId + `"
-					principal_type     = "ApplicationUser"
-					role_definition_id = "` + testRoleDefinitionId + `"
-				}`,
-				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
-			},
-		},
-	})
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+						resource "powerplatform_role_assignment" "test" {
+							scope_type         = "environment"
+							environment_id     = "` + testEnvironmentId + `"
+							principal_id       = "` + testPrincipalId + `"
+							principal_type     = "ApplicationUser"
+							role_definition_id = "` + testRoleDefinitionId + `"
+						}`,
+						ExpectError: regexp.MustCompile(`(?s)the create outcome is\s+unknown`),
+					},
+					{
+						Config: `# empty`,
+						Check: func(_ *terraform.State) error {
+							if postAttempts != 1 {
+								return fmt.Errorf("the non-idempotent create must be sent exactly once, got %d attempts", postAttempts)
+							}
+							if gets != 1 {
+								return fmt.Errorf("nothing may be listed after the failed POST, got %d list calls", gets)
+							}
+							return nil
+						},
+					},
+				},
+			})
+		})
+	}
 }
 
-// A candidate that appears late is adopted only once it has been observed unchanged twice, and the
-// adopted id is exactly the confirmed one.
-func TestUnitRoleAssignmentResource_Validate_Reconcile_Adopts_Delayed_Confirmed_Candidate(t *testing.T) {
+// The documented recovery from an unknown outcome: the operator inspects the scope, finds the
+// committed assignment, and imports it with the scope-shaped id. From there the ordinary lifecycle
+// owns it, and destroy removes exactly that assignment.
+func TestUnitRoleAssignmentResource_Validate_Import_After_Ambiguous_Commit_Succeeds(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 
 	envSuffix := "/environments/" + testEnvironmentId
-	gets := 0
+	committed := false
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
-			gets++
-			// preflight empty, first reconcile poll still empty, then the committed row surfaces
-			if gets <= 2 {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			if committed {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
+			// The server commits the assignment but answers with a server error.
+			committed = true
 			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
 		})
 	deleted := ""
@@ -1116,25 +1138,43 @@ func TestUnitRoleAssignmentResource_Validate_Reconcile_Adopts_Delayed_Confirmed_
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
+	config := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type         = "environment"
+		environment_id     = "` + testEnvironmentId + `"
+		principal_id       = "` + testPrincipalId + `"
+		principal_type     = "ApplicationUser"
+		role_definition_id = "` + testRoleDefinitionId + `"
+	}`
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_role_assignment" "test" {
-					scope_type         = "environment"
-					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "` + testPrincipalId + `"
-					principal_type     = "ApplicationUser"
-					role_definition_id = "` + testRoleDefinitionId + `"
-				}`,
-				Check: resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+				Config:      config,
+				ExpectError: regexp.MustCompile(`(?s)the create outcome is\s+unknown`),
+			},
+			{
+				Config:             config,
+				ResourceName:       "powerplatform_role_assignment.test",
+				ImportState:        true,
+				ImportStateId:      "environments/" + testEnvironmentId + "/" + environmentAssignmentId,
+				ImportStatePersist: true,
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("expected exactly one imported instance, got %d", len(states))
+					}
+					if states[0].Attributes["id"] != environmentAssignmentId {
+						return fmt.Errorf("expected the committed assignment %s to be imported, got %s", environmentAssignmentId, states[0].Attributes["id"])
+					}
+					return nil
+				},
 			},
 		},
 		CheckDestroy: func(_ *terraform.State) error {
 			if deleted != environmentAssignmentId {
-				return fmt.Errorf("destroy must remove exactly the adopted assignment, deleted '%s'", deleted)
+				return fmt.Errorf("destroy must remove exactly the imported assignment, deleted '%s'", deleted)
 			}
 			return nil
 		},
@@ -1226,34 +1266,21 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Malformed_Guids(t *t
 	})
 }
 
-// The reviewer's killer sequence: a concurrent caller's assignment A is visible on the early polls
-// and ours (B) only surfaces on a later one. Early adoption would seize A and later destroy it
-// while B lived on untracked, so the window must run to completion and refuse the pair.
-func TestUnitRoleAssignmentResource_Validate_Reconcile_Runs_The_Whole_Window(t *testing.T) {
+// A cancellation during the POST hides the outcome exactly like a transport failure: the result is
+// the explicit unknown-outcome error, never a success and never an adoption.
+func TestUnitRoleAssignmentResource_Validate_Create_Cancellation_During_Post_Is_Unknown_Outcome(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 
-	envSuffix := "/environments/" + testEnvironmentId
-	concurrent := assignmentJSON("44444444-4444-4444-4444-444444444444", testPrincipalId, testRoleDefinitionId, envSuffix, "")
-	ours := assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")
 	gets := 0
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			gets++
-			switch {
-			case gets == 1: // preflight
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
-			case gets <= 3: // early polls: only the concurrent caller's assignment
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+concurrent+`]}`), nil
-			default: // ours surfaces late
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+concurrent+`,`+ours+`]}`), nil
-			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
-		})
+		httpmock.NewErrorResponder(context.Canceled))
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -1268,54 +1295,16 @@ func TestUnitRoleAssignmentResource_Validate_Reconcile_Runs_The_Whole_Window(t *
 					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
-				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
+				ExpectError: regexp.MustCompile(`(?s)the create outcome is\s+unknown`),
 			},
-		},
-	})
-}
-
-// Candidate history is never forgotten: a candidate that appears and is then replaced by another
-// means two distinct fresh ids were observed, and neither can be adopted.
-func TestUnitRoleAssignmentResource_Validate_Reconcile_Remembers_Replaced_Candidates(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	mocks.ActivateEnvironmentHttpMocks()
-
-	envSuffix := "/environments/" + testEnvironmentId
-	first := assignmentJSON("44444444-4444-4444-4444-444444444444", testPrincipalId, testRoleDefinitionId, envSuffix, "")
-	second := assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")
-	gets := 0
-	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			gets++
-			switch gets {
-			case 1: // preflight
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
-			case 2: // first candidate
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+first+`]}`), nil
-			default: // it vanishes and a different one appears
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+second+`]}`), nil
-			}
-		})
-	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
-		})
-
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_role_assignment" "test" {
-					scope_type         = "environment"
-					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "` + testPrincipalId + `"
-					principal_type     = "ApplicationUser"
-					role_definition_id = "` + testRoleDefinitionId + `"
-				}`,
-				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
+				Config: `# empty`,
+				Check: func(_ *terraform.State) error {
+					if gets != 1 {
+						return fmt.Errorf("nothing may be listed after the cancelled POST, got %d list calls", gets)
+					}
+					return nil
+				},
 			},
 		},
 	})

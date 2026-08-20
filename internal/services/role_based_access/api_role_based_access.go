@@ -65,11 +65,13 @@ func (client *client) tenantScope(ctx context.Context) (string, error) {
 //     destroying the resource will remove it;
 //   - if several already exist the create fails, because adopting any one of them would leave
 //     Terraform managing an arbitrary duplicate: deduplicate or import instead;
-//   - otherwise the relationship is created. The POST is never replayed, since a retry after an
-//     ambiguous failure could grant twice. Instead the scope is re-listed and an assignment
-//     matching the relationship that was NOT in the pre-create baseline is adopted: that one is
-//     ours. Adopting the first tuple match would risk adopting a pre-existing duplicate and later
-//     destroying it while the one this create made lives on untracked.
+//   - otherwise the relationship is created with a single POST. The POST is never replayed, since
+//     a retry after an ambiguous failure could grant twice. The one exception is the specific
+//     scope-propagation 400, which proves nothing was committed. Any other failure that leaves
+//     the outcome unknown is returned as an explicit unknown-outcome error: the API assigns the
+//     id server-side, permits duplicates, and issues no idempotency or correlation token, so no
+//     later listing can prove which assignment, if any, this request created. Guessing could
+//     seize a concurrent caller's assignment, so nothing is adopted and nothing reaches state.
 func (client *client) CreateRoleAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	tenantScope, err := client.tenantScope(ctx)
 	if err != nil {
@@ -77,9 +79,9 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 	}
 	request.Scope = scope.qualify(tenantScope)
 
-	// Preflight, authoritatively: the ownership rules below are only sound against a real baseline,
-	// so a failed list stops the create rather than degrading to an empty one. A missing child
-	// scope is the one retriable case, since a freshly created environment or group can lag here.
+	// Preflight, authoritatively: adopting or refusing duplicates is only sound against a real
+	// listing, so a failed list stops the create rather than degrading to an empty one. A missing
+	// child scope is the one retriable case, since a freshly created environment or group can lag.
 	var existing []roleAssignmentDto
 	for {
 		existing, err = client.ListRoleAssignments(ctx, scope)
@@ -94,7 +96,7 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			}
 			continue
 		}
-		return nil, fmt.Errorf("could not list the existing role assignments before creating, and creating without that baseline could duplicate or mismanage an existing assignment: %w", err)
+		return nil, fmt.Errorf("could not list the existing role assignments before creating, so it is unknown whether one for this relationship already exists, and creating blindly could duplicate or mismanage it: %w", err)
 	}
 
 	matches := matchingAssignments(existing, request)
@@ -104,10 +106,6 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 	}
 	if len(matches) > 1 {
 		return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))
-	}
-	baseline := map[string]struct{}{}
-	for i := range existing {
-		baseline[strings.ToLower(existing[i].RoleAssignmentId)] = struct{}{}
 	}
 
 	apiUrl := client.url(scope.collectionPath())
@@ -125,12 +123,17 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			}
 			continue
 		}
-		if !isAmbiguousCreateFailure(err) {
-			// A definitive rejection: the request never committed, so there is nothing to reconcile.
-			return nil, err
+		if isAmbiguousCreateFailure(err) {
+			return nil, unknownOutcomeError(err)
 		}
-		return client.reconcileAmbiguousCreate(ctx, scope, request, baseline, err)
+		// A definitive rejection: the request never committed.
+		return nil, err
 	}
+}
+
+// unknownOutcomeError wraps a create failure whose outcome the API gives no way to resolve.
+func unknownOutcomeError(err error) error {
+	return fmt.Errorf("the create outcome is unknown. The API may have committed the assignment, but it provides no idempotency key or correlation identifier that would let the provider identify it safely. Inspect the role assignments at this scope: if one was created, import it using the scope-shaped import id, and if duplicates exist, deduplicate them first. Terraform has not recorded an assignment in state. Original failure: %w", err)
 }
 
 // isAmbiguousCreateFailure reports whether the request might have committed despite the error. A
@@ -145,53 +148,6 @@ func isAmbiguousCreateFailure(err error) bool {
 	return httpErr.StatusCode == http.StatusRequestTimeout ||
 		httpErr.StatusCode == http.StatusTooManyRequests ||
 		httpErr.StatusCode >= http.StatusInternalServerError
-}
-
-// reconcileAttempts bounds how long an ambiguous create failure is reconciled for. The committed
-// assignment can lag the failed response, so one immediate list is not enough, but polling forever
-// would hide a genuine failure.
-const reconcileAttempts = 4
-
-// reconcileAmbiguousCreate decides ownership after a POST whose outcome is unknown. The API issues
-// no correlation token, so ownership can only be inferred, and the inference must run the whole
-// window: an early adoption could seize a concurrent caller's assignment while ours surfaces a poll
-// later. Every fresh id observed anywhere in the window is accumulated, and if that set ever holds
-// more than one id the outcome is declared ambiguous, because at most one of them can be ours.
-// Only a single id, observed as the sole fresh candidate across the entire window and still present
-// at its end, is adopted. Anything less provable returns the original failure with instructions,
-// never a guess.
-func (client *client) reconcileAmbiguousCreate(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto, baseline map[string]struct{}, createErr error) (*roleAssignmentDto, error) {
-	seen := map[string]struct{}{}
-	var last *roleAssignmentDto
-	for attempt := 0; attempt < reconcileAttempts; attempt++ {
-		if attempt > 0 {
-			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
-				break
-			}
-		}
-		assignments, err := client.ListRoleAssignments(ctx, scope)
-		if err != nil {
-			continue
-		}
-
-		last = nil
-		for _, match := range matchingAssignments(assignments, request) {
-			if _, preexisting := baseline[strings.ToLower(match.RoleAssignmentId)]; preexisting {
-				continue
-			}
-			seen[strings.ToLower(match.RoleAssignmentId)] = struct{}{}
-			adoptable := match
-			last = &adoptable
-		}
-		if len(seen) > 1 {
-			return nil, fmt.Errorf("the create failed ambiguously and %d distinct new assignments for this principal, role and scope were observed; at most one can be the one this create made, so none can be adopted safely. Inspect them, remove any duplicate, and import the survivor. Original failure: %w", len(seen), createErr)
-		}
-	}
-	if len(seen) == 1 && last != nil {
-		tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously; %s was the only new assignment observed across the whole reconcile window, adopting it", request.Scope, last.RoleAssignmentId))
-		return last, nil
-	}
-	return nil, fmt.Errorf("the create failed and it could not be proven whether the assignment was committed; list the scope's role assignments and import the assignment if it exists. Original failure: %w", createErr)
 }
 
 // matchingAssignments returns the assignments with the request's principal, role and type.
