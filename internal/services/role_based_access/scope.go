@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 )
 
 // assignmentScope is where a role assignment applies. The RBAC API expresses scope twice for every
@@ -87,13 +89,13 @@ func (s assignmentScope) String() string {
 // scope requires environment_id, environment group scope requires environment_group_id, and tenant
 // scope must not carry either. The id attributes carry their own validators, but those cannot fire
 // when the attribute is absent, so the requirement is enforced from this side too.
-func validateScopeSelection(scopeType, environmentId, environmentGroupId types.String) diag.Diagnostics {
+func validateScopeSelection(scopeType types.String, environmentId, environmentGroupId customtypes.UUID) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if scopeType.IsUnknown() || scopeType.IsNull() {
 		return diags
 	}
 
-	has := func(v types.String) bool { return v.IsUnknown() || (!v.IsNull() && v.ValueString() != "") }
+	has := func(v customtypes.UUID) bool { return v.IsUnknown() || (!v.IsNull() && v.ValueString() != "") }
 
 	switch scopeType.ValueString() {
 	case scopeEnvironment:

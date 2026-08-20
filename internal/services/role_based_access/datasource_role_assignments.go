@@ -6,7 +6,6 @@ package role_based_access //nolint:revive // the underscored package name predat
 import (
 	"context"
 	"fmt"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -17,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 var (
@@ -117,27 +116,17 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the environment to read assignments from. Required when `scope_type` is `environment`",
 				Optional:            true,
+				CustomType:          customtypes.UUIDType{},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_group_id")),
-					stringvalidator.LengthAtLeast(1),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
-					validators.OtherFieldRequiredWhenValueOf(
-						path.Root("scope_type").Expression(),
-						regexp.MustCompile("^"+scopeEnvironment+"$"), nil,
-						"environment_id is required when scope_type is `environment`"),
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the environment group to read assignments from. Required when `scope_type` is `environment_group`",
 				Optional:            true,
+				CustomType:          customtypes.UUIDType{},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
-					stringvalidator.LengthAtLeast(1),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a guid"),
-					validators.OtherFieldRequiredWhenValueOf(
-						path.Root("scope_type").Expression(),
-						regexp.MustCompile("^"+scopeEnvironmentGroup+"$"), nil,
-						"environment_group_id is required when scope_type is `environment_group`"),
 				},
 			},
 			"role_assignments": roleAssignmentsAttribute("List of role assignments at the requested scope"),

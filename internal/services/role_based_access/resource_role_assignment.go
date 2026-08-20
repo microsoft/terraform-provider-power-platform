@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -22,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 // principalTypes are the principal kinds the RBAC API accepts. The API models this as an enum
@@ -91,45 +90,33 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise",
 				Optional:            true,
+				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_group_id")),
-					stringvalidator.LengthAtLeast(1),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
-					validators.OtherFieldRequiredWhenValueOf(
-						path.Root("scope_type").Expression(),
-						regexp.MustCompile("^"+scopeEnvironment+"$"), nil,
-						"environment_id is required when scope_type is `environment`"),
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
 				MarkdownDescription: "The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise",
 				Optional:            true,
+				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
-					stringvalidator.LengthAtLeast(1),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a guid"),
-					validators.OtherFieldRequiredWhenValueOf(
-						path.Root("scope_type").Expression(),
-						regexp.MustCompile("^"+scopeEnvironmentGroup+"$"), nil,
-						"environment_group_id is required when scope_type is `environment_group`"),
 				},
 			},
 			"principal_id": schema.StringAttribute{
 				MarkdownDescription: "The Microsoft Entra object ID of the principal to assign the role to, for every principal type. " +
 					"For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID. " +
 					"For a user it is the user's object ID, not the email address: the API models this field as a GUID, so an email is rejected before any lookup happens",
-				Required: true,
+				Required:   true,
+				CustomType: customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "principal_id must be an Entra object id (a guid); a user is identified by object id, not email"),
 				},
 			},
 			"principal_type": schema.StringAttribute{
@@ -145,6 +132,7 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"role_definition_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the role definition to assign",
 				Required:            true,
+				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -258,9 +246,9 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state.PrincipalId = types.StringValue(found.PrincipalObjectId)
+	state.PrincipalId = customtypes.NewUUIDValue(found.PrincipalObjectId)
 	state.PrincipalType = types.StringValue(found.PrincipalType)
-	state.RoleDefinitionId = types.StringValue(found.RoleDefinitionId)
+	state.RoleDefinitionId = customtypes.NewUUIDValue(found.RoleDefinitionId)
 	state.Scope = types.StringValue(found.Scope)
 	state.CreatedOn = types.StringValue(found.CreatedOn)
 

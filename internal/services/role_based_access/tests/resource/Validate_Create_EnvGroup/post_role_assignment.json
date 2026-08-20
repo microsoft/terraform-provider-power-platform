@@ -1,6 +1,6 @@
 {
   "roleAssignmentId": "22222222-2222-2222-2222-222222222222",
-  "scope": "/tenants/00000000-0000-0000-0000-000000000001/environmentGroups/dddddddd-dddd-dddd-dddd-dddddddddddd",
+  "scope": "/tenants/00000000-0000-0000-0000-000000000001/environmentgroups/dddddddd-dddd-dddd-dddd-dddddddddddd",
   "principalType": "ApplicationUser",
   "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
   "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",

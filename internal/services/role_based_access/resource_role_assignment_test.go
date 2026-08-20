@@ -151,7 +151,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *te
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", envGroupAssignmentId),
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "environment_group_id", testEnvironmentGroupId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentGroups/"+testEnvironmentGroupId),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentgroups/"+testEnvironmentGroupId),
 				),
 			},
 			{
@@ -197,19 +197,24 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 	mocks.ActivateEnvironmentHttpMocks()
 
 	postAttempts := 0
+	created := false
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			postAttempts++
 			if postAttempts == 1 {
 				return httpmock.NewStringResponse(http.StatusBadRequest, `{"code":"EndpointInvalid","message":"Environment id is invalid.","innererror":{"code":"EnvironmentIdInvalid"}}`), nil
 			}
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
 		})
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
 		})
-	httpmock.RegisterResponder("DELETE", `=~^https://api\.powerplatform\.com/authorization/environments/.+/roleAssignments/.+\z`,
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -221,11 +226,11 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
-					scope_type                       = "environment"
-					environment_id                   = "` + testEnvironmentId + `"
-					principal_id = "` + testPrincipalId + `"
-					principal_type                   = "ApplicationUser"
-					role_definition_id               = "` + testRoleDefinitionId + `"
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
@@ -410,7 +415,7 @@ func TestAccRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *tes
 		}`, "scope_type           = \"environment_group\"\n\t\t\tenvironment_group_id = powerplatform_environment_group.test_env_group.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environmentGroups/`)),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
 				)...),
 			},
 		},
@@ -599,7 +604,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 					// service principal, three scopes
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_tenant", "scope", regexp.MustCompile(`^/tenants/[^/]+$`)),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment", "scope", regexp.MustCompile(`/environments/`)),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`/environmentGroups/`)),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment", "environment_id", "powerplatform_environment.test_environment", "id"),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment_group", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
 
@@ -624,14 +629,16 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 	})
 }
 
-// The create POST is not idempotent, so a transient failure must not replay it. Instead the scope is
-// listed and a matching assignment adopted, because the failed-looking request may have committed.
+// The create POST is not idempotent, so a transient failure must not replay it. Instead the scope
+// is re-listed and the assignment that was not in the pre-create baseline is adopted, because the
+// failed-looking request may have committed.
 func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles_Without_Replay(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 
 	postAttempts := 0
+	gets := 0
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			postAttempts++
@@ -640,6 +647,11 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles
 		})
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			if gets == 1 {
+				// the preflight baseline: nothing there yet
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
 		})
 	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
@@ -674,12 +686,27 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles
 	})
 }
 
-// The API's principalObjectId is a System.Guid, verified live: an email fails JSON conversion with a
-// 400 before any principal lookup. Rejecting it at plan time turns that into a clear message.
-func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testing.T) {
+// A relationship that already exists uniquely is adopted without a POST, since the configuration
+// identifies the relationship and the assignment id is computed.
+func TestUnitRoleAssignmentResource_Validate_Create_Adopts_Unique_Existing_Assignment(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+
+	postAttempts := 0
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			postAttempts++
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -690,17 +717,105 @@ func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testi
 				resource "powerplatform_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "someone@contoso.com"
-					principal_type     = "User"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
-				ExpectError: regexp.MustCompile(`identified by object id, not email`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					func(_ *terraform.State) error {
+						if postAttempts != 0 {
+							return fmt.Errorf("an existing unique relationship must be adopted without a POST, got %d attempts", postAttempts)
+						}
+						return nil
+					},
+				),
 			},
 		},
 	})
 }
 
-// scope_type must arrive with its matching id: the per-attribute validators cannot catch an id that
+// Duplicate existing relationships cannot be adopted safely, so create refuses them.
+func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Duplicate_Existing_Assignments(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleAssignmentId":"33333333-3333-3333-3333-333333333333","scope":"/tenants/00000000-0000-0000-0000-000000000001/environments/`+testEnvironmentId+`","principalType":"ApplicationUser","principalObjectId":"`+testPrincipalId+`","roleDefinitionId":"`+testRoleDefinitionId+`","createdByPrincipalType":"User","createdByPrincipalObjectId":"cccccccc-cccc-cccc-cccc-cccccccccccc","createdOn":"2026-06-22T17:00:00Z","expiresOn":null},
+				{"roleAssignmentId":"55555555-5555-5555-5555-555555555555","scope":"/tenants/00000000-0000-0000-0000-000000000001/environments/`+testEnvironmentId+`","principalType":"ApplicationUser","principalObjectId":"`+testPrincipalId+`","roleDefinitionId":"`+testRoleDefinitionId+`","createdByPrincipalType":"User","createdByPrincipalObjectId":"cccccccc-cccc-cccc-cccc-cccccccccccc","createdOn":"2026-06-22T17:01:00Z","expiresOn":null}
+			]}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)found 2 existing role assignments.*deduplicate`),
+			},
+		},
+	})
+}
+
+// A definitive rejection never committed anything, so there is nothing to reconcile and no polling.
+func TestUnitRoleAssignmentResource_Validate_Create_Definitive_Failure_Does_Not_Poll(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusBadRequest, `{"code":"PrincipalDoesNotExist","message":"The service principal does not exist in tenant."}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`PrincipalDoesNotExist`),
+			},
+			{
+				Config: `# empty`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					func(_ *terraform.State) error {
+						if gets != 1 {
+							return fmt.Errorf("a definitive 400 must not trigger reconcile polling, got %d list calls", gets)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// scope_type must arrive with its matching id// scope_type must arrive with its matching id: the per-attribute validators cannot catch an id that
 // is absent entirely, so ValidateConfig covers that side.
 func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testing.T) {
 	httpmock.Activate()
@@ -763,7 +878,8 @@ func TestUnitRoleAssignmentResource_Validate_Read_404_Tenant_Errors_Environment_
 	httpmock.RegisterResponder("GET", tenantCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			tenantGets++
-			if tenantGets == 1 {
+			// preflight and the post-apply refresh see the assignment; the 404 starts afterwards
+			if tenantGets <= 2 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Tenant/get_role_assignments.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
@@ -807,10 +923,11 @@ func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			envGets++
-			if envGets == 1 {
+			// preflight and the post-apply refresh see the assignment; then the environment is
+			// deleted out of band
+			if envGets <= 2 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
 			}
-			// the environment has been deleted out of band
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
@@ -835,6 +952,32 @@ func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment
 			{
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// The API's principalObjectId is a System.Guid, verified live: an email fails JSON conversion with
+// a 400 before any principal lookup. The UUID custom type rejects it at plan time instead.
+func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "someone@contoso.com"
+					principal_type     = "User"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`Invalid UUID String Value`),
 			},
 		},
 	})

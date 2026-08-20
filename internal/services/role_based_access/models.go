@@ -6,6 +6,7 @@ package role_based_access
 import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -19,16 +20,16 @@ type roleAssignmentResource struct {
 // Resource models
 
 type roleAssignmentResourceModel struct {
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Id                 types.String   `tfsdk:"id"`
-	ScopeType          types.String   `tfsdk:"scope_type"`
-	EnvironmentId      types.String   `tfsdk:"environment_id"`
-	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
-	PrincipalId        types.String   `tfsdk:"principal_id"`
-	PrincipalType      types.String   `tfsdk:"principal_type"`
-	RoleDefinitionId   types.String   `tfsdk:"role_definition_id"`
-	Scope              types.String   `tfsdk:"scope"`
-	CreatedOn          types.String   `tfsdk:"created_on"`
+	Timeouts           timeouts.Value   `tfsdk:"timeouts"`
+	Id                 types.String     `tfsdk:"id"`
+	ScopeType          types.String     `tfsdk:"scope_type"`
+	EnvironmentId      customtypes.UUID `tfsdk:"environment_id"`
+	EnvironmentGroupId customtypes.UUID `tfsdk:"environment_group_id"`
+	PrincipalId        customtypes.UUID `tfsdk:"principal_id"`
+	PrincipalType      types.String     `tfsdk:"principal_type"`
+	RoleDefinitionId   customtypes.UUID `tfsdk:"role_definition_id"`
+	Scope              types.String     `tfsdk:"scope"`
+	CreatedOn          types.String     `tfsdk:"created_on"`
 }
 
 // assignmentScope is where the assignment applies. The kind comes from the `scope_type` attribute rather
@@ -78,8 +79,8 @@ type roleAssignmentDataSourceModel struct {
 type roleAssignmentsDataSourceModel struct {
 	Timeouts           timeouts.Value                  `tfsdk:"timeouts"`
 	ScopeType          types.String                    `tfsdk:"scope_type"`
-	EnvironmentId      types.String                    `tfsdk:"environment_id"`
-	EnvironmentGroupId types.String                    `tfsdk:"environment_group_id"`
+	EnvironmentId      customtypes.UUID                `tfsdk:"environment_id"`
+	EnvironmentGroupId customtypes.UUID                `tfsdk:"environment_group_id"`
 	RoleAssignments    []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
 }
 

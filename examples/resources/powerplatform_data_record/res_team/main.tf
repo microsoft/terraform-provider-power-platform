@@ -33,7 +33,7 @@ variable "team_description" {
 variable "role_ids" {
   type        = set(string)
   description = "The role ids that are granted to this team"
-
+  
 }
 
 resource "powerplatform_data_record" "team" {

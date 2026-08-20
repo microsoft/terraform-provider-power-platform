@@ -57,19 +57,44 @@ func (client *client) tenantScope(ctx context.Context) (string, error) {
 	return fmt.Sprintf("/tenants/%s", tenantDto.TenantId), nil
 }
 
-// CreateRoleAssignment creates a role assignment at the given scope.
+// CreateRoleAssignment creates a role assignment at the given scope, with explicit relationship
+// semantics. The configuration identifies the relationship (scope, principal, type, role) while the
+// assignment id is computed, and the API happily stores duplicates of the same relationship, so:
 //
-// The POST is not idempotent, so it is never replayed: a retried request that actually committed the
-// first time would grant access twice or fail as a duplicate while the real assignment goes
-// untracked. The one deliberate retry is the scope-propagation 400, which is safe because a 400
-// means nothing was created. Any other failure is reconciled by listing the scope: if an assignment
-// matching the principal, role and type is there, the request committed and it is adopted.
+//   - if exactly one matching assignment already exists it is adopted without a POST, and
+//     destroying the resource will remove it;
+//   - if several already exist the create fails, because adopting any one of them would leave
+//     Terraform managing an arbitrary duplicate: deduplicate or import instead;
+//   - otherwise the relationship is created. The POST is never replayed, since a retry after an
+//     ambiguous failure could grant twice. Instead the scope is re-listed and an assignment
+//     matching the relationship that was NOT in the pre-create baseline is adopted: that one is
+//     ours. Adopting the first tuple match would risk adopting a pre-existing duplicate and later
+//     destroying it while the one this create made lives on untracked.
 func (client *client) CreateRoleAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	tenantScope, err := client.tenantScope(ctx)
 	if err != nil {
 		return nil, err
 	}
 	request.Scope = scope.qualify(tenantScope)
+
+	// Preflight: adopt a unique existing relationship, refuse an ambiguous one, and record the
+	// baseline ids so a post-failure reconcile can tell our assignment from pre-existing ones. A
+	// preflight failure (for example a scope that has not propagated yet) degrades to an empty
+	// baseline: the POST path below handles propagation itself.
+	baseline := map[string]struct{}{}
+	if existing, listErr := client.ListRoleAssignments(ctx, scope); listErr == nil {
+		matches := matchingAssignments(existing, request)
+		if len(matches) == 1 {
+			tflog.Debug(ctx, fmt.Sprintf("Adopting existing role assignment %s at scope %s", matches[0].RoleAssignmentId, request.Scope))
+			return &matches[0], nil
+		}
+		if len(matches) > 1 {
+			return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))
+		}
+		for i := range existing {
+			baseline[strings.ToLower(existing[i].RoleAssignmentId)] = struct{}{}
+		}
+	}
 
 	apiUrl := client.url(scope.collectionPath())
 	response := roleAssignmentDto{}
@@ -86,13 +111,31 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			}
 			continue
 		}
+		if !isAmbiguousCreateFailure(err) {
+			// A definitive rejection: the request never committed, so there is nothing to reconcile.
+			return nil, err
+		}
 
-		if adopted := client.findExistingAssignment(ctx, scope, request); adopted != nil {
-			tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously but the assignment exists; adopting %s", request.Scope, adopted.RoleAssignmentId))
+		if adopted := client.findAssignmentCreatedByUs(ctx, scope, request, baseline); adopted != nil {
+			tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously but a new matching assignment exists; adopting %s", request.Scope, adopted.RoleAssignmentId))
 			return adopted, nil
 		}
 		return nil, err
 	}
+}
+
+// isAmbiguousCreateFailure reports whether the request might have committed despite the error. A
+// definitive HTTP rejection (400, 401, 403, 404, 409) means the server refused it; a transport
+// failure, timeout, throttle or server error leaves the outcome unknown.
+func isAmbiguousCreateFailure(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if !errors.As(err, &httpErr) {
+		// No HTTP status at all: the transport failed with the outcome unknown.
+		return true
+	}
+	return httpErr.StatusCode == http.StatusRequestTimeout ||
+		httpErr.StatusCode == http.StatusTooManyRequests ||
+		httpErr.StatusCode >= http.StatusInternalServerError
 }
 
 // reconcileAttempts bounds how long an ambiguous create failure is reconciled for. The committed
@@ -100,11 +143,9 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 // would hide a genuine failure.
 const reconcileAttempts = 3
 
-// findExistingAssignment looks for an assignment matching the request's principal, role and type at
-// the given scope. It is used to reconcile an ambiguous create failure, so its own errors are
-// swallowed: the caller returns the original failure. Identifiers are compared case-insensitively,
-// since the service renders guids in its own casing.
-func (client *client) findExistingAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) *roleAssignmentDto {
+// findAssignmentCreatedByUs looks for an assignment matching the request that was not present
+// before the POST. Its own errors are swallowed: the caller returns the original failure.
+func (client *client) findAssignmentCreatedByUs(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto, baseline map[string]struct{}) *roleAssignmentDto {
 	for attempt := 0; attempt < reconcileAttempts; attempt++ {
 		if attempt > 0 {
 			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
@@ -115,15 +156,28 @@ func (client *client) findExistingAssignment(ctx context.Context, scope assignme
 		if err != nil {
 			continue
 		}
-		for i := range assignments {
-			if strings.EqualFold(assignments[i].PrincipalObjectId, request.PrincipalObjectId) &&
-				strings.EqualFold(assignments[i].RoleDefinitionId, request.RoleDefinitionId) &&
-				strings.EqualFold(assignments[i].PrincipalType, request.PrincipalType) {
-				return &assignments[i]
+		for _, match := range matchingAssignments(assignments, request) {
+			if _, preexisting := baseline[strings.ToLower(match.RoleAssignmentId)]; !preexisting {
+				adopted := match
+				return &adopted
 			}
 		}
 	}
 	return nil
+}
+
+// matchingAssignments returns the assignments with the request's principal, role and type.
+// Identifiers are compared case-insensitively, since the service renders guids in its own casing.
+func matchingAssignments(assignments []roleAssignmentDto, request roleAssignmentRequestDto) []roleAssignmentDto {
+	var matches []roleAssignmentDto
+	for i := range assignments {
+		if strings.EqualFold(assignments[i].PrincipalObjectId, request.PrincipalObjectId) &&
+			strings.EqualFold(assignments[i].RoleDefinitionId, request.RoleDefinitionId) &&
+			strings.EqualFold(assignments[i].PrincipalType, request.PrincipalType) {
+			matches = append(matches, assignments[i])
+		}
+	}
+	return matches
 }
 
 func isScopeNotYetPropagated(err error) bool {

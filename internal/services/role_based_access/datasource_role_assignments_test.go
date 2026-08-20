@@ -91,7 +91,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_EnvironmentGroup_Scope(t *t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.id", "44444444-4444-4444-4444-444444444444"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.scope", "/environmentGroups/"+testDataSourceEnvironmentGroupId),
+					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.scope", "/environmentgroups/"+testDataSourceEnvironmentGroupId),
 				),
 			},
 		},

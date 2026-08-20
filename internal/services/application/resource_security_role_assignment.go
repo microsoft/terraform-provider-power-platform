@@ -23,6 +23,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -35,14 +36,14 @@ type SecurityRoleAssignmentResource struct {
 }
 
 type SecurityRoleAssignmentResourceModel struct {
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	Id               types.String   `tfsdk:"id"`
-	EnvironmentId    types.String   `tfsdk:"environment_id"`
-	SystemUserId     types.String   `tfsdk:"system_user_id"`
-	TeamId           types.String   `tfsdk:"team_id"`
-	BusinessUnitId   types.String   `tfsdk:"business_unit_id"`
-	SecurityRoleName types.String   `tfsdk:"security_role_name"`
-	RoleId           types.String   `tfsdk:"role_id"`
+	Timeouts         timeouts.Value   `tfsdk:"timeouts"`
+	Id               types.String     `tfsdk:"id"`
+	EnvironmentId    customtypes.UUID `tfsdk:"environment_id"`
+	SystemUserId     customtypes.UUID `tfsdk:"system_user_id"`
+	TeamId           customtypes.UUID `tfsdk:"team_id"`
+	BusinessUnitId   customtypes.UUID `tfsdk:"business_unit_id"`
+	SecurityRoleName types.String     `tfsdk:"security_role_name"`
+	RoleId           customtypes.UUID `tfsdk:"role_id"`
 }
 
 // holder is the Dataverse principal this assignment targets, chosen by whichever id is set.
@@ -106,9 +107,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
-				},
+				CustomType: customtypes.UUIDType{},
 			},
 			"system_user_id": schema.StringAttribute{
 				MarkdownDescription: "Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.",
@@ -116,9 +115,10 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				CustomType: customtypes.UUIDType{},
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(path.MatchRoot("system_user_id"), path.MatchRoot("team_id")),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "system_user_id must be a guid"),
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"team_id": schema.StringAttribute{
@@ -127,8 +127,9 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				CustomType: customtypes.UUIDType{},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "team_id must be a guid"),
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"business_unit_id": schema.StringAttribute{
@@ -139,9 +140,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "business_unit_id must be a guid"),
-				},
+				CustomType: customtypes.UUIDType{},
 			},
 			"security_role_name": schema.StringAttribute{
 				MarkdownDescription: "Dataverse security role name to assign.",
@@ -153,6 +152,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 			"role_id": schema.StringAttribute{
 				MarkdownDescription: "Resolved Dataverse role ID for the assigned security role. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it.",
 				Computed:            true,
+				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -215,8 +215,8 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		}
 	}
 
-	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
-	plan.RoleId = types.StringValue(resolved.role.RoleId)
+	plan.BusinessUnitId = customtypes.NewUUIDValue(resolved.businessUnitID)
+	plan.RoleId = customtypes.NewUUIDValue(resolved.role.RoleId)
 	plan.Id = types.StringValue(plan.compositeId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -253,7 +253,7 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.BusinessUnitId = types.StringValue(assigned.BusinessUnitId)
+	state.BusinessUnitId = customtypes.NewUUIDValue(assigned.BusinessUnitId)
 	// The name is a create-time selector, so an existing value is left alone even if the role has
 	// been renamed since; the id keeps the assignment attached regardless. It is only filled in
 	// when absent, which is the import path.
@@ -325,8 +325,8 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 		principalAttribute = "team_id"
 	}
 
-	// Dataverse renders guids lowercase, and the role lookup compares ids case-insensitively, but
-	// normalising here keeps state canonical regardless of how the import id was typed.
+	// The guid attributes carry semantic equality, so casing never causes drift; the segments are
+	// still validated so a malformed id fails at import rather than at the first refresh.
 	guidRegex := regexp.MustCompile(helpers.GuidRegex)
 	for _, part := range []string{idParts[0], idParts[2], idParts[3]} {
 		if !guidRegex.MatchString(part) {
@@ -335,11 +335,10 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 		}
 	}
 
-	normalizedId := fmt.Sprintf("%s/%s/%s/%s", strings.ToLower(idParts[0]), idParts[1], strings.ToLower(idParts[2]), strings.ToLower(idParts[3]))
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), normalizedId)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), strings.ToLower(idParts[0]))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), strings.ToLower(idParts[2]))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), strings.ToLower(idParts[3]))...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), idParts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), idParts[3])...)
 }
 
 type resolvedRoleAssignment struct {

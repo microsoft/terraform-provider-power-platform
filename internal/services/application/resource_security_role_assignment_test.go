@@ -635,7 +635,7 @@ func TestUnitSecurityRoleAssignmentResource_Empty_TeamId_Is_Rejected(t *testing.
 					team_id            = ""
 					security_role_name = "MetaForm Global Admin"
 				}`,
-				ExpectError: regexp.MustCompile(`team_id must be a guid`),
+				ExpectError: regexp.MustCompile(`Invalid UUID String Value`),
 			},
 		},
 	})
