@@ -68,11 +68,12 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 				Request:    request,
 			},
 		}
-		return resp, err
+		// The request may have reached the service even though the response was lost.
+		return resp, RequestSentError{Err: err}
 	}
 
 	if apiResponse == nil {
-		return nil, errors.New("unexpected nil response without error")
+		return nil, RequestSentError{Err: errors.New("unexpected nil response without error")}
 	}
 
 	resp := &Response{
@@ -80,7 +81,7 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 
 	defer apiResponse.Body.Close()
-	body, err := io.ReadAll(apiResponse.Body)
+	body, readErr := io.ReadAll(apiResponse.Body)
 	resp.BodyAsBytes = body
 
 	// Check for CAE challenge response if CAE is enabled
@@ -100,7 +101,11 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		return resp, caeError
 	}
 
-	return resp, err
+	if readErr != nil {
+		// The response status arrived, so the request was processed; only its body was lost.
+		return resp, RequestSentError{Err: readErr}
+	}
+	return resp, nil
 }
 
 type Response struct {

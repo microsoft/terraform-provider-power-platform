@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
@@ -47,8 +48,11 @@ func TestUnitIsAmbiguousCreateFailure_Classifies_Every_Status(t *testing.T) {
 		}
 	}
 
-	if !isAmbiguousCreateFailure(errors.New("connection reset by peer")) {
-		t.Error("a transport failure carries no status and must be classified as ambiguous")
+	if !isAmbiguousCreateFailure(api.RequestSentError{Err: errors.New("connection reset by peer")}) {
+		t.Error("a failure after the request may have been sent must be classified as ambiguous")
+	}
+	if isAmbiguousCreateFailure(errors.New("could not acquire a token")) {
+		t.Error("a failure before the request was sent proves nothing was committed and must not be classified as ambiguous")
 	}
 }
 

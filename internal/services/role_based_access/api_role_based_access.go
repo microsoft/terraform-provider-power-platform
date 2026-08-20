@@ -138,17 +138,19 @@ func unknownOutcomeError(err error) error {
 }
 
 // isAmbiguousCreateFailure reports whether the request might have committed despite the error. A
-// definitive HTTP rejection (400, 401, 403, 404, 409) means the server refused it; a transport
-// failure, timeout, throttle or server error leaves the outcome unknown.
+// definitive HTTP rejection (400, 401, 403, 404, 409) means the server refused it, and an error
+// raised before the request was sent (scope, url, token or request construction) proves nothing
+// was committed; a failure on or after the wire without a status, which the api client marks with
+// RequestSentError, leaves the outcome unknown.
 func isAmbiguousCreateFailure(err error) bool {
 	var httpErr customerrors.UnexpectedHttpStatusCodeError
-	if !errors.As(err, &httpErr) {
-		// No HTTP status at all: the transport failed with the outcome unknown.
-		return true
+	if errors.As(err, &httpErr) {
+		return httpErr.StatusCode == http.StatusRequestTimeout ||
+			httpErr.StatusCode == http.StatusTooManyRequests ||
+			httpErr.StatusCode >= http.StatusInternalServerError
 	}
-	return httpErr.StatusCode == http.StatusRequestTimeout ||
-		httpErr.StatusCode == http.StatusTooManyRequests ||
-		httpErr.StatusCode >= http.StatusInternalServerError
+	var sent api.RequestSentError
+	return errors.As(err, &sent)
 }
 
 // matchingAssignments returns the assignments with the request's principal, role and type.
