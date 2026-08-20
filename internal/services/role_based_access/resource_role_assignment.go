@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -291,7 +292,14 @@ func (r *roleAssignmentResource) ImportState(ctx context.Context, req resource.I
 		"`environments/{environment_id}/{role_assignment_id}`, or " +
 		"`environmentGroups/{environment_group_id}/{role_assignment_id}`"
 
+	guidRegex := regexp.MustCompile(helpers.GuidRegex)
 	parts := strings.Split(req.ID, "/")
+	for _, part := range parts {
+		if part != "environments" && part != "environmentGroups" && !guidRegex.MatchString(part) {
+			resp.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("'%s' is not a guid. %s", part, importFormats))
+			return
+		}
+	}
 	switch {
 	case len(parts) == 1 && parts[0] != "":
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeTenant)...)

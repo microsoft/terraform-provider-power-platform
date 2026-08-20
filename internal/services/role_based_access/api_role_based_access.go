@@ -77,23 +77,37 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 	}
 	request.Scope = scope.qualify(tenantScope)
 
-	// Preflight: adopt a unique existing relationship, refuse an ambiguous one, and record the
-	// baseline ids so a post-failure reconcile can tell our assignment from pre-existing ones. A
-	// preflight failure (for example a scope that has not propagated yet) degrades to an empty
-	// baseline: the POST path below handles propagation itself.
+	// Preflight, authoritatively: the ownership rules below are only sound against a real baseline,
+	// so a failed list stops the create rather than degrading to an empty one. A missing child
+	// scope is the one retriable case, since a freshly created environment or group can lag here.
+	var existing []roleAssignmentDto
+	for {
+		existing, err = client.ListRoleAssignments(ctx, scope)
+		if err == nil {
+			break
+		}
+		if scope.kind != scopeTenant && errors.Is(err, customerrors.ErrObjectNotFound) {
+			waitFor := api.DefaultRetryAfter()
+			tflog.Debug(ctx, fmt.Sprintf("Scope %s is not visible for role assignments yet, retrying preflight after %s", request.Scope, waitFor))
+			if sleepErr := client.Api.SleepWithContext(ctx, waitFor); sleepErr != nil {
+				return nil, err
+			}
+			continue
+		}
+		return nil, fmt.Errorf("could not list the existing role assignments before creating, and creating without that baseline could duplicate or mismanage an existing assignment: %w", err)
+	}
+
+	matches := matchingAssignments(existing, request)
+	if len(matches) == 1 {
+		tflog.Debug(ctx, fmt.Sprintf("Adopting existing role assignment %s at scope %s", matches[0].RoleAssignmentId, request.Scope))
+		return &matches[0], nil
+	}
+	if len(matches) > 1 {
+		return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))
+	}
 	baseline := map[string]struct{}{}
-	if existing, listErr := client.ListRoleAssignments(ctx, scope); listErr == nil {
-		matches := matchingAssignments(existing, request)
-		if len(matches) == 1 {
-			tflog.Debug(ctx, fmt.Sprintf("Adopting existing role assignment %s at scope %s", matches[0].RoleAssignmentId, request.Scope))
-			return &matches[0], nil
-		}
-		if len(matches) > 1 {
-			return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))
-		}
-		for i := range existing {
-			baseline[strings.ToLower(existing[i].RoleAssignmentId)] = struct{}{}
-		}
+	for i := range existing {
+		baseline[strings.ToLower(existing[i].RoleAssignmentId)] = struct{}{}
 	}
 
 	apiUrl := client.url(scope.collectionPath())
@@ -115,12 +129,7 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			// A definitive rejection: the request never committed, so there is nothing to reconcile.
 			return nil, err
 		}
-
-		if adopted := client.findAssignmentCreatedByUs(ctx, scope, request, baseline); adopted != nil {
-			tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously but a new matching assignment exists; adopting %s", request.Scope, adopted.RoleAssignmentId))
-			return adopted, nil
-		}
-		return nil, err
+		return client.reconcileAmbiguousCreate(ctx, scope, request, baseline, err)
 	}
 }
 
@@ -141,36 +150,62 @@ func isAmbiguousCreateFailure(err error) bool {
 // reconcileAttempts bounds how long an ambiguous create failure is reconciled for. The committed
 // assignment can lag the failed response, so one immediate list is not enough, but polling forever
 // would hide a genuine failure.
-const reconcileAttempts = 3
+const reconcileAttempts = 4
 
-// findAssignmentCreatedByUs looks for an assignment matching the request that was not present
-// before the POST. Its own errors are swallowed: the caller returns the original failure.
-func (client *client) findAssignmentCreatedByUs(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto, baseline map[string]struct{}) *roleAssignmentDto {
+// reconcileAmbiguousCreate decides ownership after a POST whose outcome is unknown. Adoption
+// requires proof: exactly one assignment matching the relationship that was absent from the
+// pre-create baseline, observed unchanged on two consecutive polls. More than one new candidate
+// means a concurrent caller made one of them, and adopting either could seize theirs, so that is
+// an explicit failure. If ownership cannot be proven either way, the original failure is returned
+// with instructions, never a guess.
+func (client *client) reconcileAmbiguousCreate(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto, baseline map[string]struct{}, createErr error) (*roleAssignmentDto, error) {
+	confirmed := ""
 	for attempt := 0; attempt < reconcileAttempts; attempt++ {
 		if attempt > 0 {
 			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
-				return nil
+				break
 			}
 		}
 		assignments, err := client.ListRoleAssignments(ctx, scope)
 		if err != nil {
+			confirmed = ""
 			continue
 		}
+
+		var fresh []roleAssignmentDto
 		for _, match := range matchingAssignments(assignments, request) {
 			if _, preexisting := baseline[strings.ToLower(match.RoleAssignmentId)]; !preexisting {
-				adopted := match
-				return &adopted
+				fresh = append(fresh, match)
 			}
 		}
+
+		switch len(fresh) {
+		case 0:
+			confirmed = ""
+		case 1:
+			if strings.EqualFold(confirmed, fresh[0].RoleAssignmentId) {
+				adopted := fresh[0]
+				tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously; assignment %s confirmed as ours across two polls, adopting it", request.Scope, adopted.RoleAssignmentId))
+				return &adopted, nil
+			}
+			confirmed = fresh[0].RoleAssignmentId
+		default:
+			return nil, fmt.Errorf("the create failed ambiguously and %d new assignments for this principal, role and scope appeared; one may belong to a concurrent caller, so none can be adopted safely. Inspect them, remove any duplicate, and import the survivor. Original failure: %w", len(fresh), createErr)
+		}
 	}
-	return nil
+	return nil, fmt.Errorf("the create failed and it could not be proven whether the assignment was committed; list the scope's role assignments and import the assignment if it exists. Original failure: %w", createErr)
 }
 
 // matchingAssignments returns the assignments with the request's principal, role and type.
 // Identifiers are compared case-insensitively, since the service renders guids in its own casing.
+// Expiring assignments never match: this resource has no expiry input, so it can neither have
+// created one nor faithfully manage one.
 func matchingAssignments(assignments []roleAssignmentDto, request roleAssignmentRequestDto) []roleAssignmentDto {
 	var matches []roleAssignmentDto
 	for i := range assignments {
+		if assignments[i].ExpiresOn != nil && *assignments[i].ExpiresOn != "" {
+			continue
+		}
 		if strings.EqualFold(assignments[i].PrincipalObjectId, request.PrincipalObjectId) &&
 			strings.EqualFold(assignments[i].RoleDefinitionId, request.RoleDefinitionId) &&
 			strings.EqualFold(assignments[i].PrincipalType, request.PrincipalType) {

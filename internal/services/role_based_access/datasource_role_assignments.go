@@ -99,7 +99,7 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches the [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform.\n\n" +
 			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Reading assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
-			"Use this data source to discover which principals are assigned roles.\n\n" +
+			"Use this data source to discover which principals are assigned roles: service principals, users and groups alike.\n\n" +
 			"Set `scope_type` to choose which assignments to read.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{

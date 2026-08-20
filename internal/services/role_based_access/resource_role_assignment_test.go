@@ -982,3 +982,246 @@ func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testi
 		},
 	})
 }
+
+// Without an authoritative baseline the ownership rules are unsound, so a failed preflight stops
+// the create before any POST.
+func TestUnitRoleAssignmentResource_Validate_Create_Fails_Without_Preflight_Baseline(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	postAttempts := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"error":"forbidden"}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			postAttempts++
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)could not list the existing role assignments before\s+creating`),
+			},
+			{
+				Config: `# empty`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					func(_ *terraform.State) error {
+						if postAttempts != 0 {
+							return fmt.Errorf("create must not POST without a baseline, got %d attempts", postAttempts)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// assignmentJSON renders one assignment for list fixtures built inline.
+func assignmentJSON(id, principal, role, scopeSuffix, expiresOn string) string {
+	expires := "null"
+	if expiresOn != "" {
+		expires = `"` + expiresOn + `"`
+	}
+	return `{"roleAssignmentId":"` + id + `","scope":"/tenants/00000000-0000-0000-0000-000000000001` + scopeSuffix + `","principalType":"ApplicationUser","principalObjectId":"` + principal + `","roleDefinitionId":"` + role + `","createdByPrincipalType":"User","createdByPrincipalObjectId":"cccccccc-cccc-cccc-cccc-cccccccccccc","createdOn":"2026-06-22T17:00:00Z","expiresOn":` + expires + `}`
+}
+
+// Two new matching assignments after an ambiguous failure mean one may belong to a concurrent
+// caller, so neither is adopted and the create fails explicitly.
+func TestUnitRoleAssignmentResource_Validate_Reconcile_Refuses_Multiple_New_Candidates(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			if gets == 1 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			// one candidate on the first reconcile poll, two afterwards: no premature adoption
+			if gets == 2 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON("33333333-3333-3333-3333-333333333333", testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+
+				assignmentJSON("33333333-3333-3333-3333-333333333333", testPrincipalId, testRoleDefinitionId, envSuffix, "")+","+
+				assignmentJSON("55555555-5555-5555-5555-555555555555", testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)new assignments.*concurrent\s+caller.*none\s+can\s+be\s+adopted`),
+			},
+		},
+	})
+}
+
+// A candidate that appears late is adopted only once it has been observed unchanged twice, and the
+// adopted id is exactly the confirmed one.
+func TestUnitRoleAssignmentResource_Validate_Reconcile_Adopts_Delayed_Confirmed_Candidate(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			// preflight empty, first reconcile poll still empty, then the committed row surfaces
+			if gets <= 2 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
+		})
+	deleted := ""
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			deleted = environmentAssignmentId
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+			},
+		},
+		CheckDestroy: func(_ *terraform.State) error {
+			if deleted != environmentAssignmentId {
+				return fmt.Errorf("destroy must remove exactly the adopted assignment, deleted '%s'", deleted)
+			}
+			return nil
+		},
+	})
+}
+
+// An expiring assignment is a relationship this resource cannot represent, so it is never adopted:
+// the create proceeds and makes the permanent assignment the configuration declares.
+func TestUnitRoleAssignmentResource_Validate_Create_Does_Not_Adopt_Expiring_Assignment(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	postAttempts := 0
+	created := false
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			rows := assignmentJSON("44444444-4444-4444-4444-444444444444", testPrincipalId, testRoleDefinitionId, envSuffix, "2027-01-01T00:00:00Z")
+			if created {
+				rows += "," + assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+rows+`]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			postAttempts++
+			created = true
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					func(_ *terraform.State) error {
+						if postAttempts != 1 {
+							return fmt.Errorf("the expiring assignment must not be adopted; expected one POST, got %d", postAttempts)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// Import ids must be guids in every guid position.
+func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Malformed_Guids(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ResourceName:  "powerplatform_role_assignment.test",
+				ImportState:   true,
+				ImportStateId: "environments/not-a-guid/" + environmentAssignmentId,
+				ExpectError:   regexp.MustCompile(`(?s)Invalid import ID.*not a guid`),
+			},
+		},
+	})
+}

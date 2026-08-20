@@ -526,8 +526,11 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 			return nil, err
 		}
-		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-			return nil, err
+		// A 404 here means the association, the role or the principal is already gone, which is the
+		// outcome a removal wants; failing would make an out-of-band removal break destroy.
+		if resp.HttpResponse.StatusCode == http.StatusNotFound {
+			tflog.Debug(ctx, fmt.Sprintf("Security role %s was already dissociated from %s", roleId, holder))
+			continue
 		}
 	}
 
