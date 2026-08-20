@@ -39,6 +39,7 @@ type SourceModel struct {
 	Timeouts                     timeouts.Value     `tfsdk:"timeouts"`
 	Id                           types.String       `tfsdk:"id"`
 	Location                     types.String       `tfsdk:"location"`
+	MacroRegion                  types.String       `tfsdk:"macro_region"`
 	AzureRegion                  types.String       `tfsdk:"azure_region"`
 	DisplayName                  types.String       `tfsdk:"display_name"`
 	EnvironmentType              types.String       `tfsdk:"environment_type"`
@@ -93,11 +94,17 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource *SourceModel, r *Resource) (*environmentCreateDto, error) {
 	conf := r.EnvironmentClient.Api.Config
 	environmentDto := &environmentCreateDto{
-		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
 			DisplayName:    environmentSource.DisplayName.ValueString(),
 			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
 		},
+	}
+
+	// The API rejects a payload carrying both keys with AmbiguousLocationSpecification.
+	if helpers.IsKnown(environmentSource.MacroRegion) && environmentSource.MacroRegion.ValueString() != "" {
+		environmentDto.MacroRegion = environmentSource.MacroRegion.ValueString()
+	} else {
+		environmentDto.Location = environmentSource.Location.ValueString()
 	}
 
 	if !environmentSource.Description.IsNull() && environmentSource.Description.ValueString() != "" {
@@ -209,13 +216,28 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, errors.New("dataverse object is null or unknown")
 }
 
-func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
+// Tenants that provision by location omit macroRegion entirely, so null is the correct
+// representation rather than an empty string. The known value is used as a fallback because a
+// response that omitted macroRegion would otherwise null a configured attribute, and
+// RequiresReplaceIfConfigured would then plan a destroy and recreate.
+func macroRegionValue(macroRegion string, known *string) types.String {
+	if macroRegion != "" {
+		return types.StringValue(macroRegion)
+	}
+	if known != nil && *known != "" {
+		return types.StringValue(*known)
+	}
+	return types.StringNull()
+}
+
+func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId, macroRegion *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
 	model := &SourceModel{
 		Timeouts:                  timeout,
 		Description:               types.StringValue(environmentDto.Properties.Description),
 		Id:                        types.StringValue(environmentDto.Name),
 		DisplayName:               types.StringValue(environmentDto.Properties.DisplayName),
 		Location:                  types.StringValue(environmentDto.Location),
+		MacroRegion:               macroRegionValue(environmentDto.MacroRegion, macroRegion),
 		AzureRegion:               types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType:           types.StringValue(environmentDto.Properties.EnvironmentSku),
 		Cadence:                   types.StringValue(environmentDto.Properties.UpdateCadence.Id),

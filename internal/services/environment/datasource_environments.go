@@ -97,6 +97,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.",
 							Computed:            true,
 						},
+						"macro_region": schema.StringAttribute{
+							MarkdownDescription: "Macro region geography of the environment (`eu-efta`, `north-america` etc.). Can be queried using the `powerplatform_macro_regions` data source.",
+							Computed:            true,
+						},
 						"azure_region": schema.StringAttribute{
 							MarkdownDescription: "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.",
 							Computed:            true,
@@ -287,7 +291,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, nil, timeouts.Value{}, *d.EnvironmentClient.Api.Config)
+		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, nil, nil, timeouts.Value{}, *d.EnvironmentClient.Api.Config)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return

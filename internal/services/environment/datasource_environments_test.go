@@ -4,6 +4,7 @@
 package environment_test
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
@@ -144,6 +145,48 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.version"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.unique_name"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.currency_code"),
+				),
+			},
+		},
+	})
+}
+
+// Environments on a macro region tenant carry macroRegion as a top level sibling of location, and
+// environments on a tenant that provisions by location omit it entirely.
+func TestUnitEnvironmentsDataSource_Validate_Read_Macro_Region(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read_Macro_Region/get_environments.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/datasource/Validate_Read_Macro_Region/get_environment_%s.json", id)).String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "powerplatform_environments" "all" {}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.#", "2"),
+
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.macro_region", "eu-efta"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.location", "switzerland"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.azure_region", "switzerlandwest"),
+
+					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.macro_region"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.location", "europe"),
 				),
 			},
 		},

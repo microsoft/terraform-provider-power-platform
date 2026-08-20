@@ -35,11 +35,12 @@ var (
 )
 
 type EnvironmentDto struct {
-	Id         string                   `json:"id,omitempty"`
-	Type       string                   `json:"type,omitempty"`
-	Location   string                   `json:"location,omitempty"`
-	Name       string                   `json:"name,omitempty"`
-	Properties *EnviromentPropertiesDto `json:"properties"`
+	Id          string                   `json:"id,omitempty"`
+	Type        string                   `json:"type,omitempty"`
+	Location    string                   `json:"location,omitempty"`
+	MacroRegion string                   `json:"macroRegion,omitempty"`
+	Name        string                   `json:"name,omitempty"`
+	Properties  *EnviromentPropertiesDto `json:"properties"`
 }
 
 type EnviromentPropertiesDto struct {
@@ -196,9 +197,20 @@ type environmentArrayDto struct {
 	Value []EnvironmentDto `json:"value"`
 }
 
+// Location carries omitempty because the API rejects an empty "location" alongside
+// "macroRegion" with AmbiguousLocationSpecification.
 type environmentCreateDto struct {
-	Location   string                         `json:"location"`
-	Properties environmentCreatePropertiesDto `json:"properties"`
+	Location    string                         `json:"location,omitempty"`
+	MacroRegion string                         `json:"macroRegion,omitempty"`
+	Properties  environmentCreatePropertiesDto `json:"properties"`
+}
+
+// BAPI reinterprets the locations/{segment} path as a macro region id on macro region tenants.
+func (dto environmentCreateDto) geoSegment() string {
+	if dto.MacroRegion != "" {
+		return dto.MacroRegion
+	}
+	return dto.Location
 }
 
 type modifySkuDto struct {
@@ -292,8 +304,22 @@ type validateUpdateEnvironmentDetailsDto struct {
 	EnvironmentName string `json:"environmentName"`
 }
 
+// tenantProvisioningModeMacroRegion is the only mode that changes placement semantics. The API
+// spells the classic mode "region" in lowercase and this one in camelCase, so anything that is not
+// an exact match is treated as classic to avoid misrouting sovereign clouds.
+const tenantProvisioningModeMacroRegion = "macroRegion"
+
 type LocationArrayDto struct {
-	Value []LocationDto `json:"value"`
+	Value                  []LocationDto    `json:"value"`
+	TenantProvisioningMode string           `json:"tenantProvisioningMode"`
+	MacroRegions           []macroRegionDto `json:"macroRegions"`
+}
+
+type macroRegionDto struct {
+	MacroRegionId string `json:"macroRegionId"`
+	DisplayName   string `json:"displayName"`
+	// Pointer because some macro regions omit the key entirely.
+	DataResidencyNote *string `json:"dataResidencyNote"`
 }
 
 type LocationDto struct {

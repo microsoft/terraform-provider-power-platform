@@ -55,9 +55,21 @@ Every unit test covering a new feature or fix should have a corresponding accept
 
 Acceptance tests require authentication and appropriate test environment setup. This section is particularly useful for testing different authentication styles, ensuring the provider supports various authentication mechanisms reliably.
 
-- The test suite includes **pre-checks** (`testAccPreCheck(t)`) to validate required environment variables before running tests.
 - Ensure necessary credentials are set before executing acceptance tests.
 - Missing variables will result in skipped tests to prevent erroneous failures.
+
+#### Skipping tests that need a specific tenant capability
+
+Some acceptance tests can only pass against a tenant with a particular capability, and the CI tenant cannot have every capability at once. Gate these on an environment variable and skip when it is unset, using `t.Skip` as the first statement of the test. Do not use `resource.TestCase.PreCheck` - no test in this repository uses it.
+
+Helpers live in `internal/mocks/mocks.go` alongside `TestsEntraLicesingGroupName`, and the variable name is prefixed `ACCEPTANCE_TESTS_`.
+
+| Variable | Purpose | CI value |
+| --- | --- | --- |
+| `ACCEPTANCE_TESTS_LICENSING_GROUP_NAME` | Overrides the Entra group used by licensing tests. Falls back to `pptestusers`. | unset |
+| `ACCEPTANCE_TESTS_MACRO_REGION` | Macro region id (for example `eu-efta`) for tests that need a tenant provisioning by macro region geography rather than by datacenter location. Read by `mocks.SkipIfNotMacroRegionTenant`. | set to empty in `.github/workflows/run_tests.yml`, so those tests skip |
+
+The CI workflow runs `go test ... -failfast`, so a test that cannot pass on the CI tenant would abort the entire suite rather than fail on its own. Setting the variable explicitly to empty in the workflow records that the skip is intentional.
 
 #### Running Acceptance Tests
 

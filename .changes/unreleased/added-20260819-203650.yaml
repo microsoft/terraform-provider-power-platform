@@ -1,0 +1,5 @@
+kind: added
+body: Add `macro_region` to `powerplatform_environment` and the `powerplatform_environments` data source, plus a new `powerplatform_macro_regions` data source. Environment creation previously failed on tenants that provision by macro region, where the service rejects `location` outright.
+time: 2026-08-19T20:36:50.060939016Z
+custom:
+    Issue: "1227"
