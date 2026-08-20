@@ -374,6 +374,56 @@ resource "powerplatform_managed_solution" "solution" {
 	})
 }
 
+func TestUnitManagedSolutionResource_Validate_Create_Retries_When_Dataverse_Denies_Caller(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	solutionPath := createTestSolutionZip(t, map[string]string{
+		"solution.xml":       `<ImportExportXml><SolutionManifest><UniqueName>CodeEditor</UniqueName><Version>1.0.0.0</Version><Managed>1</Managed><LocalizedNames><LocalizedName description="Code Editor" /></LocalizedNames></SolutionManifest></ImportExportXml>`,
+		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
+		"environmentvariabledefinitions/codeeditor_secret/environmentvariabledefinition.xml": `<environmentvariabledefinition schemaname="codeeditor_secret"></environmentvariabledefinition>`,
+	})
+
+	registerManagedSolutionEnvironmentResponder("Validate_Create_Retries_When_Dataverse_Denies_Caller")
+	definitionAttempts := 0
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariabledefinitions?%24filter=schemaname+eq+%27codeeditor_secret%27&%24select=schemaname%2Cismanaged",
+		func(req *http.Request) (*http.Response, error) {
+			definitionAttempts++
+			if definitionAttempts == 1 {
+				return httpmock.NewStringResponse(http.StatusForbidden, `{"error":{"code":"0x80072560","message":"The user is not a member of the organization."}}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Retries_When_Dataverse_Denies_Caller/get_environment_variable_definitions.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "powerplatform_managed_solution" "solution" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  unique_name    = "CodeEditor"
+  version        = "1.0.0.0"
+
+  source = {
+    path = %q
+  }
+}
+`, solutionPath),
+				// The packaging error proves the retried read reached Dataverse after the 403.
+				ExpectError: regexp.MustCompile(`(?s)environment variable packaging validation failed: codeeditor_secret already\s+exists as an unmanaged definition`),
+			},
+		},
+	})
+
+	if definitionAttempts < 2 {
+		t.Fatalf("expected the environment variable definition read to be retried after a 403; observed %d attempt(s)", definitionAttempts)
+	}
+}
+
 func TestUnitManagedSolutionResource_Validate_Create_Fails_When_DependencyVersionIsTooLow(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

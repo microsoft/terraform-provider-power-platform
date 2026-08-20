@@ -163,6 +163,13 @@ const (
 	CONNECTIVITY_ENVIRONMENT_POLL_TIMEOUT  = 10 * time.Minute
 )
 
+// A freshly provisioned Dataverse organization answers Web API calls with 403 until it has
+// provisioned the caller as an application user.
+const (
+	DATAVERSE_CALLER_PROVISIONING_POLL_INTERVAL = 15 * time.Second
+	DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT  = 10 * time.Minute
+)
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"

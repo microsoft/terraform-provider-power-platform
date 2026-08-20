@@ -19,9 +19,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 )
@@ -55,7 +58,34 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 }
 
 func (client *Client) GetInstalledSolutions(ctx context.Context, environmentId string) ([]solution.SolutionDto, error) {
-	return client.SolutionClient.GetInstalledSolutions(ctx, environmentId)
+	var solutions []solution.SolutionDto
+	err := client.retryWhileDataverseRejectsCaller(ctx, environmentId, func() error {
+		var readErr error
+		solutions, readErr = client.SolutionClient.GetInstalledSolutions(ctx, environmentId)
+		return readErr
+	})
+	if err != nil {
+		return nil, err
+	}
+	return solutions, nil
+}
+
+// retryWhileDataverseRejectsCaller replays a read while Dataverse answers with 403, which a freshly
+// provisioned organization does until it has provisioned the caller as an application user.
+func (client *Client) retryWhileDataverseRejectsCaller(ctx context.Context, environmentId string, read func() error) error {
+	deadline := time.Now().Add(constants.DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT)
+	for {
+		err := read()
+		var accessDenied customerrors.AccessDeniedError
+		if err == nil || !errors.As(err, &accessDenied) || time.Now().After(deadline) {
+			return err
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse in environment '%s' denied access to the caller, retrying while the environment finishes provisioning", environmentId))
+		if sleepErr := client.Api.SleepWithContext(ctx, constants.DATAVERSE_CALLER_PROVISIONING_POLL_INTERVAL); sleepErr != nil {
+			return sleepErr
+		}
+	}
 }
 
 func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
@@ -254,7 +284,9 @@ func (client *Client) GetUnmanagedEnvironmentVariableDefinitions(ctx context.Con
 		values.Add("$filter", fmt.Sprintf("schemaname eq '%s'", escapeODataString(schemaName)))
 
 		response := environmentVariableDefinitionsResponseDto{}
-		if err := client.SolutionClient.GetTableData(ctx, environmentId, "environmentvariabledefinitions", values.Encode(), &response); err != nil {
+		if err := client.retryWhileDataverseRejectsCaller(ctx, environmentId, func() error {
+			return client.SolutionClient.GetTableData(ctx, environmentId, "environmentvariabledefinitions", values.Encode(), &response)
+		}); err != nil {
 			return nil, err
 		}
 
