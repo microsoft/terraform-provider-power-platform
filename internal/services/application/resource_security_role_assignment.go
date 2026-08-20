@@ -133,7 +133,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			"business_unit_id": schema.StringAttribute{
-				MarkdownDescription: "Business unit ID used to resolve the requested security role name. Defaults to the principal's current business unit.",
+				MarkdownDescription: "Business unit the role belongs to. With `security_role_name` it scopes the name resolution and defaults to the principal's current business unit; with `security_role_id` it is computed from the role row, and a configured value must agree with it.",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{

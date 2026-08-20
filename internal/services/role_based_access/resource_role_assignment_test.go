@@ -366,7 +366,7 @@ func commonAcceptanceChecks() []resource.TestCheckFunc {
 	}
 }
 
-// With neither identifier set the assignment lands on the tenant.
+// scope_type "tenant" lands the assignment on the tenant, with no identifier to accompany it.
 func TestAccRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -526,11 +526,14 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 
 				# --- service principal, at all three scopes ------------------------------------
 
+				# The tenant assignment selects the role by name, deliberately case-different, to
+				# exercise the resolution live; the resolved id is asserted below. The others keep
+				# the id selector so both paths run.
 				resource "powerplatform_role_assignment" "sp_tenant" {
-					scope_type         = "tenant"
-					principal_id       = azuread_service_principal.test_sp.object_id
-					principal_type     = "ApplicationUser"
-					role_definition_id = local.role_definition_id
+					scope_type           = "tenant"
+					principal_id         = azuread_service_principal.test_sp.object_id
+					principal_type       = "ApplicationUser"
+					role_definition_name = "power platform role based access control ADMINISTRATOR"
 
 					depends_on = [time_sleep.wait_for_principals]
 				}
@@ -606,6 +609,8 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// service principal, three scopes
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_tenant", "scope", regexp.MustCompile(`^/tenants/[^/]+$`)),
+					// The case-different name must have resolved to the stable role id.
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.sp_tenant", "role_definition_id", roleBasedAccessAdministratorRoleId),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment", "scope", regexp.MustCompile(`/environments/`)),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment", "environment_id", "powerplatform_environment.test_environment", "id"),
