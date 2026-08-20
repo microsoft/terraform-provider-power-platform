@@ -547,7 +547,10 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
-		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
+		// The environment was created, we just can't read it back. Return the id along with the error
+		// so the caller can still record it, otherwise Terraform never learns about an environment
+		// that exists and the next apply fails with DomainNameAlreadyInUse.
+		return &EnvironmentDto{Name: createdEnvironmentId}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
 
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil {
