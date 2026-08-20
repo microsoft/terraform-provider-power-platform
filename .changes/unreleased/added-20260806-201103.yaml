@@ -1,5 +1,5 @@
 kind: added
-body: Added `powerplatform_role_assignments` data source to list role assignments. Set `environment_id` or `environment_group_id` to read one scope, or neither to read the tenant scope
+body: Added `powerplatform_role_assignments` data source to list role assignments. The required `scope_type` names which assignments to read: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`
 time: 2026-08-06T20:11:03.526179674Z
 custom:
     Issue: "1190"

@@ -36,6 +36,7 @@ var principalTypes = []string{"ApplicationUser", "Group", "User"}
 
 var _ resource.Resource = &roleAssignmentResource{}
 var _ resource.ResourceWithImportState = &roleAssignmentResource{}
+var _ resource.ResourceWithValidateConfig = &roleAssignmentResource{}
 
 func NewRoleAssignmentResource() resource.Resource {
 	return &roleAssignmentResource{
@@ -60,8 +61,8 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 		MarkdownDescription: "Manages a Power Platform administrative [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control). " +
 			"Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use `powerplatform_security_role_assignment` instead.\n\n" +
 			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
-			"The assignment is scoped by which identifier you set. Set `environment_id` to scope it to an environment, " +
-			"or `environment_group_id` to scope it to an environment group. Set neither and the assignment applies to the whole tenant.",
+			"The assignment is scoped by the required `scope_type`: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`. " +
+			"Tenant scope is the broadest grant available, so it must be named explicitly.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -164,6 +165,18 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			},
 		},
 	}
+}
+
+// ValidateConfig enforces that scope_type and its matching id arrive together. The per-attribute
+// validators cannot cover the missing-id case, because a validator attached to an absent attribute
+// never runs.
+func (r *roleAssignmentResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config roleAssignmentResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(validateScopeSelection(config.ScopeType, config.EnvironmentId, config.EnvironmentGroupId)...)
 }
 
 func (r *roleAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -305,9 +318,11 @@ func (r *roleAssignmentResource) ImportState(ctx context.Context, req resource.I
 	}
 }
 
+// findRoleAssignment compares ids case-insensitively, since an imported id may not match the
+// service's guid casing.
 func findRoleAssignment(assignments []roleAssignmentDto, roleAssignmentId string) *roleAssignmentDto {
 	for i := range assignments {
-		if assignments[i].RoleAssignmentId == roleAssignmentId {
+		if strings.EqualFold(assignments[i].RoleAssignmentId, roleAssignmentId) {
 			return &assignments[i]
 		}
 	}

@@ -574,6 +574,26 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 					role_definition_id = local.role_definition_id
 
 					depends_on = [time_sleep.wait_for_principals]
+				}
+
+				# --- the assignments are discoverable through the data source at their scopes -----
+
+				data "powerplatform_role_assignments" "environment" {
+					scope_type     = "environment"
+					environment_id = powerplatform_environment.test_environment.id
+
+					depends_on = [
+						powerplatform_role_assignment.sp_environment,
+						powerplatform_role_assignment.group_environment,
+						powerplatform_role_assignment.user_environment,
+					]
+				}
+
+				data "powerplatform_role_assignments" "environment_group" {
+					scope_type           = "environment_group"
+					environment_group_id = powerplatform_environment_group.test_env_group.id
+
+					depends_on = [powerplatform_role_assignment.sp_environment_group]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// service principal, three scopes
@@ -592,7 +612,11 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.user_environment", "principal_type", "User"),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.user_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
 
-					// every assignment is discoverable through the data source at its own scope
+					// the data source finds the assignments at their scopes: three on the
+					// environment (service principal, group, user) and one on the group
+					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.environment", "role_assignments.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.environment_group", "role_assignments.#", "1"),
+
 					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.sp_tenant", "created_on"),
 				),
 			},
@@ -671,6 +695,146 @@ func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testi
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
 				ExpectError: regexp.MustCompile(`identified by object id, not email`),
+			},
+		},
+	})
+}
+
+// scope_type must arrive with its matching id: the per-attribute validators cannot catch an id that
+// is absent entirely, so ValidateConfig covers that side.
+func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "missing_env_id" {
+					scope_type         = "environment"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`environment_id is required when scope_type`),
+			},
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "missing_group_id" {
+					scope_type         = "environment_group"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`environment_group_id is required when scope_type`),
+			},
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "tenant_with_id" {
+					scope_type         = "tenant"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`must not be set when scope_type is .tenant.`),
+			},
+		},
+	})
+}
+
+// A 404 from the tenant collection cannot mean a deleted scope, so it must stay an error rather
+// than silently untracking an active tenant-wide grant. A 404 on a deleted environment is the
+// opposite: the scope took its assignments with it, so the resource leaves state.
+func TestUnitRoleAssignmentResource_Validate_Read_404_Tenant_Errors_Environment_Removes(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	// tenant scope: create fine, then the collection starts returning 404
+	tenantGets := 0
+	httpmock.RegisterResponder("POST", tenantCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Tenant/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", tenantCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			tenantGets++
+			if tenantGets == 1 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Tenant/get_role_assignments.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", tenantCollection+"/"+tenantAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "tenant"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+			},
+			{
+				RefreshState: true,
+				ExpectError:  regexp.MustCompile(`(?s)Failed to list role assignments at tenant scope.*cannot\s+mean\s+a\s+deleted\s+scope`),
+			},
+		},
+	})
+}
+
+func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment_Deleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envGets := 0
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			envGets++
+			if envGets == 1 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+			}
+			// the environment has been deleted out of band
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+			},
+			{
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

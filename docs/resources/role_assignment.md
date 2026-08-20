@@ -5,7 +5,7 @@ subcategory: ""
 description: |-
   Manages a Power Platform administrative role assignment https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control. Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use powerplatform_security_role_assignment instead.
   ~> The role based access control API is in preview https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
-  The assignment is scoped by which identifier you set. Set environment_id to scope it to an environment, or environment_group_id to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
+  The assignment is scoped by the required scope_type: tenant, environment with environment_id, or environment_group with environment_group_id. Tenant scope is the broadest grant available, so it must be named explicitly.
 ---
 
 # powerplatform_role_assignment (Resource)
@@ -14,7 +14,7 @@ Manages a Power Platform administrative [role assignment](https://learn.microsof
 
 ~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
 
-The assignment is scoped by which identifier you set. Set `environment_id` to scope it to an environment, or `environment_group_id` to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
+The assignment is scoped by the required `scope_type`: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`. Tenant scope is the broadest grant available, so it must be named explicitly.
 
 ## Example Usage
 
@@ -31,27 +31,17 @@ provider "powerplatform" {
   use_cli = true
 }
 
-# Fetch all available role definitions so we can look up the one we need by name
-data "powerplatform_role_definitions" "all" {
-}
-
-variable "role_definition_name" {
-  default     = "Power Platform Role Based Access Control Administrator"
-  description = "Display name of the role definition to assign"
-  type        = string
-}
-
 variable "principal_id" {
   default     = "00000000-0000-0000-0000-000000000000"
   description = "Object id of the enterprise application that will be granted the role"
   type        = string
 }
 
+# Role definitions carry stable ids; display names have been recased before, so match on the id.
+# powerplatform_role_definitions lists them all.
 locals {
-  role_definition_id = [
-    for role in data.powerplatform_role_definitions.all.role_definitions :
-    role.role_definition_id if role.role_definition_name == var.role_definition_name
-  ][0]
+  # Power Platform Reader
+  role_definition_id = "c886ad2e-27f7-4874-8381-5849b8d8a090"
 }
 
 # Assign a role to a service principal at the tenant level

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -105,6 +106,9 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
+				},
 			},
 			"system_user_id": schema.StringAttribute{
 				MarkdownDescription: "Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.",
@@ -114,13 +118,17 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				},
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(path.MatchRoot("system_user_id"), path.MatchRoot("team_id")),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "system_user_id must be a guid"),
 				},
 			},
 			"team_id": schema.StringAttribute{
-				MarkdownDescription: "Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.",
+				MarkdownDescription: "Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Only owner teams and Microsoft Entra group teams can hold security roles; an access team is refused. Exactly one of `system_user_id` or `team_id` must be set.",
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "team_id must be a guid"),
 				},
 			},
 			"business_unit_id": schema.StringAttribute{
@@ -130,6 +138,9 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "business_unit_id must be a guid"),
 				},
 			},
 			"security_role_name": schema.StringAttribute{
@@ -187,7 +198,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
+			fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
 			err.Error(),
 		)
 		return
@@ -197,7 +208,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId})
 		if err != nil {
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to assign security role '%s' to principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
+				fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
 				err.Error(),
 			)
 			return
@@ -314,10 +325,21 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 		principalAttribute = "team_id"
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), idParts[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), idParts[3])...)
+	// Dataverse renders guids lowercase, and the role lookup compares ids case-insensitively, but
+	// normalising here keeps state canonical regardless of how the import id was typed.
+	guidRegex := regexp.MustCompile(helpers.GuidRegex)
+	for _, part := range []string{idParts[0], idParts[2], idParts[3]} {
+		if !guidRegex.MatchString(part) {
+			resp.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("'%s' is not a guid", part))
+			return
+		}
+	}
+
+	normalizedId := fmt.Sprintf("%s/%s/%s/%s", strings.ToLower(idParts[0]), idParts[1], strings.ToLower(idParts[2]), strings.ToLower(idParts[3]))
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), normalizedId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), strings.ToLower(idParts[0]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), strings.ToLower(idParts[2]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), strings.ToLower(idParts[3]))...)
 }
 
 type resolvedRoleAssignment struct {
@@ -363,9 +385,11 @@ func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Contex
 }
 
 // findAssignedRole returns the holder's assignment of the given role id, or nil when it is absent.
+// findAssignedRole compares guids case-insensitively: Dataverse renders them lowercase, but an
+// imported id may not be.
 func findAssignedRole(principal *roleHolderDto, roleID string) *applicationSecurityRoleDto {
 	for i := range principal.SecurityRoles {
-		if principal.SecurityRoles[i].RoleId == roleID {
+		if strings.EqualFold(principal.SecurityRoles[i].RoleId, roleID) {
 			return &principal.SecurityRoles[i]
 		}
 	}

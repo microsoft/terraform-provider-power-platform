@@ -616,3 +616,27 @@ func TestUnitSecurityRoleAssignmentResource_AccessTeam_Is_Rejected(t *testing.T)
 		},
 	})
 }
+
+// An empty team_id must fail at plan time. Before ids were validated it satisfied the
+// exactly-one-of check and then crossed onto the systemusers path, because the holder kind was
+// inferred from the string being non-empty.
+func TestUnitSecurityRoleAssignmentResource_Empty_TeamId_Is_Rejected(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					team_id            = ""
+					security_role_name = "MetaForm Global Admin"
+				}`,
+				ExpectError: regexp.MustCompile(`team_id must be a guid`),
+			},
+		},
+	})
+}

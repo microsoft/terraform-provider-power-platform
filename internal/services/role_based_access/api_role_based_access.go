@@ -95,19 +95,32 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 	}
 }
 
+// reconcileAttempts bounds how long an ambiguous create failure is reconciled for. The committed
+// assignment can lag the failed response, so one immediate list is not enough, but polling forever
+// would hide a genuine failure.
+const reconcileAttempts = 3
+
 // findExistingAssignment looks for an assignment matching the request's principal, role and type at
 // the given scope. It is used to reconcile an ambiguous create failure, so its own errors are
-// swallowed: the caller returns the original failure.
+// swallowed: the caller returns the original failure. Identifiers are compared case-insensitively,
+// since the service renders guids in its own casing.
 func (client *client) findExistingAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) *roleAssignmentDto {
-	assignments, err := client.ListRoleAssignments(ctx, scope)
-	if err != nil {
-		return nil
-	}
-	for i := range assignments {
-		if assignments[i].PrincipalObjectId == request.PrincipalObjectId &&
-			assignments[i].RoleDefinitionId == request.RoleDefinitionId &&
-			assignments[i].PrincipalType == request.PrincipalType {
-			return &assignments[i]
+	for attempt := 0; attempt < reconcileAttempts; attempt++ {
+		if attempt > 0 {
+			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+				return nil
+			}
+		}
+		assignments, err := client.ListRoleAssignments(ctx, scope)
+		if err != nil {
+			continue
+		}
+		for i := range assignments {
+			if strings.EqualFold(assignments[i].PrincipalObjectId, request.PrincipalObjectId) &&
+				strings.EqualFold(assignments[i].RoleDefinitionId, request.RoleDefinitionId) &&
+				strings.EqualFold(assignments[i].PrincipalType, request.PrincipalType) {
+				return &assignments[i]
+			}
 		}
 	}
 	return nil
@@ -133,9 +146,14 @@ func (client *client) ListRoleAssignments(ctx context.Context, scope assignmentS
 	if err != nil {
 		return nil, err
 	}
-	// The API returns 404 when the scope itself (the environment or environment group) no longer
-	// exists, which the caller distinguishes from an empty list so it can drop child state.
+	// The API returns 404 when the scope itself no longer exists. That only means something for
+	// environment and environment group scopes, whose parents can be deleted; the tenant cannot
+	// disappear, so a tenant-scope 404 is a service fault and must stay an error. Otherwise a
+	// transient 404 would silently untrack an active tenant-wide grant.
 	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		if scope.kind == scopeTenant {
+			return nil, errors.New("the tenant role assignment collection returned 404, which cannot mean a deleted scope; treating it as a service error")
+		}
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("scope not found: %s", scope))
 	}
 	return response.Value, nil

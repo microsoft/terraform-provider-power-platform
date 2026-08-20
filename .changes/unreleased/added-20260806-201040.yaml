@@ -1,5 +1,5 @@
 kind: added
-body: Added `powerplatform_role_assignment` resource to assign a Power Platform role to an enterprise application, user or group. Set `environment_id` or `environment_group_id` to scope the assignment, or neither to assign at tenant scope
+body: Added `powerplatform_role_assignment` resource to assign a Power Platform role to an enterprise application, user or group. The required `scope_type` names where it applies: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`
 time: 2026-08-06T20:10:40.174952825Z
 custom:
     Issue: "1190"

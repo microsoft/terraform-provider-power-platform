@@ -22,8 +22,9 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &roleAssignmentsDataSource{}
-	_ datasource.DataSourceWithConfigure = &roleAssignmentsDataSource{}
+	_ datasource.DataSource                   = &roleAssignmentsDataSource{}
+	_ datasource.DataSourceWithConfigure      = &roleAssignmentsDataSource{}
+	_ datasource.DataSourceWithValidateConfig = &roleAssignmentsDataSource{}
 )
 
 // roleAssignmentsAttribute returns the shared schema of the list of role assignments returned by the RBAC API.
@@ -142,6 +143,16 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 			"role_assignments": roleAssignmentsAttribute("List of role assignments at the requested scope"),
 		},
 	}
+}
+
+// ValidateConfig mirrors the resource: scope_type and its matching id must arrive together.
+func (d *roleAssignmentsDataSource) ValidateConfig(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	var config roleAssignmentsDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(validateScopeSelection(config.ScopeType, config.EnvironmentId, config.EnvironmentGroupId)...)
 }
 
 func (d *roleAssignmentsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

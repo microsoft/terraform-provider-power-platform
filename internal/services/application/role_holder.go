@@ -9,27 +9,31 @@ import "fmt"
 // teams in separate tables, each with its own role association, so the holder decides both the
 // entity set to address and the association to write through.
 type roleHolder struct {
-	systemUserId string
-	teamId       string
+	// kind is carried explicitly rather than inferred from which id is non-empty, so an empty or
+	// malformed id can never silently switch the holder onto the other table's endpoints.
+	kind     string
+	holderId string
 }
 
+const (
+	holderKindSystemUser = "systemuser"
+	holderKindTeam       = "team"
+)
+
 func systemUserRoleHolder(systemUserId string) roleHolder {
-	return roleHolder{systemUserId: systemUserId}
+	return roleHolder{kind: holderKindSystemUser, holderId: systemUserId}
 }
 
 func teamRoleHolder(teamId string) roleHolder {
-	return roleHolder{teamId: teamId}
+	return roleHolder{kind: holderKindTeam, holderId: teamId}
 }
 
 func (h roleHolder) isTeam() bool {
-	return h.teamId != ""
+	return h.kind == holderKindTeam
 }
 
 func (h roleHolder) id() string {
-	if h.isTeam() {
-		return h.teamId
-	}
-	return h.systemUserId
+	return h.holderId
 }
 
 // entitySet is the Dataverse collection holding this principal.
@@ -68,7 +72,7 @@ func (h roleHolder) associationPath(apiVersion string) string {
 
 func (h roleHolder) String() string {
 	if h.isTeam() {
-		return fmt.Sprintf("team %s", h.teamId)
+		return fmt.Sprintf("team %s", h.holderId)
 	}
-	return fmt.Sprintf("system user %s", h.systemUserId)
+	return fmt.Sprintf("system user %s", h.holderId)
 }

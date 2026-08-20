@@ -92,7 +92,7 @@ module "network_injection" {
   vnet_locations             = local.europe_location[0].azure_regions
   enterprise_policy_name     = "ep_example_network_injection_policy"
   enterprise_policy_location = local.europe_location[0].name
-// let's wait for first policy to be executed
+  // let's wait for first policy to be executed
   depends_on = [module.identity]
 }
 
