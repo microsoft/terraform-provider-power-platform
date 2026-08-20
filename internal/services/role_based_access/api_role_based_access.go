@@ -152,14 +152,17 @@ func isAmbiguousCreateFailure(err error) bool {
 // would hide a genuine failure.
 const reconcileAttempts = 4
 
-// reconcileAmbiguousCreate decides ownership after a POST whose outcome is unknown. Adoption
-// requires proof: exactly one assignment matching the relationship that was absent from the
-// pre-create baseline, observed unchanged on two consecutive polls. More than one new candidate
-// means a concurrent caller made one of them, and adopting either could seize theirs, so that is
-// an explicit failure. If ownership cannot be proven either way, the original failure is returned
-// with instructions, never a guess.
+// reconcileAmbiguousCreate decides ownership after a POST whose outcome is unknown. The API issues
+// no correlation token, so ownership can only be inferred, and the inference must run the whole
+// window: an early adoption could seize a concurrent caller's assignment while ours surfaces a poll
+// later. Every fresh id observed anywhere in the window is accumulated, and if that set ever holds
+// more than one id the outcome is declared ambiguous, because at most one of them can be ours.
+// Only a single id, observed as the sole fresh candidate across the entire window and still present
+// at its end, is adopted. Anything less provable returns the original failure with instructions,
+// never a guess.
 func (client *client) reconcileAmbiguousCreate(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto, baseline map[string]struct{}, createErr error) (*roleAssignmentDto, error) {
-	confirmed := ""
+	seen := map[string]struct{}{}
+	var last *roleAssignmentDto
 	for attempt := 0; attempt < reconcileAttempts; attempt++ {
 		if attempt > 0 {
 			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
@@ -168,30 +171,25 @@ func (client *client) reconcileAmbiguousCreate(ctx context.Context, scope assign
 		}
 		assignments, err := client.ListRoleAssignments(ctx, scope)
 		if err != nil {
-			confirmed = ""
 			continue
 		}
 
-		var fresh []roleAssignmentDto
+		last = nil
 		for _, match := range matchingAssignments(assignments, request) {
-			if _, preexisting := baseline[strings.ToLower(match.RoleAssignmentId)]; !preexisting {
-				fresh = append(fresh, match)
+			if _, preexisting := baseline[strings.ToLower(match.RoleAssignmentId)]; preexisting {
+				continue
 			}
+			seen[strings.ToLower(match.RoleAssignmentId)] = struct{}{}
+			adoptable := match
+			last = &adoptable
 		}
-
-		switch len(fresh) {
-		case 0:
-			confirmed = ""
-		case 1:
-			if strings.EqualFold(confirmed, fresh[0].RoleAssignmentId) {
-				adopted := fresh[0]
-				tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously; assignment %s confirmed as ours across two polls, adopting it", request.Scope, adopted.RoleAssignmentId))
-				return &adopted, nil
-			}
-			confirmed = fresh[0].RoleAssignmentId
-		default:
-			return nil, fmt.Errorf("the create failed ambiguously and %d new assignments for this principal, role and scope appeared; one may belong to a concurrent caller, so none can be adopted safely. Inspect them, remove any duplicate, and import the survivor. Original failure: %w", len(fresh), createErr)
+		if len(seen) > 1 {
+			return nil, fmt.Errorf("the create failed ambiguously and %d distinct new assignments for this principal, role and scope were observed; at most one can be the one this create made, so none can be adopted safely. Inspect them, remove any duplicate, and import the survivor. Original failure: %w", len(seen), createErr)
 		}
+	}
+	if len(seen) == 1 && last != nil {
+		tflog.Debug(ctx, fmt.Sprintf("Create at scope %s failed ambiguously; %s was the only new assignment observed across the whole reconcile window, adopting it", request.Scope, last.RoleAssignmentId))
+		return last, nil
 	}
 	return nil, fmt.Errorf("the create failed and it could not be proven whether the assignment was committed; list the scope's role assignments and import the assignment if it exists. Original failure: %w", createErr)
 }

@@ -472,10 +472,10 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	return resolved, nil
 }
 
-func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) (*roleHolderDto, error) {
+func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	apiUrl := &url.URL{
@@ -490,23 +490,23 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 		}
 		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-			return nil, err
+			return err
 		}
 		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return client.GetRoleHolder(ctx, environmentId, holder)
+	return nil
 }
 
-func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) (*roleHolderDto, error) {
+func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, roleId := range roleIds {
@@ -521,10 +521,10 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 
 		resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-			return nil, err
+			return err
 		}
 		// A 404 here means the association, the role or the principal is already gone, which is the
 		// outcome a removal wants; failing would make an out-of-band removal break destroy.
@@ -534,7 +534,7 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 		}
 	}
 
-	return client.GetRoleHolder(ctx, environmentId, holder)
+	return nil
 }
 
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {

@@ -293,27 +293,22 @@ func (r *roleAssignmentResource) ImportState(ctx context.Context, req resource.I
 		"`environmentGroups/{environment_group_id}/{role_assignment_id}`"
 
 	guidRegex := regexp.MustCompile(helpers.GuidRegex)
+	isGuid := func(v string) bool { return guidRegex.MatchString(v) }
 	parts := strings.Split(req.ID, "/")
-	for _, part := range parts {
-		if part != "environments" && part != "environmentGroups" && !guidRegex.MatchString(part) {
-			resp.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("'%s' is not a guid. %s", part, importFormats))
-			return
-		}
-	}
 	switch {
-	case len(parts) == 1 && parts[0] != "":
+	case len(parts) == 1 && isGuid(parts[0]):
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeTenant)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[0])...)
-	case len(parts) == 3 && parts[0] == "environments" && parts[1] != "" && parts[2] != "":
+	case len(parts) == 3 && parts[0] == "environments" && isGuid(parts[1]) && isGuid(parts[2]):
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeEnvironment)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), parts[1])...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[2])...)
-	case len(parts) == 3 && parts[0] == "environmentGroups" && parts[1] != "" && parts[2] != "":
+	case len(parts) == 3 && parts[0] == "environmentGroups" && isGuid(parts[1]) && isGuid(parts[2]):
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeEnvironmentGroup)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_group_id"), parts[1])...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[2])...)
 	default:
-		resp.Diagnostics.AddError("Invalid import ID", importFormats)
+		resp.Diagnostics.AddError("Invalid import ID", importFormats+". Every id segment must be a guid")
 	}
 }
 

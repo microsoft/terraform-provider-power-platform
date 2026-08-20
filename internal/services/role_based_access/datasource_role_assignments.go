@@ -42,11 +42,11 @@ func roleAssignmentsAttribute(markdownDescription string) schema.ListNestedAttri
 					Computed:            true,
 				},
 				"principal_type": schema.StringAttribute{
-					MarkdownDescription: "The type of principal the role is assigned to (e.g., `ApplicationUser`, `User`)",
+					MarkdownDescription: "The kind of principal the role is assigned to: `ApplicationUser` for a service principal or managed identity, `Group` for a Microsoft Entra group, or `User` for a person",
 					Computed:            true,
 				},
 				"principal_id": schema.StringAttribute{
-					MarkdownDescription: "The object ID of the enterprise application (service principal) or user the role is assigned to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID",
+					MarkdownDescription: "The Microsoft Entra object ID of the principal the role is assigned to, for every principal type. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID",
 					Computed:            true,
 				},
 				"role_definition_id": schema.StringAttribute{

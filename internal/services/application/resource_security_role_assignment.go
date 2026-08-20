@@ -205,13 +205,19 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	}
 
 	if findAssignedRole(resolved.principal, resolved.role.RoleId) == nil {
-		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
-				err.Error(),
-			)
-			return
+		if err := r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId}); err != nil {
+			// The POST may have committed despite the failure. The association is idempotent, so
+			// reading the relationship back settles it: if the role is there, the grant is live and
+			// must be recorded in state rather than left as an active privilege outside it.
+			principal, readErr := r.ApplicationClient.GetRoleHolder(ctx, plan.EnvironmentId.ValueString(), plan.holder())
+			if readErr != nil || findAssignedRole(principal, resolved.role.RoleId) == nil {
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
+					err.Error(),
+				)
+				return
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Associating security role '%s' with %s failed but the association exists; recording it", resolved.role.RoleId, plan.holder()))
 		}
 	}
 
@@ -296,7 +302,12 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{state.RoleId.ValueString()}); err != nil {
+	if err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{state.RoleId.ValueString()}); err != nil {
+		// The principal vanishing between the read above and the removal is the destruction this
+		// wanted; only a genuine failure should stop the destroy.
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Failed to remove security role '%s' from %s", state.RoleId.ValueString(), state.holder()),
 			err.Error(),

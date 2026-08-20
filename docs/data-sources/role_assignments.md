@@ -63,7 +63,7 @@ Read-Only:
 - `created_on` (String) The timestamp when the role assignment was created
 - `expires_on` (String) The timestamp when the role assignment expires, or `null` if it does not expire
 - `id` (String) The unique identifier of the role assignment
-- `principal_id` (String) The object ID of the enterprise application (service principal) or user the role is assigned to. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
-- `principal_type` (String) The type of principal the role is assigned to (e.g., `ApplicationUser`, `User`)
+- `principal_id` (String) The Microsoft Entra object ID of the principal the role is assigned to, for every principal type. For `ApplicationUser` principals this is the enterprise application object ID, not the application (client) ID
+- `principal_type` (String) The kind of principal the role is assigned to: `ApplicationUser` for a service principal or managed identity, `Group` for a Microsoft Entra group, or `User` for a person
 - `role_definition_id` (String) The ID of the assigned role definition
 - `scope` (String) The scope the role assignment applies to

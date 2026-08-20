@@ -1081,7 +1081,7 @@ func TestUnitRoleAssignmentResource_Validate_Reconcile_Refuses_Multiple_New_Cand
 					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
-				ExpectError: regexp.MustCompile(`(?s)new assignments.*concurrent\s+caller.*none\s+can\s+be\s+adopted`),
+				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
 			},
 		},
 	})
@@ -1220,8 +1220,141 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Malformed_Guids(t *t
 				ResourceName:  "powerplatform_role_assignment.test",
 				ImportState:   true,
 				ImportStateId: "environments/not-a-guid/" + environmentAssignmentId,
-				ExpectError:   regexp.MustCompile(`(?s)Invalid import ID.*not a guid`),
+				ExpectError:   regexp.MustCompile(`(?s)Invalid import ID.*Every\s+id\s+segment\s+must\s+be\s+a\s+guid`),
 			},
 		},
 	})
+}
+
+// The reviewer's killer sequence: a concurrent caller's assignment A is visible on the early polls
+// and ours (B) only surfaces on a later one. Early adoption would seize A and later destroy it
+// while B lived on untracked, so the window must run to completion and refuse the pair.
+func TestUnitRoleAssignmentResource_Validate_Reconcile_Runs_The_Whole_Window(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	concurrent := assignmentJSON("44444444-4444-4444-4444-444444444444", testPrincipalId, testRoleDefinitionId, envSuffix, "")
+	ours := assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			switch {
+			case gets == 1: // preflight
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			case gets <= 3: // early polls: only the concurrent caller's assignment
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+concurrent+`]}`), nil
+			default: // ours surfaces late
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+concurrent+`,`+ours+`]}`), nil
+			}
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
+			},
+		},
+	})
+}
+
+// Candidate history is never forgotten: a candidate that appears and is then replaced by another
+// means two distinct fresh ids were observed, and neither can be adopted.
+func TestUnitRoleAssignmentResource_Validate_Reconcile_Remembers_Replaced_Candidates(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	first := assignmentJSON("44444444-4444-4444-4444-444444444444", testPrincipalId, testRoleDefinitionId, envSuffix, "")
+	second := assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			switch {
+			case gets == 1: // preflight
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			case gets == 2: // first candidate
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+first+`]}`), nil
+			default: // it vanishes and a different one appears
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+second+`]}`), nil
+			}
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"boom"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)distinct new assignments.*none\s+can\s+be\s+adopted`),
+			},
+		},
+	})
+}
+
+// Reserved path words are only reserved in their own position; used anywhere else they are just
+// malformed ids and the import is rejected.
+func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Reserved_Word_Bypasses(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	config := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type         = "environment"
+		environment_id     = "` + testEnvironmentId + `"
+		principal_id       = "` + testPrincipalId + `"
+		principal_type     = "ApplicationUser"
+		role_definition_id = "` + testRoleDefinitionId + `"
+	}`
+
+	for _, importId := range []string{
+		"environments",
+		"environments/" + testEnvironmentId + "/environmentGroups",
+		"environmentGroups/environments/" + environmentAssignmentId,
+	} {
+		resource.Test(t, resource.TestCase{
+			IsUnitTest:               true,
+			ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config:        config,
+					ResourceName:  "powerplatform_role_assignment.test",
+					ImportState:   true,
+					ImportStateId: importId,
+					ExpectError:   regexp.MustCompile(`Invalid import ID`),
+				},
+			},
+		})
+	}
 }

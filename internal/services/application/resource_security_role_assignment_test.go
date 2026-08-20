@@ -703,3 +703,66 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 		// the framework destroys at the end of the test; the 404 above must not fail it
 	})
 }
+
+// The association POST is idempotent, so a failure whose grant actually committed is settled by
+// reading the relationship back; a live grant must land in state, not outside it.
+func TestUnitSecurityRoleAssignmentResource_Create_Reconciles_Committed_Association(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		principalID    = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		roleName       = "MetaForm Global Admin"
+	)
+
+	posted := false
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/`+environmentID,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			roles := ""
+			if posted {
+				// the failed-looking POST actually committed
+				roles = `{"roleid":"` + roleAdminID + `","name":"` + roleName + `","_businessunitid_value":"` + rootBusinessID + `"}`
+			}
+			return httpmock.NewStringResponse(http.StatusOK,
+				`{"systemuserid":"`+principalID+`","applicationid":"`+applicationID+`","fullname":"Example","_businessunitid_value":"`+rootBusinessID+`","isdisabled":false,"systemuserroles_association":[`+roles+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK,
+				`{"value":[{"roleid":"`+roleAdminID+`","name":"`+roleName+`","_businessunitid_value":"`+rootBusinessID+`"}]}`), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			posted = true
+			// a transport failure whose request nevertheless committed server-side
+			return nil, errors.New("connection reset by peer")
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					system_user_id     = "` + principalID + `"
+					security_role_name = "` + roleName + `"
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+			},
+		},
+	})
+}
