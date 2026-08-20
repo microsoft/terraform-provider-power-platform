@@ -21,6 +21,7 @@ type roleAssignmentResource struct {
 type roleAssignmentResourceModel struct {
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Id                 types.String   `tfsdk:"id"`
+	ScopeType          types.String   `tfsdk:"scope_type"`
 	EnvironmentId      types.String   `tfsdk:"environment_id"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 	PrincipalId        types.String   `tfsdk:"principal_id"`
@@ -30,12 +31,13 @@ type roleAssignmentResourceModel struct {
 	CreatedOn          types.String   `tfsdk:"created_on"`
 }
 
-// scope derives where the assignment applies from whichever identifier is set.
-func (m roleAssignmentResourceModel) scope() assignmentScope {
-	switch {
-	case helpers.IsKnown(m.EnvironmentId):
+// assignmentScope is where the assignment applies. The kind comes from the `scope_type` attribute rather
+// than being inferred, so an empty or missing id is a validation error instead of a tenant grant.
+func (m roleAssignmentResourceModel) assignmentScope() assignmentScope {
+	switch m.ScopeType.ValueString() {
+	case scopeEnvironment:
 		return environmentAssignmentScope(m.EnvironmentId.ValueString())
-	case helpers.IsKnown(m.EnvironmentGroupId):
+	case scopeEnvironmentGroup:
 		return environmentGroupAssignmentScope(m.EnvironmentGroupId.ValueString())
 	default:
 		return tenantAssignmentScope()
@@ -75,17 +77,18 @@ type roleAssignmentDataSourceModel struct {
 
 type roleAssignmentsDataSourceModel struct {
 	Timeouts           timeouts.Value                  `tfsdk:"timeouts"`
+	ScopeType          types.String                    `tfsdk:"scope_type"`
 	EnvironmentId      types.String                    `tfsdk:"environment_id"`
 	EnvironmentGroupId types.String                    `tfsdk:"environment_group_id"`
 	RoleAssignments    []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
 }
 
-// scope derives which assignments to read from whichever identifier is set.
-func (m roleAssignmentsDataSourceModel) scope() assignmentScope {
-	switch {
-	case helpers.IsKnown(m.EnvironmentId):
+// assignmentScope is which assignments to read, taken from the explicit `scope_type` attribute.
+func (m roleAssignmentsDataSourceModel) assignmentScope() assignmentScope {
+	switch m.ScopeType.ValueString() {
+	case scopeEnvironment:
 		return environmentAssignmentScope(m.EnvironmentId.ValueString())
-	case helpers.IsKnown(m.EnvironmentGroupId):
+	case scopeEnvironmentGroup:
 		return environmentGroupAssignmentScope(m.EnvironmentGroupId.ValueString())
 	default:
 		return tenantAssignmentScope()

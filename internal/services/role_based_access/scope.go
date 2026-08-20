@@ -9,31 +9,42 @@ import "fmt"
 // call: once as a URL segment under /authorization, and once as a fully qualified string under the
 // tenant. Both use the same segment, so it is built in one place here.
 //
-// An empty scope is the tenant itself.
+// The kind is always explicit, so an unset or empty id can never silently widen an assignment to
+// the tenant.
 type assignmentScope struct {
-	environmentId      string
-	environmentGroupId string
+	kind string
+	id   string
 }
 
+// Scope kinds, as written in the resource's `scope_type` attribute.
+const (
+	scopeTenant           = "tenant"
+	scopeEnvironment      = "environment"
+	scopeEnvironmentGroup = "environment_group"
+)
+
+// scopeKinds are the values the `scope_type` attribute accepts.
+var scopeKinds = []string{scopeTenant, scopeEnvironment, scopeEnvironmentGroup}
+
 func tenantAssignmentScope() assignmentScope {
-	return assignmentScope{}
+	return assignmentScope{kind: scopeTenant}
 }
 
 func environmentAssignmentScope(environmentId string) assignmentScope {
-	return assignmentScope{environmentId: environmentId}
+	return assignmentScope{kind: scopeEnvironment, id: environmentId}
 }
 
 func environmentGroupAssignmentScope(environmentGroupId string) assignmentScope {
-	return assignmentScope{environmentGroupId: environmentGroupId}
+	return assignmentScope{kind: scopeEnvironmentGroup, id: environmentGroupId}
 }
 
 // segment is the path fragment shared by the request URL and the qualified scope string.
 func (s assignmentScope) segment() string {
-	switch {
-	case s.environmentId != "":
-		return fmt.Sprintf("/environments/%s", s.environmentId)
-	case s.environmentGroupId != "":
-		return fmt.Sprintf("/environmentGroups/%s", s.environmentGroupId)
+	switch s.kind {
+	case scopeEnvironment:
+		return fmt.Sprintf("/environments/%s", s.id)
+	case scopeEnvironmentGroup:
+		return fmt.Sprintf("/environmentGroups/%s", s.id)
 	default:
 		return ""
 	}
@@ -56,11 +67,11 @@ func (s assignmentScope) qualify(tenantScope string) string {
 
 // String describes the scope for logs and error messages.
 func (s assignmentScope) String() string {
-	switch {
-	case s.environmentId != "":
-		return fmt.Sprintf("environment %s", s.environmentId)
-	case s.environmentGroupId != "":
-		return fmt.Sprintf("environment group %s", s.environmentGroupId)
+	switch s.kind {
+	case scopeEnvironment:
+		return fmt.Sprintf("environment %s", s.id)
+	case scopeEnvironmentGroup:
+		return fmt.Sprintf("environment group %s", s.id)
 	default:
 		return "tenant"
 	}

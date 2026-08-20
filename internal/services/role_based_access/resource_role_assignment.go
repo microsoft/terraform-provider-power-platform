@@ -6,6 +6,7 @@ package role_based_access
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 // principalTypes are the principal kinds the RBAC API accepts. The API models this as an enum
@@ -70,24 +72,48 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"scope_type": schema.StringAttribute{
+				MarkdownDescription: "Where the assignment applies. One of `tenant`, `environment` or `environment_group`. " +
+					"`environment` requires `environment_id` and `environment_group` requires `environment_group_id`. " +
+					"Tenant scope is the broadest grant available, so it must be asked for by name rather than by leaving the scope unset",
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(scopeKinds...),
+				},
+			},
 			"environment_id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the environment to scope the assignment to. Conflicts with `environment_group_id`. Leave both unset to assign at tenant scope",
+				MarkdownDescription: "The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise",
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_group_id")),
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
+					validators.OtherFieldRequiredWhenValueOf(
+						path.Root("scope_type").Expression(),
+						regexp.MustCompile("^"+scopeEnvironment+"$"), nil,
+						"environment_id is required when scope_type is `environment`"),
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the environment group to scope the assignment to. Conflicts with `environment_id`. Leave both unset to assign at tenant scope",
+				MarkdownDescription: "The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise",
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a guid"),
+					validators.OtherFieldRequiredWhenValueOf(
+						path.Root("scope_type").Expression(),
+						regexp.MustCompile("^"+scopeEnvironmentGroup+"$"), nil,
+						"environment_group_id is required when scope_type is `environment_group`"),
 				},
 			},
 			"principal_id": schema.StringAttribute{
@@ -161,7 +187,7 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	scope := plan.scope()
+	scope := plan.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Creating role assignment for principal %s at %s scope", plan.PrincipalId.ValueString(), scope))
 
 	assignment, err := r.Client.CreateRoleAssignment(ctx, scope, roleAssignmentRequestDto{
@@ -191,7 +217,7 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	scope := state.scope()
+	scope := state.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Reading role assignment %s at %s scope", state.Id.ValueString(), scope))
 
 	assignments, err := r.Client.ListRoleAssignments(ctx, scope)
@@ -229,7 +255,7 @@ func (r *roleAssignmentResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	scope := state.scope()
+	scope := state.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Deleting role assignment %s at %s scope", state.Id.ValueString(), scope))
 
 	if err := r.Client.DeleteRoleAssignment(ctx, scope, state.Id.ValueString()); err != nil {
@@ -251,11 +277,14 @@ func (r *roleAssignmentResource) ImportState(ctx context.Context, req resource.I
 	parts := strings.Split(req.ID, "/")
 	switch {
 	case len(parts) == 1 && parts[0] != "":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeTenant)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[0])...)
 	case len(parts) == 3 && parts[0] == "environments" && parts[1] != "" && parts[2] != "":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeEnvironment)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), parts[1])...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[2])...)
 	case len(parts) == 3 && parts[0] == "environmentGroups" && parts[1] != "" && parts[2] != "":
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("scope_type"), scopeEnvironmentGroup)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_group_id"), parts[1])...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[2])...)
 	default:

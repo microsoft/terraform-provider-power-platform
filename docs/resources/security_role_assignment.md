@@ -43,7 +43,7 @@ resource "powerplatform_application_user" "application_user" {
 
 resource "powerplatform_security_role_assignment" "example" {
   environment_id     = powerplatform_environment.env.id
-  principal_id       = powerplatform_application_user.application_user.id
+  system_user_id     = powerplatform_application_user.application_user.system_user_id
   security_role_name = "Basic User"
 }
 

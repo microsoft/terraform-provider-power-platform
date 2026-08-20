@@ -53,6 +53,7 @@ locals {
 
 # Assign a role to a service principal at the tenant level
 resource "powerplatform_role_assignment" "example" {
+  scope_type         = "tenant"
   principal_id       = var.principal_id
   principal_type     = "ApplicationUser"
   role_definition_id = local.role_definition_id
@@ -61,6 +62,7 @@ resource "powerplatform_role_assignment" "example" {
 # The same resource scopes the assignment by which identifier you set.
 # Set environment_id for an environment:
 resource "powerplatform_role_assignment" "environment" {
+  scope_type         = "environment"
   environment_id     = var.environment_id
   principal_id       = var.principal_id
   principal_type     = "ApplicationUser"
@@ -69,6 +71,7 @@ resource "powerplatform_role_assignment" "environment" {
 
 # Set environment_group_id for an environment group:
 resource "powerplatform_role_assignment" "environment_group" {
+  scope_type           = "environment_group"
   environment_group_id = var.environment_group_id
   principal_id         = var.principal_id
   principal_type       = "ApplicationUser"
@@ -94,11 +97,12 @@ variable "environment_group_id" {
 - `principal_id` (String) The Microsoft Entra object ID of the principal to assign the role to. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID
 - `principal_type` (String) The kind of principal being assigned the role. One of `ApplicationUser` for a service principal or managed identity, `Group` for a security enabled Microsoft Entra group, or `User` for a person
 - `role_definition_id` (String) The ID of the role definition to assign
+- `scope_type` (String) Where the assignment applies. One of `tenant`, `environment` or `environment_group`. `environment` requires `environment_id` and `environment_group` requires `environment_group_id`. Tenant scope is the broadest grant available, so it must be asked for by name rather than by leaving the scope unset
 
 ### Optional
 
-- `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Conflicts with `environment_id`. Leave both unset to assign at tenant scope
-- `environment_id` (String) The unique identifier of the environment to scope the assignment to. Conflicts with `environment_group_id`. Leave both unset to assign at tenant scope
+- `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise
+- `environment_id` (String) The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

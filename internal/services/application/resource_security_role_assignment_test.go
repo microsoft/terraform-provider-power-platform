@@ -5,6 +5,7 @@ package application_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -530,7 +531,7 @@ func TestUnitSecurityRoleAssignmentResource_Team(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
 					func(_ *terraform.State) error {
 						if teamRoleAssociationCalls == 0 {
-							return fmt.Errorf("expected the role to be associated through teamroles_association")
+							return errors.New("expected the role to be associated through teamroles_association")
 						}
 						return nil
 					},

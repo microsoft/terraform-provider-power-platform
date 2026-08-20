@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -392,8 +393,8 @@ func (client *client) GetRoleHolder(ctx context.Context, environmentId string, h
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for %s", holder))
 	}
 
-	sort.Slice(response.SecurityRoles, func(i, j int) bool {
-		return response.SecurityRoles[i].RoleId < response.SecurityRoles[j].RoleId
+	slices.SortFunc(response.SecurityRoles, func(a, b applicationSecurityRoleDto) int {
+		return strings.Compare(a.RoleId, b.RoleId)
 	})
 
 	return &roleHolderDto{Id: response.TeamId, BusinessUnitId: response.BusinessUnitId, SecurityRoles: response.SecurityRoles}, nil

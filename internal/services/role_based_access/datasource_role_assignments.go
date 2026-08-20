@@ -6,6 +6,7 @@ package role_based_access
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 var (
@@ -96,24 +98,43 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Fetches the [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform. " +
 			"Use this data source to discover which principals are assigned roles.\n\n" +
-			"Set `environment_id` to read the assignments on an environment, or `environment_group_id` to read those on an " +
-			"environment group. Set neither and the tenant scoped assignments are returned.",
+			"Set `scope_type` to choose which assignments to read.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
+			"scope_type": schema.StringAttribute{
+				MarkdownDescription: "Which assignments to read. One of `tenant`, `environment` or `environment_group`. " +
+					"`environment` requires `environment_id` and `environment_group` requires `environment_group_id`",
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(scopeKinds...),
+				},
+			},
 			"environment_id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the environment to read assignments from. Conflicts with `environment_group_id`. Leave both unset to read tenant scoped assignments",
+				MarkdownDescription: "The unique identifier of the environment to read assignments from. Required when `scope_type` is `environment`",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_group_id")),
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_id must be a guid"),
+					validators.OtherFieldRequiredWhenValueOf(
+						path.Root("scope_type").Expression(),
+						regexp.MustCompile("^"+scopeEnvironment+"$"), nil,
+						"environment_id is required when scope_type is `environment`"),
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier of the environment group to read assignments from. Conflicts with `environment_id`. Leave both unset to read tenant scoped assignments",
+				MarkdownDescription: "The unique identifier of the environment group to read assignments from. Required when `scope_type` is `environment_group`",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRoot("environment_id")),
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a guid"),
+					validators.OtherFieldRequiredWhenValueOf(
+						path.Root("scope_type").Expression(),
+						regexp.MustCompile("^"+scopeEnvironmentGroup+"$"), nil,
+						"environment_group_id is required when scope_type is `environment_group`"),
 				},
 			},
 			"role_assignments": roleAssignmentsAttribute("List of role assignments at the requested scope"),
@@ -150,7 +171,7 @@ func (d *roleAssignmentsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	scope := state.scope()
+	scope := state.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Reading role assignments at %s scope", scope))
 
 	assignments, err := d.Client.ListRoleAssignments(ctx, scope)

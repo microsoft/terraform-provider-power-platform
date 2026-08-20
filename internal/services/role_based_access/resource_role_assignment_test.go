@@ -17,7 +17,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-const roleBasedAccessAdministratorRoleName = "Power Platform Role Based Access Control Administrator"
+// Microsoft has recased this role's display name, so match on the stable id instead.
+const roleBasedAccessAdministratorRoleId = "95e94555-018c-447b-8691-bdac8e12211e"
 
 const (
 	tenantAssignmentId      = "11111111-1111-1111-1111-111111111111"
@@ -68,7 +69,8 @@ func TestUnitRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
-					principal_id = "` + testPrincipalId + `"
+					scope_type         = "tenant"
+					principal_id       = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
@@ -104,6 +106,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
@@ -139,6 +142,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *te
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment_group"
 					environment_group_id             = "` + testEnvironmentGroupId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
@@ -173,6 +177,7 @@ func TestUnitRoleAssignmentResource_Validate_Scopes_Are_Mutually_Exclusive(t *te
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					environment_group_id             = "` + testEnvironmentGroupId + `"
 					principal_id = "` + testPrincipalId + `"
@@ -216,6 +221,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
@@ -252,6 +258,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Error(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
@@ -276,6 +283,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_InvalidId(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_role_assignment" "test" {
+					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
@@ -326,10 +334,7 @@ func acceptancePreamble(scopeConfig, scopeAttribute string) string {
 		}
 
 		locals {
-			role_definition_id = [
-				for role in data.powerplatform_role_definitions.all.role_definitions :
-				role.role_definition_id if role.role_definition_name == "` + roleBasedAccessAdministratorRoleName + `"
-			][0]
+			role_definition_id = "` + roleBasedAccessAdministratorRoleId + `"
 		}
 		` + scopeConfig + `
 
@@ -360,7 +365,7 @@ func TestAccRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: acceptancePreamble("", ""),
+				Config: acceptancePreamble("", `scope_type = "tenant"`),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`^/tenants/`)),
 					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_id"),
@@ -382,7 +387,7 @@ func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.
 			display_name     = "`+mocks.TestName()+`"
 			location         = "unitedstates"
 			environment_type = "Sandbox"
-		}`, `environment_id     = powerplatform_environment.test_environment.id`),
+		}`, "scope_type     = \"environment\"\n\t\t\tenvironment_id = powerplatform_environment.test_environment.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_id", "powerplatform_environment.test_environment", "id"),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
@@ -402,11 +407,194 @@ func TestAccRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *tes
 		resource "powerplatform_environment_group" "test_env_group" {
 			display_name = "`+mocks.TestName()+`"
 			description  = "Environment group for role assignment acceptance test"
-		}`, `environment_group_id = powerplatform_environment_group.test_env_group.id`),
+		}`, "scope_type           = \"environment_group\"\n\t\t\tenvironment_group_id = powerplatform_environment_group.test_env_group.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
 					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
 					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environmentGroups/`)),
 				)...),
+			},
+		},
+	})
+}
+
+// TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes covers the full matrix in one
+// apply: a user, a group and a service principal, assigned at tenant, environment and environment
+// group scope.
+//
+// The identifier differs by principal type. Microsoft documents users as identified by email address,
+// groups by group id, and service principals by their enterprise object id. See
+// https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control.
+// Unit tests only prove those type strings deserialise, so this is the test that proves the
+// identifier contract is right.
+func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				# --- the three principal kinds -------------------------------------------------
+
+				resource "random_password" "user" {
+					length           = 16
+					min_lower        = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.user.result
+					usage_location      = "US"
+				}
+
+				resource "azuread_group" "test_group" {
+					display_name     = "` + mocks.TestName() + `"
+					security_enabled = true
+				}
+
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "time_sleep" "wait_for_principals" {
+					create_duration = "60s"
+
+					depends_on = [
+						azuread_user.test_user,
+						azuread_group.test_group,
+						azuread_service_principal.test_sp,
+					]
+				}
+
+				# --- the two non tenant scopes -------------------------------------------------
+
+				resource "powerplatform_environment" "test_environment" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+				}
+
+				resource "powerplatform_environment_group" "test_env_group" {
+					display_name = "` + mocks.TestName() + `"
+					description  = "Environment group for the role assignment matrix"
+				}
+
+				data "powerplatform_role_definitions" "all" {
+				}
+
+				locals {
+					role_definition_id = "` + roleBasedAccessAdministratorRoleId + `"
+				}
+
+				# --- service principal, at all three scopes ------------------------------------
+
+				resource "powerplatform_role_assignment" "sp_tenant" {
+					scope_type         = "tenant"
+					principal_id       = azuread_service_principal.test_sp.object_id
+					principal_type     = "ApplicationUser"
+					role_definition_id = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_principals]
+				}
+
+				resource "powerplatform_role_assignment" "sp_environment" {
+					scope_type         = "environment"
+					environment_id     = powerplatform_environment.test_environment.id
+					principal_id       = azuread_service_principal.test_sp.object_id
+					principal_type     = "ApplicationUser"
+					role_definition_id = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_principals]
+				}
+
+				resource "powerplatform_role_assignment" "sp_environment_group" {
+					scope_type           = "environment_group"
+					environment_group_id = powerplatform_environment_group.test_env_group.id
+					principal_id         = azuread_service_principal.test_sp.object_id
+					principal_type       = "ApplicationUser"
+					role_definition_id   = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_principals]
+				}
+
+				# --- group, at environment scope ------------------------------------------------
+
+				resource "powerplatform_role_assignment" "group_environment" {
+					scope_type         = "environment"
+					environment_id     = powerplatform_environment.test_environment.id
+					principal_id       = azuread_group.test_group.object_id
+					principal_type     = "Group"
+					role_definition_id = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_principals]
+				}
+
+				# --- user, at environment scope -------------------------------------------------
+				#
+				# Microsoft documents a user as identified by email address rather than object id.
+				# If this assignment fails with PrincipalDoesNotExist while the group and service
+				# principal above succeed, the documented contract is wrong and principal_id should
+				# take the object id for every type.
+
+				resource "powerplatform_role_assignment" "user_environment" {
+					scope_type         = "environment"
+					environment_id     = powerplatform_environment.test_environment.id
+					principal_id       = azuread_user.test_user.user_principal_name
+					principal_type     = "User"
+					role_definition_id = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_principals]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// service principal, three scopes
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_tenant", "scope", regexp.MustCompile(`^/tenants/[^/]+$`)),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment", "scope", regexp.MustCompile(`/environments/`)),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`/environmentGroups/`)),
+					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment", "environment_id", "powerplatform_environment.test_environment", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment_group", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+
+					// group
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.group_environment", "principal_type", "Group"),
+					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.group_environment", "principal_id", "azuread_group.test_group", "object_id"),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.group_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					// user
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.user_environment", "principal_type", "User"),
+					resource.TestMatchResourceAttr("powerplatform_role_assignment.user_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					// every assignment is discoverable through the data source at its own scope
+					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.sp_tenant", "created_on"),
+				),
 			},
 		},
 	})

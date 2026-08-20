@@ -33,7 +33,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Tenant_Scope(t *testing.T) 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "powerplatform_role_assignments" "test" {}`,
+				Config: `data "powerplatform_role_assignments" "test" { scope_type = "tenant" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.id", tenantAssignmentId),
@@ -58,6 +58,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Environment_Scope(t *testin
 			{
 				Config: `
 				data "powerplatform_role_assignments" "test" {
+					scope_type     = "environment"
 					environment_id = "` + testEnvironmentId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -84,6 +85,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_EnvironmentGroup_Scope(t *t
 			{
 				Config: `
 				data "powerplatform_role_assignments" "test" {
+					scope_type           = "environment_group"
 					environment_group_id = "` + testDataSourceEnvironmentGroupId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -107,7 +109,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Empty(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "powerplatform_role_assignments" "test" {}`,
+				Config: `data "powerplatform_role_assignments" "test" { scope_type = "tenant" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "0"),
 				),
