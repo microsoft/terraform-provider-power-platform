@@ -1288,10 +1288,10 @@ func TestUnitRoleAssignmentResource_Validate_Reconcile_Remembers_Replaced_Candid
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			gets++
-			switch {
-			case gets == 1: // preflight
+			switch gets {
+			case 1: // preflight
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
-			case gets == 2: // first candidate
+			case 2: // first candidate
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+first+`]}`), nil
 			default: // it vanishes and a different one appears
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+second+`]}`), nil
