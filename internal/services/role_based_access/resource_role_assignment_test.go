@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package role_based_access_test
+package role_based_access_test //nolint:revive // the underscored package name predates this file and matches every service in the repo
 
 import (
 	"fmt"
@@ -561,15 +561,15 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 
 				# --- user, at environment scope -------------------------------------------------
 				#
-				# Microsoft documents a user as identified by email address rather than object id.
-				# If this assignment fails with PrincipalDoesNotExist while the group and service
-				# principal above succeed, the documented contract is wrong and principal_id should
-				# take the object id for every type.
+				# Verified live 2026-08-20: the API's principalObjectId is a System.Guid, so a user
+				# is identified by object id like every other principal. Microsoft's RBAC doc says
+				# email, but that describes the portal; a UPN fails JSON conversion with a 400
+				# before any lookup happens.
 
 				resource "powerplatform_role_assignment" "user_environment" {
 					scope_type         = "environment"
 					environment_id     = powerplatform_environment.test_environment.id
-					principal_id       = azuread_user.test_user.user_principal_name
+					principal_id       = azuread_user.test_user.object_id
 					principal_type     = "User"
 					role_definition_id = local.role_definition_id
 
@@ -645,6 +645,32 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles
 						return nil
 					},
 				),
+			},
+		},
+	})
+}
+
+// The API's principalObjectId is a System.Guid, verified live: an email fails JSON conversion with a
+// 400 before any principal lookup. Rejecting it at plan time turns that into a clear message.
+func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "someone@contoso.com"
+					principal_type     = "User"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				ExpectError: regexp.MustCompile(`identified by object id, not email`),
 			},
 		},
 	})

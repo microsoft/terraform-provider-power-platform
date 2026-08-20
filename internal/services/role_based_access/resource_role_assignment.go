@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package role_based_access
+package role_based_access //nolint:revive // the underscored package name predates this file and matches every service in the repo
 
 import (
 	"context"
@@ -120,10 +120,15 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"principal_id": schema.StringAttribute{
-				MarkdownDescription: "The Microsoft Entra object ID of the principal to assign the role to. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID",
-				Required:            true,
+				MarkdownDescription: "The Microsoft Entra object ID of the principal to assign the role to, for every principal type. " +
+					"For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID. " +
+					"For a user it is the user's object ID, not the email address: the API models this field as a GUID, so an email is rejected before any lookup happens",
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "principal_id must be an Entra object id (a guid); a user is identified by object id, not email"),
 				},
 			},
 			"principal_type": schema.StringAttribute{

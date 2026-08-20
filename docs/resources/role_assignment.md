@@ -97,7 +97,7 @@ variable "environment_group_id" {
 
 ### Required
 
-- `principal_id` (String) The Microsoft Entra object ID of the principal to assign the role to. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID
+- `principal_id` (String) The Microsoft Entra object ID of the principal to assign the role to, for every principal type. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID. For a user it is the user's object ID, not the email address: the API models this field as a GUID, so an email is rejected before any lookup happens
 - `principal_type` (String) The kind of principal being assigned the role. One of `ApplicationUser` for a service principal or managed identity, `Group` for a security enabled Microsoft Entra group, or `User` for a person
 - `role_definition_id` (String) The ID of the role definition to assign
 - `scope_type` (String) Where the assignment applies. One of `tenant`, `environment` or `environment_group`. `environment` requires `environment_id` and `environment_group` requires `environment_group_id`. Tenant scope is the broadest grant available, so it must be asked for by name rather than by leaving the scope unset

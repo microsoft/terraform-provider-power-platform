@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package role_based_access_test
+package role_based_access_test //nolint:revive // the underscored package name predates this file and matches every service in the repo
 
 import (
 	"net/http"
