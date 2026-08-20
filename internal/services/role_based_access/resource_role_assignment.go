@@ -61,7 +61,10 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use `powerplatform_security_role_assignment` instead.\n\n" +
 			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
 			"The assignment is scoped by the required `scope_type`: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`. " +
-			"Tenant scope is the broadest grant available, so it must be named explicitly.",
+			"Tenant scope is the broadest grant available, so it must be named explicitly.\n\n" +
+			"The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. " +
+			"If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. " +
+			"If several duplicates exist the create fails: deduplicate them or import one first.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
