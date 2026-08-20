@@ -92,7 +92,7 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			waitFor := api.DefaultRetryAfter()
 			tflog.Debug(ctx, fmt.Sprintf("Scope %s is not visible for role assignments yet, retrying preflight after %s", request.Scope, waitFor))
 			if sleepErr := client.Api.SleepWithContext(ctx, waitFor); sleepErr != nil {
-				return nil, err
+				return nil, fmt.Errorf("interrupted while waiting for scope %s to become visible for role assignments: %w (last list failure: %v)", request.Scope, sleepErr, err)
 			}
 			continue
 		}
@@ -119,7 +119,8 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 			waitFor := api.DefaultRetryAfter()
 			tflog.Debug(ctx, fmt.Sprintf("Scope %s is not yet available for role assignments, retrying after %s", request.Scope, waitFor))
 			if sleepErr := client.Api.SleepWithContext(ctx, waitFor); sleepErr != nil {
-				return nil, err
+				// The propagation 400 proved nothing was committed, so this stays a plain error.
+				return nil, fmt.Errorf("interrupted while waiting for scope %s to accept role assignments: %w (last propagation rejection: %v)", request.Scope, sleepErr, err)
 			}
 			continue
 		}
