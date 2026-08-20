@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_environment no longer returns a null dataverse after create when the Power Platform API reports the environment lifecycle operation as succeeded before the Dataverse metadata is readable
+time: 2026-08-17T12:30:41.740938885Z
+custom:
+    Issue: "1199"
