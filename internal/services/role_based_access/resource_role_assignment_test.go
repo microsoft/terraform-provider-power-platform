@@ -5,6 +5,7 @@ package role_based_access_test //nolint:revive // the underscored package name p
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -1344,6 +1345,205 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Reserved_Word_Bypass
 					ExpectError:   regexp.MustCompile(`Invalid import ID`),
 				},
 			},
+		})
+	}
+}
+
+const roleDefinitionsUrl = "https://api.powerplatform.com/authorization/roleDefinitions" + apiVersionQuery
+
+// A role selected by name is resolved to its id before anything is created. The match is
+// case-insensitive, since Microsoft has recased display names before, and the POST must carry the
+// resolved id.
+func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"Environment Admin Test"},
+				{"roleDefinitionId":"99999999-9999-9999-9999-999999999999","roleDefinitionName":"Some Other Role"}
+			]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(req *http.Request) (*http.Response, error) {
+			var body struct {
+				RoleDefinitionId string `json:"roleDefinitionId"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return httpmock.NewStringResponse(http.StatusBadRequest, "unreadable body"), nil
+			}
+			if body.RoleDefinitionId != testRoleDefinitionId {
+				return httpmock.NewStringResponse(http.StatusBadRequest, `the POST must carry the resolved id, got `+body.RoleDefinitionId), nil
+			}
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type           = "environment"
+					environment_id       = "` + testEnvironmentId + `"
+					principal_id         = "` + testPrincipalId + `"
+					principal_type       = "ApplicationUser"
+					role_definition_name = "environment admin TEST"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "environment admin TEST"),
+				),
+			},
+		},
+	})
+}
+
+// A role selected by id gets its display name filled in from the catalogue as a courtesy.
+func TestUnitRoleAssignmentResource_Validate_Create_By_Id_Fills_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"Environment Admin Test"}
+			]}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "Environment Admin Test"),
+			},
+		},
+	})
+}
+
+// Several definitions with the same name cannot be told apart, so the create refuses to guess.
+func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Ambiguous_Role_Definition_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	gets := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			gets++
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"11111111-0000-0000-0000-000000000001","roleDefinitionName":"Duplicated Role"},
+				{"roleDefinitionId":"11111111-0000-0000-0000-000000000002","roleDefinitionName":"duplicated role"}
+			]}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type           = "environment"
+					environment_id       = "` + testEnvironmentId + `"
+					principal_id         = "` + testPrincipalId + `"
+					principal_type       = "ApplicationUser"
+					role_definition_name = "Duplicated Role"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)use\s+role_definition_id to pick one`),
+			},
+		},
+	})
+}
+
+// A name that matches nothing is a configuration error naming the data source that lists the
+// catalogue.
+func TestUnitRoleAssignmentResource_Validate_Create_Unknown_Role_Definition_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"Environment Admin Test"}
+			]}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type           = "environment"
+					environment_id       = "` + testEnvironmentId + `"
+					principal_id         = "` + testPrincipalId + `"
+					principal_type       = "ApplicationUser"
+					role_definition_name = "No Such Role"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)no role definition is\s+named`),
+			},
+		},
+	})
+}
+
+// The role is selected by exactly one of id or name, from both directions.
+func TestUnitRoleAssignmentResource_Validate_Role_Selector_Exactly_One(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	base := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type     = "environment"
+		environment_id = "` + testEnvironmentId + `"
+		principal_id   = "` + testPrincipalId + `"
+		principal_type = "ApplicationUser"
+	`
+	cases := []struct {
+		name   string
+		config string
+	}{
+		{"both", base + `
+			role_definition_id   = "` + testRoleDefinitionId + `"
+			role_definition_name = "Environment Admin Test"
+		}`},
+		{"neither", base + `}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:      tc.config,
+						ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Combination`),
+					},
+				},
+			})
 		})
 	}
 }

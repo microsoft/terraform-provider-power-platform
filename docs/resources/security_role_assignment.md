@@ -47,6 +47,19 @@ resource "powerplatform_security_role_assignment" "example" {
   security_role_name = "Basic User"
 }
 
+# The role can also be selected by its immutable id, which is the way to pin one of
+# several same-named roles in different business units.
+resource "powerplatform_security_role_assignment" "by_role_id" {
+  environment_id   = powerplatform_environment.env.id
+  system_user_id   = powerplatform_application_user.application_user.system_user_id
+  security_role_id = var.security_role_id
+}
+
+variable "security_role_id" {
+  description = "Dataverse roleid of the security role to assign"
+  type        = string
+}
+
 # A security role can also be assigned to a team. Teams live in their own Dataverse
 # table, so use team_id instead of system_user_id. Exactly one of the two is required.
 resource "powerplatform_security_role_assignment" "team_admin" {
@@ -67,19 +80,19 @@ variable "team_id" {
 ### Required
 
 - `environment_id` (String) Dataverse environment ID.
-- `security_role_name` (String) Dataverse security role name to assign.
 
 ### Optional
 
 - `business_unit_id` (String) Business unit ID used to resolve the requested security role name. Defaults to the principal's current business unit.
+- `security_role_id` (String) Dataverse role ID of the security role to assign, computed when `security_role_name` is used. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it, and it is the way to pin one of several same-named roles in different business units.
+- `security_role_name` (String) Dataverse security role name to assign, resolved to its id within the target business unit at create time. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.
 - `system_user_id` (String) Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.
 - `team_id` (String) Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Only owner teams and Microsoft Entra group teams can hold security roles; an access team is refused. Exactly one of `system_user_id` or `team_id` must be set.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
-- `id` (String) Composite ID `{environment_id}/{entity_set}/{principal_id}/{role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.
-- `role_id` (String) Resolved Dataverse role ID for the assigned security role. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it.
+- `id` (String) Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

@@ -32,6 +32,19 @@ resource "powerplatform_security_role_assignment" "example" {
   security_role_name = "Basic User"
 }
 
+# The role can also be selected by its immutable id, which is the way to pin one of
+# several same-named roles in different business units.
+resource "powerplatform_security_role_assignment" "by_role_id" {
+  environment_id   = powerplatform_environment.env.id
+  system_user_id   = powerplatform_application_user.application_user.system_user_id
+  security_role_id = var.security_role_id
+}
+
+variable "security_role_id" {
+  description = "Dataverse roleid of the security role to assign"
+  type        = string
+}
+
 # A security role can also be assigned to a team. Teams live in their own Dataverse
 # table, so use team_id instead of system_user_id. Exactly one of the two is required.
 resource "powerplatform_security_role_assignment" "team_admin" {

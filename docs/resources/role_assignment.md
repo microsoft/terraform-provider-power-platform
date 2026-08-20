@@ -6,6 +6,7 @@ description: |-
   Manages a Power Platform administrative role assignment https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control. Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use powerplatform_security_role_assignment instead.
   ~> The role based access control API is in preview https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
   The assignment is scoped by the required scope_type: tenant, environment with environment_id, or environment_group with environment_group_id. Tenant scope is the broadest grant available, so it must be named explicitly.
+  The role is selected by exactly one of role_definition_id or role_definition_name; a name is resolved to its id at create time and the assignment is anchored on the id from then on.
   The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. If several duplicates exist the create fails: deduplicate them or import one first. Expiring assignments are not adopted: this resource represents a non-expiring relationship, so configuring the same principal, role and scope alongside an expiring assignment creates a separate permanent assignment.
 ---
 
@@ -16,6 +17,8 @@ Manages a Power Platform administrative [role assignment](https://learn.microsof
 ~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
 
 The assignment is scoped by the required `scope_type`: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`. Tenant scope is the broadest grant available, so it must be named explicitly.
+
+The role is selected by exactly one of `role_definition_id` or `role_definition_name`; a name is resolved to its id at create time and the assignment is anchored on the id from then on.
 
 The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. If several duplicates exist the create fails: deduplicate them or import one first. Expiring assignments are not adopted: this resource represents a non-expiring relationship, so configuring the same principal, role and scope alongside an expiring assignment creates a separate permanent assignment.
 
@@ -40,19 +43,22 @@ variable "principal_id" {
   type        = string
 }
 
-# Role definitions carry stable ids; display names have been recased before, so match on the id.
-# powerplatform_role_definitions lists them all.
+# The role is selected by exactly one of role_definition_name or role_definition_id.
+# Names are matched case-insensitively and resolved to the id at create time;
+# powerplatform_role_definitions lists the whole catalogue.
+
+# Assign a role to a service principal at the tenant level, selecting the role by name
+resource "powerplatform_role_assignment" "example" {
+  scope_type           = "tenant"
+  principal_id         = var.principal_id
+  principal_type       = "ApplicationUser"
+  role_definition_name = "Power Platform Reader"
+}
+
+# An id pins the role independently of its display name
 locals {
   # Power Platform Reader
   role_definition_id = "c886ad2e-27f7-4874-8381-5849b8d8a090"
-}
-
-# Assign a role to a service principal at the tenant level
-resource "powerplatform_role_assignment" "example" {
-  scope_type         = "tenant"
-  principal_id       = var.principal_id
-  principal_type     = "ApplicationUser"
-  role_definition_id = local.role_definition_id
 }
 
 # The same resource scopes the assignment by which identifier you set.
@@ -92,13 +98,14 @@ variable "environment_group_id" {
 
 - `principal_id` (String) The Microsoft Entra object ID of the principal to assign the role to, for every principal type. For a service principal this is the enterprise application object ID (`azuread_service_principal.x.object_id`), not the application (client) ID. For a user it is the user's object ID, not the email address: the API models this field as a GUID, so an email is rejected before any lookup happens
 - `principal_type` (String) The kind of principal being assigned the role. One of `ApplicationUser` for a service principal or managed identity, `Group` for a security enabled Microsoft Entra group, or `User` for a person
-- `role_definition_id` (String) The ID of the role definition to assign
 - `scope_type` (String) Where the assignment applies. One of `tenant`, `environment` or `environment_group`. `environment` requires `environment_id` and `environment_group` requires `environment_group_id`. Tenant scope is the broadest grant available, so it must be asked for by name rather than by leaving the scope unset
 
 ### Optional
 
 - `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise
 - `environment_id` (String) The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise
+- `role_definition_id` (String) The ID of the role definition to assign. Exactly one of `role_definition_id` or `role_definition_name` must be set; the id is computed when the name is used
+- `role_definition_name` (String) The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

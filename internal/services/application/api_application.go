@@ -442,6 +442,39 @@ func (client *client) GetDataverseSecurityRoles(ctx context.Context, environment
 	return response.Value, nil
 }
 
+// GetSecurityRoleById fetches one security role row by its immutable id. A missing role returns
+// ErrObjectNotFound with the environment named, so a caller can distinguish a bad id from a
+// service fault.
+func (client *client) GetSecurityRoleById(ctx context.Context, environmentId, roleId string) (*applicationSecurityRoleDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/%s/roles(%s)", constants.DATAVERSE_API_VERSION, roleId),
+	}
+	values := url.Values{}
+	values.Add("$select", "roleid,name,_businessunitid_value")
+	apiUrl.RawQuery = values.Encode()
+
+	var role applicationSecurityRoleDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &role)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("security role '%s' not found in environment '%s'", roleId, environmentId))
+	}
+
+	return &role, nil
+}
+
 func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentId, businessUnitId string, roleNames []string) ([]applicationSecurityRoleDto, error) {
 	allRoles, err := client.GetDataverseSecurityRoles(ctx, environmentId, businessUnitId)
 	if err != nil {

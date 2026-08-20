@@ -130,7 +130,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleUserID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleUserID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleUserID),
 				),
 			},
 		},
@@ -354,7 +354,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Read_RoleD
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 				),
 			},
 			{
@@ -433,7 +433,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Validate_R
 				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 				),
 			},
 			{
@@ -528,7 +528,7 @@ func TestUnitSecurityRoleAssignmentResource_Team(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "team_id", teamID),
 					resource.TestCheckNoResourceAttr("powerplatform_security_role_assignment.test", "system_user_id"),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/teams/"+teamID+"/"+roleAdminID),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 					func(_ *terraform.State) error {
 						if teamRoleAssociationCalls == 0 {
 							return errors.New("expected the role to be associated through teamroles_association")
@@ -697,7 +697,7 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 					system_user_id     = "` + principalID + `"
 					security_role_name = "` + roleName + `"
 				}`,
-				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 			},
 		},
 		// the framework destroys at the end of the test; the 404 above must not fail it
@@ -761,8 +761,161 @@ func TestUnitSecurityRoleAssignmentResource_Create_Reconciles_Committed_Associat
 					system_user_id     = "` + principalID + `"
 					security_role_name = "` + roleName + `"
 				}`,
-				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
+				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
 			},
 		},
 	})
+}
+
+// A role selected by security_role_id needs no name resolution: the role row is fetched by id, its
+// business unit becomes the computed business_unit_id, and its name is filled in as a courtesy.
+func TestUnitSecurityRoleAssignmentResource_Create_By_Role_Id(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID = "00000000-0000-0000-0000-000000000001"
+		applicationID = "00000000-0000-0000-0000-000000000007"
+		principalID   = "00000000-0000-0000-0000-000000000008"
+		rootBusiness  = "00000000-0000-0000-0000-000000000003"
+		roleID        = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	)
+	assigned := false
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			roles := "[]"
+			if assigned {
+				roles = `[{"roleid":"` + roleID + `","name":"MetaForm Global Admin","_businessunitid_value":"` + rootBusiness + `"}]`
+			}
+			body := `{"systemuserid":"` + principalID + `","applicationid":"` + applicationID + `","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":` + roles + `}`
+			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+body+`]}`), nil
+		})
+	// The single-row fetch must be registered before any roles.* pattern so it matches first.
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles(%28|\()`+roleID+`(%29|\)).*`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"roleid":"`+roleID+`","name":"MetaForm Global Admin","_businessunitid_value":"`+rootBusiness+`"}`), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
+		func(_ *http.Request) (*http.Response, error) {
+			assigned = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))/systemuserroles_association/\$ref.*`,
+		func(_ *http.Request) (*http.Response, error) {
+			assigned = false
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id   = "` + environmentID + `"
+					system_user_id   = "` + principalID + `"
+					security_role_id = "` + roleID + `"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusiness),
+				),
+			},
+		},
+	})
+}
+
+// A configured business unit must agree with the business unit the role row actually belongs to.
+func TestUnitSecurityRoleAssignmentResource_Refuses_Business_Unit_Mismatch(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID = "00000000-0000-0000-0000-000000000001"
+		applicationID = "00000000-0000-0000-0000-000000000007"
+		principalID   = "00000000-0000-0000-0000-000000000008"
+		rootBusiness  = "00000000-0000-0000-0000-000000000003"
+		otherBusiness = "00000000-0000-0000-0000-000000000004"
+		roleID        = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	)
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := `{"systemuserid":"` + principalID + `","applicationid":"` + applicationID + `","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":[]}`
+			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+body+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles(%28|\()`+roleID+`(%29|\)).*`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"roleid":"`+roleID+`","name":"MetaForm Global Admin","_businessunitid_value":"`+rootBusiness+`"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id   = "` + environmentID + `"
+					system_user_id   = "` + principalID + `"
+					security_role_id = "` + roleID + `"
+					business_unit_id = "` + otherBusiness + `"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)belongs to business unit`),
+			},
+		},
+	})
+}
+
+// The role is selected by exactly one of name or id, from both directions.
+func TestUnitSecurityRoleAssignmentResource_Role_Selector_Exactly_One(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	base := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id = "00000000-0000-0000-0000-000000000001"
+		system_user_id = "00000000-0000-0000-0000-000000000008"
+	`
+	cases := []struct {
+		name   string
+		config string
+	}{
+		{"both", base + `
+			security_role_name = "MetaForm Global Admin"
+			security_role_id   = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		}`},
+		{"neither", base + `}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:      tc.config,
+						ExpectError: regexp.MustCompile(`(?s)Invalid Attribute Combination`),
+					},
+				},
+			})
+		})
+	}
 }

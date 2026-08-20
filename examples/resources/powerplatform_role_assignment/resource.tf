@@ -16,19 +16,22 @@ variable "principal_id" {
   type        = string
 }
 
-# Role definitions carry stable ids; display names have been recased before, so match on the id.
-# powerplatform_role_definitions lists them all.
+# The role is selected by exactly one of role_definition_name or role_definition_id.
+# Names are matched case-insensitively and resolved to the id at create time;
+# powerplatform_role_definitions lists the whole catalogue.
+
+# Assign a role to a service principal at the tenant level, selecting the role by name
+resource "powerplatform_role_assignment" "example" {
+  scope_type           = "tenant"
+  principal_id         = var.principal_id
+  principal_type       = "ApplicationUser"
+  role_definition_name = "Power Platform Reader"
+}
+
+# An id pins the role independently of its display name
 locals {
   # Power Platform Reader
   role_definition_id = "c886ad2e-27f7-4874-8381-5849b8d8a090"
-}
-
-# Assign a role to a service principal at the tenant level
-resource "powerplatform_role_assignment" "example" {
-  scope_type         = "tenant"
-  principal_id       = var.principal_id
-  principal_type     = "ApplicationUser"
-  role_definition_id = local.role_definition_id
 }
 
 # The same resource scopes the assignment by which identifier you set.

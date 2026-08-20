@@ -28,6 +28,7 @@ type roleAssignmentResourceModel struct {
 	PrincipalId        customtypes.UUID `tfsdk:"principal_id"`
 	PrincipalType      types.String     `tfsdk:"principal_type"`
 	RoleDefinitionId   customtypes.UUID `tfsdk:"role_definition_id"`
+	RoleDefinitionName types.String     `tfsdk:"role_definition_name"`
 	Scope              types.String     `tfsdk:"scope"`
 	CreatedOn          types.String     `tfsdk:"created_on"`
 }

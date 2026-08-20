@@ -63,6 +63,7 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
 			"The assignment is scoped by the required `scope_type`: `tenant`, `environment` with `environment_id`, or `environment_group` with `environment_group_id`. " +
 			"Tenant scope is the broadest grant available, so it must be named explicitly.\n\n" +
+			"The role is selected by exactly one of `role_definition_id` or `role_definition_name`; a name is resolved to its id at create time and the assignment is anchored on the id from then on.\n\n" +
 			"The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. " +
 			"If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. " +
 			"If several duplicates exist the create fails: deduplicate them or import one first. " +
@@ -135,11 +136,27 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"role_definition_id": schema.StringAttribute{
-				MarkdownDescription: "The ID of the role definition to assign",
-				Required:            true,
+				MarkdownDescription: "The ID of the role definition to assign. Exactly one of `role_definition_id` or `role_definition_name` must be set; the id is computed when the name is used",
+				Optional:            true,
+				Computed:            true,
 				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRoot("role_definition_id"), path.MatchRoot("role_definition_name")),
+				},
+			},
+			"role_definition_name": schema.StringAttribute{
+				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"scope": schema.StringAttribute{
@@ -204,6 +221,20 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 	scope := plan.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Creating role assignment for principal %s at %s scope", plan.PrincipalId.ValueString(), scope))
 
+	// The role is selected by exactly one of id or name. A name must resolve to exactly one
+	// definition before anything is created; an id is used as given, with the name filled in from
+	// the catalogue as a courtesy that never blocks the lifecycle.
+	if !helpers.IsKnown(plan.RoleDefinitionId) {
+		definition, err := r.Client.ResolveRoleDefinitionByName(ctx, plan.RoleDefinitionName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Failed to resolve the role definition named %q", plan.RoleDefinitionName.ValueString()), err.Error())
+			return
+		}
+		plan.RoleDefinitionId = customtypes.NewUUIDValue(definition.RoleDefinitionId)
+	} else if !helpers.IsKnown(plan.RoleDefinitionName) {
+		plan.RoleDefinitionName = nullableStringValue(r.Client.RoleDefinitionNameById(ctx, plan.RoleDefinitionId.ValueString()))
+	}
+
 	assignment, err := r.Client.CreateRoleAssignment(ctx, scope, roleAssignmentRequestDto{
 		PrincipalObjectId: plan.PrincipalId.ValueString(),
 		PrincipalType:     plan.PrincipalType.ValueString(),
@@ -219,6 +250,15 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 	plan.CreatedOn = types.StringValue(assignment.CreatedOn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// nullableStringValue returns a null string when the value is empty, since an Optional and
+// Computed attribute must end an apply known, and "absent" is more honest than "".
+func nullableStringValue(value string) types.String {
+	if value == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(value)
 }
 
 func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -256,6 +296,12 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 	state.RoleDefinitionId = customtypes.NewUUIDValue(found.RoleDefinitionId)
 	state.Scope = types.StringValue(found.Scope)
 	state.CreatedOn = types.StringValue(found.CreatedOn)
+	// A configured or previously filled name is left alone, so a recased or renamed catalogue
+	// entry cannot churn state; the id anchors the assignment either way. The name is only filled
+	// in when absent, which is the import path and the id-configured path.
+	if !helpers.IsKnown(state.RoleDefinitionName) {
+		state.RoleDefinitionName = nullableStringValue(r.Client.RoleDefinitionNameById(ctx, found.RoleDefinitionId))
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

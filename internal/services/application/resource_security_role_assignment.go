@@ -43,7 +43,7 @@ type SecurityRoleAssignmentResourceModel struct {
 	TeamId           customtypes.UUID `tfsdk:"team_id"`
 	BusinessUnitId   customtypes.UUID `tfsdk:"business_unit_id"`
 	SecurityRoleName types.String     `tfsdk:"security_role_name"`
-	RoleId           customtypes.UUID `tfsdk:"role_id"`
+	SecurityRoleId   customtypes.UUID `tfsdk:"security_role_id"`
 }
 
 // holder is the Dataverse principal this assignment targets, chosen by whichever id is set.
@@ -61,7 +61,7 @@ func (m SecurityRoleAssignmentResourceModel) holder() roleHolder {
 // rename and cannot distinguish same-named roles in different business units.
 func (m SecurityRoleAssignmentResourceModel) compositeId() string {
 	h := m.holder()
-	return fmt.Sprintf("%s/%s/%s/%s", m.EnvironmentId.ValueString(), h.entitySet(), h.id(), m.RoleId.ValueString())
+	return fmt.Sprintf("%s/%s/%s/%s", m.EnvironmentId.ValueString(), h.entitySet(), h.id(), m.SecurityRoleId.ValueString())
 }
 
 func NewSecurityRoleAssignmentResource() resource.Resource {
@@ -95,7 +95,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.",
+				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -143,17 +143,24 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				CustomType: customtypes.UUIDType{},
 			},
 			"security_role_name": schema.StringAttribute{
-				MarkdownDescription: "Dataverse security role name to assign.",
-				Required:            true,
+				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
+				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.MatchRoot("security_role_name"), path.MatchRoot("security_role_id")),
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
-			"role_id": schema.StringAttribute{
-				MarkdownDescription: "Resolved Dataverse role ID for the assigned security role. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it.",
+			"security_role_id": schema.StringAttribute{
+				MarkdownDescription: "Dataverse role ID of the security role to assign, computed when `security_role_name` is used. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it, and it is the way to pin one of several same-named roles in different business units.",
+				Optional:            true,
 				Computed:            true,
 				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -195,10 +202,11 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		plan.holder(),
 		plan.BusinessUnitId.ValueString(),
 		plan.SecurityRoleName.ValueString(),
+		plan.SecurityRoleId.ValueString(),
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
+			fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
 			err.Error(),
 		)
 		return
@@ -212,7 +220,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 			principal, readErr := r.ApplicationClient.GetRoleHolder(ctx, plan.EnvironmentId.ValueString(), plan.holder())
 			if readErr != nil || findAssignedRole(principal, resolved.role.RoleId) == nil {
 				resp.Diagnostics.AddError(
-					fmt.Sprintf("Failed to assign security role '%s' to %s", plan.SecurityRoleName.ValueString(), plan.holder()),
+					fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
 					err.Error(),
 				)
 				return
@@ -222,9 +230,20 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 	}
 
 	plan.BusinessUnitId = customtypes.NewUUIDValue(resolved.businessUnitID)
-	plan.RoleId = customtypes.NewUUIDValue(resolved.role.RoleId)
+	plan.SecurityRoleId = customtypes.NewUUIDValue(resolved.role.RoleId)
+	if !helpers.IsKnown(plan.SecurityRoleName) {
+		plan.SecurityRoleName = types.StringValue(resolved.role.Name)
+	}
 	plan.Id = types.StringValue(plan.compositeId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// roleSelector names the configured role for error messages, whichever selector was used.
+func (m SecurityRoleAssignmentResourceModel) roleSelector() string {
+	if helpers.IsKnown(m.SecurityRoleName) {
+		return fmt.Sprintf("'%s'", m.SecurityRoleName.ValueString())
+	}
+	return fmt.Sprintf("'%s'", m.SecurityRoleId.ValueString())
 }
 
 func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -253,7 +272,7 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	assigned := findAssignedRole(principal, state.RoleId.ValueString())
+	assigned := findAssignedRole(principal, state.SecurityRoleId.ValueString())
 	if assigned == nil {
 		resp.State.RemoveResource(ctx)
 		return
@@ -297,25 +316,25 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	if findAssignedRole(principal, state.RoleId.ValueString()) == nil {
+	if findAssignedRole(principal, state.SecurityRoleId.ValueString()) == nil {
 		// Already unassigned; destruction is idempotent.
 		return
 	}
 
-	if err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{state.RoleId.ValueString()}); err != nil {
+	if err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{state.SecurityRoleId.ValueString()}); err != nil {
 		// The principal vanishing between the read above and the removal is the destruction this
 		// wanted; only a genuine failure should stop the destroy.
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			return
 		}
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to remove security role '%s' from %s", state.RoleId.ValueString(), state.holder()),
+			fmt.Sprintf("Failed to remove security role '%s' from %s", state.SecurityRoleId.ValueString(), state.holder()),
 			err.Error(),
 		)
 	}
 }
 
-// ImportState accepts {environment_id}/{systemusers|teams}/{principal_id}/{role_id}. The role is
+// ImportState accepts {environment_id}/{systemusers|teams}/{principal_id}/{security_role_id}. The role is
 // identified by its immutable id: names can be renamed and duplicated across business units, so an
 // imported name could attach to the wrong role. Read fills security_role_name in from the live role.
 func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -326,7 +345,7 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 	if len(idParts) != 4 || (idParts[1] != "systemusers" && idParts[1] != "teams") || idParts[0] == "" || idParts[2] == "" || idParts[3] == "" {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
-			fmt.Sprintf("Expected import ID in format 'environment_id/systemusers/{system_user_id}/{role_id}' or 'environment_id/teams/{team_id}/{role_id}', got '%s'", req.ID),
+			fmt.Sprintf("Expected import ID in format 'environment_id/systemusers/{system_user_id}/{security_role_id}' or 'environment_id/teams/{team_id}/{security_role_id}', got '%s'", req.ID),
 		)
 		return
 	}
@@ -349,7 +368,7 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), idParts[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), idParts[3])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_id"), idParts[3])...)
 }
 
 type resolvedRoleAssignment struct {
@@ -358,9 +377,9 @@ type resolvedRoleAssignment struct {
 	businessUnitID string
 }
 
-// resolveRequestedRole resolves a role NAME to its id for Create. This is the only place the name is
-// used; every later operation works from the resolved id.
-func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
+// resolveRequestedRole resolves the configured role selector, a NAME or an ID, to the role row for
+// Create. This is the only place the name is used; every later operation works from the resolved id.
+func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName, securityRoleID string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {
 		return nil, err
@@ -372,6 +391,23 @@ func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Contex
 	currentPrincipal, err := r.ApplicationClient.GetRoleHolder(ctx, environmentID, holder)
 	if err != nil {
 		return nil, err
+	}
+
+	if securityRoleID != "" {
+		// An id needs no business unit to resolve: the role row carries its own, which becomes the
+		// computed business_unit_id. A configured business unit still has to agree with it.
+		role, err := r.ApplicationClient.GetSecurityRoleById(ctx, environmentID, securityRoleID)
+		if err != nil {
+			return nil, err
+		}
+		if requestedBusinessUnitID != "" && !strings.EqualFold(role.BusinessUnitId, requestedBusinessUnitID) {
+			return nil, fmt.Errorf("security role '%s' belongs to business unit '%s', not the configured business unit '%s'", securityRoleID, role.BusinessUnitId, requestedBusinessUnitID)
+		}
+		return &resolvedRoleAssignment{
+			principal:      currentPrincipal,
+			role:           *role,
+			businessUnitID: role.BusinessUnitId,
+		}, nil
 	}
 
 	businessUnitID := requestedBusinessUnitID

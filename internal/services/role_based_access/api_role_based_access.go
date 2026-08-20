@@ -221,3 +221,48 @@ func (client *client) ListRoleDefinitions(ctx context.Context) ([]roleDefinition
 	}
 	return response.Value, nil
 }
+
+// ResolveRoleDefinitionByName resolves a role definition name to its definition. Names are matched
+// case-insensitively, since Microsoft has recased display names before. Exactly one match is
+// required: none is a configuration error, and several cannot be told apart by name, so both fail
+// with instructions rather than guessing.
+func (client *client) ResolveRoleDefinitionByName(ctx context.Context, name string) (*roleDefinitionDto, error) {
+	definitions, err := client.ListRoleDefinitions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not list the role definitions to resolve the name %q: %w", name, err)
+	}
+	var matches []roleDefinitionDto
+	for i := range definitions {
+		if strings.EqualFold(definitions[i].RoleDefinitionName, name) {
+			matches = append(matches, definitions[i])
+		}
+	}
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no role definition is named %q; the catalogue holds %d definitions, which the powerplatform_role_definitions data source lists", name, len(definitions))
+	}
+	if len(matches) > 1 {
+		ids := make([]string, len(matches))
+		for i := range matches {
+			ids[i] = matches[i].RoleDefinitionId
+		}
+		return nil, fmt.Errorf("%d role definitions are named %q (%s); use role_definition_id to pick one", len(matches), name, strings.Join(ids, ", "))
+	}
+	return &matches[0], nil
+}
+
+// RoleDefinitionNameById returns the display name for a role definition id, or "" when the
+// catalogue cannot be listed or does not hold the id. The name is cosmetic alongside the id
+// identity, so this lookup never fails a lifecycle operation.
+func (client *client) RoleDefinitionNameById(ctx context.Context, roleDefinitionId string) string {
+	definitions, err := client.ListRoleDefinitions(ctx)
+	if err != nil {
+		tflog.Debug(ctx, fmt.Sprintf("Could not list role definitions to name %s: %s", roleDefinitionId, err))
+		return ""
+	}
+	for i := range definitions {
+		if strings.EqualFold(definitions[i].RoleDefinitionId, roleDefinitionId) {
+			return definitions[i].RoleDefinitionName
+		}
+	}
+	return ""
+}
