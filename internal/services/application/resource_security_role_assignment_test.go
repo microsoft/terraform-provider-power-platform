@@ -127,7 +127,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
@@ -142,7 +142,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/MetaForm User"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleUserID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleUserID),
@@ -213,7 +213,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Import(t *
 				ResourceName:      "powerplatform_security_role_assignment.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     environmentID + "/systemusers/" + principalID + "/MetaForm Global Admin",
+				ImportStateId:     environmentID + "/systemusers/" + principalID + "/" + roleAdminID,
 			},
 		},
 	})
@@ -277,7 +277,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleName),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", roleName),
 				),
 			},
@@ -287,7 +287,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 				ResourceName:      "powerplatform_security_role_assignment.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     environmentID + "/systemusers/" + principalID + "/" + roleName,
+				ImportStateId:     environmentID + "/systemusers/" + principalID + "/" + roleAdminID,
 			},
 		},
 	})
@@ -353,7 +353,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Read_RoleD
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
 				),
 			},
@@ -432,7 +432,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Validate_R
 				}
 				`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
 				),
 			},
@@ -527,7 +527,7 @@ func TestUnitSecurityRoleAssignmentResource_Team(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "team_id", teamID),
 					resource.TestCheckNoResourceAttr("powerplatform_security_role_assignment.test", "system_user_id"),
-					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/teams/"+teamID+"/"+roleName),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/teams/"+teamID+"/"+roleAdminID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "role_id", roleAdminID),
 					func(_ *terraform.State) error {
 						if teamRoleAssociationCalls == 0 {
@@ -540,7 +540,7 @@ func TestUnitSecurityRoleAssignmentResource_Team(t *testing.T) {
 			{
 				ResourceName:      "powerplatform_security_role_assignment.test",
 				ImportState:       true,
-				ImportStateId:     environmentID + "/teams/" + teamID + "/" + roleName,
+				ImportStateId:     environmentID + "/teams/" + teamID + "/" + roleAdminID,
 				ImportStateVerify: true,
 			},
 		},
@@ -573,6 +573,45 @@ func TestUnitSecurityRoleAssignmentResource_Principal_Is_ExactlyOneOf(t *testing
 					security_role_name = "MetaForm Global Admin"
 				}`,
 				ExpectError: regexp.MustCompile(`Invalid Attribute Combination`),
+			},
+		},
+	})
+}
+
+// Dataverse does not let access teams hold security roles, so the resource refuses them with a
+// pointer at the team kinds that can.
+func TestUnitSecurityRoleAssignmentResource_AccessTeam_Is_Rejected(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID = "00000000-0000-0000-0000-000000000001"
+		teamID        = "00000000-0000-0000-0000-00000000000b"
+	)
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/`+environmentID,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/teams.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK,
+				`{"teamid":"`+teamID+`","name":"Access Team","teamtype":1,"_businessunitid_value":"00000000-0000-0000-0000-000000000003"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					team_id            = "` + teamID + `"
+					security_role_name = "MetaForm Global Admin"
+				}`,
+				ExpectError: regexp.MustCompile(`access teams cannot hold security roles`),
 			},
 		},
 	})

@@ -3,12 +3,12 @@
 page_title: "powerplatform_security_role_assignment Resource - Power Platform"
 subcategory: ""
 description: |-
-  Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.
+  Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.
 ---
 
 # powerplatform_security_role_assignment (Resource)
 
-Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.
+Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.
 
 ## Example Usage
 
@@ -78,8 +78,8 @@ variable "team_id" {
 
 ### Read-Only
 
-- `id` (String) Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_name}`, where entity set is `systemusers` or `teams`.
-- `role_id` (String) Resolved Dataverse role ID for the assigned security role.
+- `id` (String) Composite ID `{environment_id}/{entity_set}/{principal_id}/{role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.
+- `role_id` (String) Resolved Dataverse role ID for the assigned security role. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -89,7 +89,6 @@ Optional:
 - `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
-- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import
 
@@ -98,12 +97,13 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# The composite id names the table the principal lives in, because a system user id and a
-# team id are rows in different tables.
+# The composite id names the table the principal lives in and the immutable role id, because a
+# system user id and a team id are rows in different tables, and role names can be renamed or
+# duplicated across business units.
 
 # assignment to a user or application user
-terraform import powerplatform_security_role_assignment.example "00000000-0000-0000-0000-000000000001/systemusers/00000000-0000-0000-0000-000000000002/Basic User"
+terraform import powerplatform_security_role_assignment.example "00000000-0000-0000-0000-000000000001/systemusers/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000004"
 
 # assignment to a team
-terraform import powerplatform_security_role_assignment.team_admin "00000000-0000-0000-0000-000000000001/teams/00000000-0000-0000-0000-000000000003/System Administrator"
+terraform import powerplatform_security_role_assignment.team_admin "00000000-0000-0000-0000-000000000001/teams/00000000-0000-0000-0000-000000000003/00000000-0000-0000-0000-000000000004"
 ```

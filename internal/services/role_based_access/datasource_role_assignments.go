@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
@@ -96,7 +97,8 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches the [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform. " +
+		MarkdownDescription: "Fetches the [role assignments](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control/list-role-assignments) in Power Platform.\n\n" +
+			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Reading assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
 			"Use this data source to discover which principals are assigned roles.\n\n" +
 			"Set `scope_type` to choose which assignments to read.",
 		Attributes: map[string]schema.Attribute{
@@ -170,6 +172,16 @@ func (d *roleAssignmentsDataSource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// The shared request-context helper only installs timeout contexts for resource requests, so
+	// the advertised read timeout is honoured here directly.
+	readTimeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, readTimeout)
+	defer cancel()
 
 	scope := state.assignmentScope()
 	tflog.Debug(ctx, fmt.Sprintf("Reading role assignments at %s scope", scope))

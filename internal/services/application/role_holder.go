@@ -51,7 +51,7 @@ func (h roleHolder) association() string {
 // selectFields are the columns needed to resolve the principal's business unit and confirm it exists.
 func (h roleHolder) selectFields() string {
 	if h.isTeam() {
-		return "teamid,name,_businessunitid_value"
+		return "teamid,name,teamtype,_businessunitid_value"
 	}
 	return "applicationid,systemuserid,fullname,isdisabled,deletedstate,_businessunitid_value"
 }

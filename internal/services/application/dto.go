@@ -106,6 +106,7 @@ type applicationUserDto struct {
 type teamDto struct {
 	TeamId         string                       `json:"teamid"`
 	Name           string                       `json:"name"`
+	TeamType       int64                        `json:"teamtype"`
 	BusinessUnitId string                       `json:"_businessunitid_value"`
 	SecurityRoles  []applicationSecurityRoleDto `json:"teamroles_association,omitempty"`
 }

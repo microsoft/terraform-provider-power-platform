@@ -5,6 +5,7 @@ package role_based_access
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
@@ -55,8 +57,9 @@ func (r *roleAssignmentResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control) in Power Platform. " +
-			"Use this resource to assign roles to service principals or users.\n\n" +
+		MarkdownDescription: "Manages a Power Platform administrative [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control). " +
+			"Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use `powerplatform_security_role_assignment` instead.\n\n" +
+			"~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.\n\n" +
 			"The assignment is scoped by which identifier you set. Set `environment_id` to scope it to an environment, " +
 			"or `environment_group_id` to scope it to an environment group. Set neither and the assignment applies to the whole tenant.",
 		Attributes: map[string]schema.Attribute{
@@ -222,6 +225,11 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 
 	assignments, err := r.Client.ListRoleAssignments(ctx, scope)
 	if err != nil {
+		// A gone scope (deleted environment or environment group) took its assignments with it.
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Failed to list role assignments at %s scope", scope), err.Error())
 		return
 	}

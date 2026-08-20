@@ -52,12 +52,14 @@ func (m SecurityRoleAssignmentResourceModel) holder() roleHolder {
 	return systemUserRoleHolder(m.SystemUserId.ValueString())
 }
 
-// compositeId identifies the assignment as {environment}/{entity set}/{principal}/{role}. The entity
-// set is included because a system user id and a team id are rows in different tables, so without it
-// an imported id would be ambiguous.
+// compositeId identifies the assignment as {environment}/{entity set}/{principal}/{role id}. The
+// entity set is included because a system user id and a team id are rows in different tables, and the
+// role is identified by its immutable id rather than its name: Dataverse permits renaming custom
+// roles while associations are made to role records by id, so a name in the identity would dangle on
+// rename and cannot distinguish same-named roles in different business units.
 func (m SecurityRoleAssignmentResourceModel) compositeId() string {
 	h := m.holder()
-	return fmt.Sprintf("%s/%s/%s/%s", m.EnvironmentId.ValueString(), h.entitySet(), h.id(), m.SecurityRoleName.ValueString())
+	return fmt.Sprintf("%s/%s/%s/%s", m.EnvironmentId.ValueString(), h.entitySet(), h.id(), m.RoleId.ValueString())
 }
 
 func NewSecurityRoleAssignmentResource() resource.Resource {
@@ -83,16 +85,15 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Assigns a single Dataverse security role, resolved by name within the target business unit, to a principal (system user). The assignment is managed independently of the principal's lifecycle.",
+		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
 				Delete: true,
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_name}`, where entity set is `systemusers` or `teams`.",
+				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -139,7 +140,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			"role_id": schema.StringAttribute{
-				MarkdownDescription: "Resolved Dataverse role ID for the assigned security role.",
+				MarkdownDescription: "Resolved Dataverse role ID for the assigned security role. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -192,7 +193,7 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
+	if findAssignedRole(resolved.principal, resolved.role.RoleId) == nil {
 		resolved.principal, err = r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId})
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -203,9 +204,9 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		}
 	}
 
-	plan.Id = types.StringValue(plan.compositeId())
 	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
 	plan.RoleId = types.StringValue(resolved.role.RoleId)
+	plan.Id = types.StringValue(plan.compositeId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -219,64 +220,41 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	resolved, err := r.resolveRequestedRole(
-		ctx,
-		state.EnvironmentId.ValueString(),
-		state.holder(),
-		state.BusinessUnitId.ValueString(),
-		state.SecurityRoleName.ValueString(),
-	)
+	// The assignment is anchored on the stored role id, never re-resolved by name. Renaming the
+	// role therefore does not orphan the assignment, and same-named roles in other business units
+	// cannot be confused with it.
+	principal, err := r.ApplicationClient.GetRoleHolder(ctx, state.EnvironmentId.ValueString(), state.holder())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
+			fmt.Sprintf("Failed to read security role assignment for %s", state.holder()),
 			err.Error(),
 		)
 		return
 	}
 
-	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
+	assigned := findAssignedRole(principal, state.RoleId.ValueString())
+	if assigned == nil {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
-	state.BusinessUnitId = types.StringValue(resolved.businessUnitID)
-	state.RoleId = types.StringValue(resolved.role.RoleId)
+	state.BusinessUnitId = types.StringValue(assigned.BusinessUnitId)
+	// The name is a create-time selector, so an existing value is left alone even if the role has
+	// been renamed since; the id keeps the assignment attached regardless. It is only filled in
+	// when absent, which is the import path.
+	if !helpers.IsKnown(state.SecurityRoleName) {
+		state.SecurityRoleName = types.StringValue(assigned.Name)
+	}
+	state.Id = types.StringValue(state.compositeId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
-
-	var plan SecurityRoleAssignmentResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resolved, err := r.resolveRequestedRole(
-		ctx,
-		plan.EnvironmentId.ValueString(),
-		plan.holder(),
-		plan.BusinessUnitId.ValueString(),
-		plan.SecurityRoleName.ValueString(),
-	)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to refresh security role assignment '%s' for principal '%s'", plan.SecurityRoleName.ValueString(), plan.SystemUserId.ValueString()),
-			err.Error(),
-		)
-		return
-	}
-
-	plan.Id = types.StringValue(plan.compositeId())
-	plan.BusinessUnitId = types.StringValue(resolved.businessUnitID)
-	plan.RoleId = types.StringValue(resolved.role.RoleId)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	// Every attribute requires replacement, so there is no in-place update.
 }
 
 func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -289,45 +267,44 @@ func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	resolved, err := r.resolveRequestedRole(
-		ctx,
-		state.EnvironmentId.ValueString(),
-		state.holder(),
-		state.BusinessUnitId.ValueString(),
-		state.SecurityRoleName.ValueString(),
-	)
+	principal, err := r.ApplicationClient.GetRoleHolder(ctx, state.EnvironmentId.ValueString(), state.holder())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			// The principal (or its environment) is gone, and the association went with it.
 			return
 		}
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to read security role assignment '%s' for principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
+			fmt.Sprintf("Failed to read security role assignment for %s", state.holder()),
 			err.Error(),
 		)
 		return
 	}
 
-	if !principalHasRole(resolved.principal, resolved.role.RoleId) {
+	if findAssignedRole(principal, state.RoleId.ValueString()) == nil {
+		// Already unassigned; destruction is idempotent.
 		return
 	}
 
-	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{resolved.role.RoleId}); err != nil {
+	if _, err = r.ApplicationClient.RemovePrincipalSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.holder(), []string{state.RoleId.ValueString()}); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to remove security role '%s' from principal '%s'", state.SecurityRoleName.ValueString(), state.SystemUserId.ValueString()),
+			fmt.Sprintf("Failed to remove security role '%s' from %s", state.RoleId.ValueString(), state.holder()),
 			err.Error(),
 		)
 	}
 }
 
+// ImportState accepts {environment_id}/{systemusers|teams}/{principal_id}/{role_id}. The role is
+// identified by its immutable id: names can be renamed and duplicated across business units, so an
+// imported name could attach to the wrong role. Read fills security_role_name in from the live role.
 func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	idParts := strings.SplitN(req.ID, "/", 4)
-	if len(idParts) != 4 || (idParts[1] != "systemusers" && idParts[1] != "teams") {
+	idParts := strings.Split(req.ID, "/")
+	if len(idParts) != 4 || (idParts[1] != "systemusers" && idParts[1] != "teams") || idParts[0] == "" || idParts[2] == "" || idParts[3] == "" {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
-			fmt.Sprintf("Expected import ID in format 'environment_id/systemusers/{system_user_id}/security_role_name' or 'environment_id/teams/{team_id}/security_role_name', got '%s'", req.ID),
+			fmt.Sprintf("Expected import ID in format 'environment_id/systemusers/{system_user_id}/{role_id}' or 'environment_id/teams/{team_id}/{role_id}', got '%s'", req.ID),
 		)
 		return
 	}
@@ -340,7 +317,7 @@ func (r *SecurityRoleAssignmentResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(principalAttribute), idParts[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_role_name"), idParts[3])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("role_id"), idParts[3])...)
 }
 
 type resolvedRoleAssignment struct {
@@ -349,6 +326,8 @@ type resolvedRoleAssignment struct {
 	businessUnitID string
 }
 
+// resolveRequestedRole resolves a role NAME to its id for Create. This is the only place the name is
+// used; every later operation works from the resolved id.
 func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {
@@ -383,12 +362,12 @@ func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Contex
 	}, nil
 }
 
-func principalHasRole(principal *roleHolderDto, roleID string) bool {
-	for _, role := range principal.SecurityRoles {
-		if role.RoleId == roleID {
-			return true
+// findAssignedRole returns the holder's assignment of the given role id, or nil when it is absent.
+func findAssignedRole(principal *roleHolderDto, roleID string) *applicationSecurityRoleDto {
+	for i := range principal.SecurityRoles {
+		if principal.SecurityRoles[i].RoleId == roleID {
+			return &principal.SecurityRoles[i]
 		}
 	}
-
-	return false
+	return nil
 }

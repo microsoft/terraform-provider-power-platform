@@ -599,3 +599,53 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 		},
 	})
 }
+
+// The create POST is not idempotent, so a transient failure must not replay it. Instead the scope is
+// listed and a matching assignment adopted, because the failed-looking request may have committed.
+func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Failure_Reconciles_Without_Replay(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	postAttempts := 0
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			postAttempts++
+			// The server commits the assignment but the response is lost in a 500.
+			return httpmock.NewStringResponse(http.StatusInternalServerError, `{"error":"socket hang up"}`), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					func(_ *terraform.State) error {
+						if postAttempts != 1 {
+							return fmt.Errorf("the non-idempotent create must be sent exactly once, got %d attempts", postAttempts)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}

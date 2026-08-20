@@ -3,13 +3,16 @@
 page_title: "powerplatform_role_assignment Resource - Power Platform"
 subcategory: ""
 description: |-
-  Manages a role assignment https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control in Power Platform. Use this resource to assign roles to service principals or users.
+  Manages a Power Platform administrative role assignment https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control. Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use powerplatform_security_role_assignment instead.
+  ~> The role based access control API is in preview https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
   The assignment is scoped by which identifier you set. Set environment_id to scope it to an environment, or environment_group_id to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
 ---
 
 # powerplatform_role_assignment (Resource)
 
-Manages a [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control) in Power Platform. Use this resource to assign roles to service principals or users.
+Manages a Power Platform administrative [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control). Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use `powerplatform_security_role_assignment` instead.
+
+~> The role based access control API is in [preview](https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control) and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
 
 The assignment is scoped by which identifier you set. Set `environment_id` to scope it to an environment, or `environment_group_id` to scope it to an environment group. Set neither and the assignment applies to the whole tenant.
 
