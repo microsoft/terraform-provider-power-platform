@@ -57,7 +57,7 @@ var (
 	envGroupCollection    = "https://api.powerplatform.com/authorization/environmentGroups/" + testEnvironmentGroupId + "/roleAssignments"
 )
 
-// A role assignment with neither identifier set applies to the tenant.
+// scope_type "tenant" applies the assignment tenant-wide, with no identifier to accompany it.
 func TestUnitRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

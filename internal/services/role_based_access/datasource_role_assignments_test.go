@@ -21,7 +21,7 @@ func registerListMock(collectionPath, fixture string) {
 		})
 }
 
-// With neither identifier set the data source reads the tenant scoped assignments.
+// scope_type "tenant" reads the tenant scoped assignments, with no identifier to accompany it.
 func TestUnitRoleAssignmentsDataSource_Validate_Read_Tenant_Scope(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
