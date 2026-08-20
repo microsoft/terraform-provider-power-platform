@@ -5,6 +5,7 @@ package role_based_access_test //nolint:revive // the underscored package name p
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -116,4 +117,47 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Empty(t *testing.T) {
 			},
 		},
 	})
+}
+
+// A failing list surfaces the scoped diagnostic instead of an empty result, at every scope.
+func TestUnitRoleAssignmentsDataSource_Validate_Read_Error(t *testing.T) {
+	cases := []struct {
+		name       string
+		collection string
+		config     string
+	}{
+		{"tenant", tenantCollection, `
+			scope_type = "tenant"`},
+		{"environment", environmentCollection, `
+			scope_type     = "environment"
+			environment_id = "` + testEnvironmentId + `"`},
+		{"environment_group", envGroupCollection, `
+			scope_type           = "environment_group"
+			environment_group_id = "` + testEnvironmentGroupId + `"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			mocks.ActivateEnvironmentHttpMocks()
+
+			httpmock.RegisterResponder("GET", tc.collection+apiVersionQuery,
+				func(_ *http.Request) (*http.Response, error) {
+					return httpmock.NewStringResponse(http.StatusForbidden, `{"error":"forbidden"}`), nil
+				})
+
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+						data "powerplatform_role_assignments" "test" {` + tc.config + `
+						}`,
+						ExpectError: regexp.MustCompile(`(?s)Failed to list role assignments at.*scope`),
+					},
+				},
+			})
+		})
+	}
 }
