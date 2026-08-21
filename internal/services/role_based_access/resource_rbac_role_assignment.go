@@ -66,7 +66,7 @@ func (r *rbacRoleAssignmentResource) Schema(ctx context.Context, req resource.Sc
 			"Tenant scope is the broadest grant available, so it must be named explicitly.\n\n" +
 			"The role is selected by exactly one of `role_definition_id` or `role_definition_name`; a name is resolved to its id at create time and the assignment is anchored on the id from then on.\n\n" +
 			"The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. " +
-			"If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. " +
+			"If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. The same refusal makes a forced recreate under create_before_destroy fail safely before anything is deleted, since the create leg finds the existing assignment first. " +
 			"An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{

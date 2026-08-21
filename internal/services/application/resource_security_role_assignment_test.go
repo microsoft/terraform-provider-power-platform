@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -739,105 +740,116 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 	})
 }
 
-// A failed association POST never becomes successful state, even when the mock proves the
-// association was committed: ownership cannot be read back, since a concurrent caller can
-// associate the same role between the pre-check and any read. The grant stays remote-only and
-// the error hands over the import id.
+// A failed association POST never becomes successful state, even when the association was truly
+// committed: the responder inserts the role into the harness's remote map exactly as a committed
+// POST would, so any reintroduced read-back adoption would find it and this test would fail. The
+// state is proven empty by the next plan proposing a create, without applying anything.
 func TestUnitSecurityRoleAssignmentResource_Create_Ambiguous_Failure_Never_Writes_State(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
-	// The POST commits the association but the response is lost in transit.
-	committed := false
+	const (
+		roleID      = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		principalID = "00000000-0000-0000-0000-000000000008"
+	)
+	h := securityRenameHarness(roleID, "Shared Role", "unused")
+	// The POST commits the association into the remote map, but the response is lost in transit.
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
-		func(_ *http.Request) (*http.Response, error) {
-			committed = true
+		func(req *http.Request) (*http.Response, error) {
+			h.addRole(principalID, roleID)
 			return nil, errors.New("connection reset by peer")
 		})
+
+	config := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		system_user_id     = "` + principalID + `"
+		security_role_name = "Shared Role"
+	}`
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_security_role_assignment" "test" {
-					environment_id     = "00000000-0000-0000-0000-000000000001"
-					system_user_id     = "00000000-0000-0000-0000-000000000008"
-					security_role_name = "Shared Role"
-				}`,
+				Config:      config,
 				ExpectError: regexp.MustCompile(`(?s)outcome of assigning.*is\s+unknown`),
 			},
 			{
-				Config: `# empty`,
-				Check: func(state *terraform.State) error {
-					if len(state.RootModule().Resources) != 0 {
-						return fmt.Errorf("no association may reach state after an unknown outcome, found %d resources", len(state.RootModule().Resources))
-					}
-					if !committed {
-						return errors.New("the mock must hold the committed association for this test to prove the deliberate gap")
-					}
-					return nil
+				// The plan must propose a fresh create, proving nothing reached state, and the
+				// re-apply must then be refused by the pre-check, proving the remote grant is
+				// live: two proofs from one non-destructive step.
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("powerplatform_security_role_assignment.test", plancheck.ResourceActionCreate),
+					},
 				},
+				ExpectError: regexp.MustCompile(`(?s)already assigned`),
 			},
 		},
 	})
+	// The grant lives on remotely, exactly one mutation happened, and Terraform never owned it.
+	if h.changes != 1 {
+		t.Errorf("expected exactly the committed association, got %d mutations", h.changes)
+	}
+	if !h.hasRole(principalID, roleID) {
+		t.Error("the committed association must survive in the remote map, unowned by Terraform")
+	}
 }
 
-// A definitive rejection of the association POST fails immediately: no read-back runs and nothing
-// reaches state.
+// A definitive rejection of the association POST fails immediately: the principal is never read
+// back, which the harness's own read counter proves, and nothing reaches state.
 func TestUnitSecurityRoleAssignmentResource_Create_Definitive_Failure_Fails_Immediately(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
-	principalReads := 0
-	// Wrap the principal fetch to count reads that happen after the POST fails.
-	postFailed := false
+	const (
+		roleID      = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		principalID = "00000000-0000-0000-0000-000000000008"
+	)
+	h := securityRenameHarness(roleID, "Shared Role", "unused")
+	readsAtFailure := -1
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
 		func(_ *http.Request) (*http.Response, error) {
-			postFailed = true
+			readsAtFailure = h.principalReads
 			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"code":"0x80048306","message":"principal is disabled"}}`), nil
 		})
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))\?.*`,
-		func(req *http.Request) (*http.Response, error) {
-			if postFailed {
-				principalReads++
-			}
-			body := `{"systemuserid":"00000000-0000-0000-0000-000000000008","applicationid":"00000000-0000-0000-0000-000000000007","fullname":"Example Application User","_businessunitid_value":"00000000-0000-0000-0000-000000000003","isdisabled":false,"systemuserroles_association":[]}`
-			return httpmock.NewStringResponse(http.StatusOK, body), nil
-		})
+
+	config := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		system_user_id     = "` + principalID + `"
+		security_role_name = "Shared Role"
+	}`
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_security_role_assignment" "test" {
-					environment_id     = "00000000-0000-0000-0000-000000000001"
-					system_user_id     = "00000000-0000-0000-0000-000000000008"
-					security_role_name = "Shared Role"
-				}`,
+				Config:      config,
 				ExpectError: regexp.MustCompile(`(?s)Failed to assign security\s+role.*principal is disabled`),
 			},
 			{
-				Config: `# empty`,
-				Check: func(state *terraform.State) error {
-					if len(state.RootModule().Resources) != 0 {
-						return fmt.Errorf("no association may reach state after a definitive failure, found %d resources", len(state.RootModule().Resources))
-					}
-					if principalReads != 0 {
-						return fmt.Errorf("a definitive failure must not read the relationship back, got %d reads after the POST", principalReads)
-					}
-					return nil
+				// The plan must propose a fresh create, proving nothing reached state; the
+				// re-apply then fails on the same definitive rejection.
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("powerplatform_security_role_assignment.test", plancheck.ResourceActionCreate),
+					},
 				},
+				ExpectError: regexp.MustCompile(`(?s)Failed to assign security\s+role.*principal is disabled`),
 			},
 		},
 	})
+	if readsAtFailure < 0 {
+		t.Fatal("the POST responder never fired")
+	}
+	if h.principalReads != readsAtFailure {
+		t.Errorf("a definitive failure must not read the principal back, got %d reads after the POST", h.principalReads-readsAtFailure)
+	}
 }
 
 // A role selected by security_role_id needs no name resolution: the role row is fetched by id, its
@@ -997,15 +1009,37 @@ func TestUnitSecurityRoleAssignmentResource_Role_Selector_Exactly_One(t *testing
 // whose display name can change between steps. Any systemuser id is served, so replacement tests
 // can move the holder. The returned function switches the catalogue to the renamed form, and the
 // counter tracks every association add or removal.
-func securityRenameHarness(roleID, oldName, newName string) (renamed func(), associationChanges *int, hasRole func(principal, role string) bool) {
+// secHarness owns the mock environment's remote truth: the association map, the mutation count
+// and the principal-read count, so tests assert against the same store production reads.
+type secHarness struct {
+	changes        int
+	principalReads int
+	assigned       map[string][]string
+	flip           func()
+	roleID         string
+}
+
+func (h *secHarness) hasRole(principal, role string) bool {
+	return slices.Contains(h.assigned[principal], role)
+}
+
+// addRole inserts an association into the remote map directly, the way a concurrent caller or a
+// committed-but-unacknowledged POST would, and counts it as a mutation.
+func (h *secHarness) addRole(principal, role string) {
+	if !slices.Contains(h.assigned[principal], role) {
+		h.assigned[principal] = append(h.assigned[principal], role)
+		h.changes++
+	}
+}
+
+func securityRenameHarness(roleID, oldName, newName string) *secHarness {
 	const (
 		environmentID = "00000000-0000-0000-0000-000000000001"
 		applicationID = "00000000-0000-0000-0000-000000000007"
 		rootBusiness  = "00000000-0000-0000-0000-000000000003"
 	)
 	currentName := oldName
-	assigned := map[string][]string{}
-	changes := 0
+	h := &secHarness{assigned: map[string][]string{}, roleID: roleID}
 	guidRe := regexp.MustCompile(`systemusers(?:%28|\()([0-9a-f-]+)(?:%29|\))`)
 	principalOf := func(raw string) string {
 		m := guidRe.FindStringSubmatch(raw)
@@ -1024,9 +1058,11 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 			principal := principalOf(req.URL.RawPath + req.URL.Path)
 			if principal == "" {
 				principal = "00000000-0000-0000-0000-000000000008"
+			} else {
+				h.principalReads++
 			}
-			roles := make([]string, 0, len(assigned[principal]))
-			for _, id := range assigned[principal] {
+			roles := make([]string, 0, len(h.assigned[principal]))
+			for _, id := range h.assigned[principal] {
 				name := currentName
 				if id != roleID {
 					name = "A Different Role"
@@ -1059,9 +1095,8 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 				return nil, err
 			}
 			for _, candidate := range []string{roleID, "99999999-0000-0000-0000-000000000009"} {
-				if strings.Contains(payload["@odata.id"], candidate) && !slices.Contains(assigned[principal], candidate) {
-					assigned[principal] = append(assigned[principal], candidate)
-					changes++
+				if strings.Contains(payload["@odata.id"], candidate) {
+					h.addRole(principal, candidate)
 				}
 			}
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
@@ -1070,18 +1105,17 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 		func(req *http.Request) (*http.Response, error) {
 			principal := principalOf(req.URL.RawPath + req.URL.Path)
 			for _, candidate := range []string{roleID, "99999999-0000-0000-0000-000000000009"} {
-				if strings.Contains(req.URL.RawQuery, candidate) && slices.Contains(assigned[principal], candidate) {
-					assigned[principal] = slices.DeleteFunc(assigned[principal], func(id string) bool { return id == candidate })
-					changes++
+				if strings.Contains(req.URL.RawQuery, candidate) && slices.Contains(h.assigned[principal], candidate) {
+					h.assigned[principal] = slices.DeleteFunc(h.assigned[principal], func(id string) bool { return id == candidate })
+					h.changes++
 					return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 				}
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	return func() { currentName = newName }, &changes, func(principal, role string) bool {
-		return slices.Contains(assigned[principal], role)
-	}
+	h.flip = func() { currentName = newName }
+	return h
 }
 
 // A renamed Dataverse role is followed in place: the association is neither removed nor re-added,
@@ -1091,7 +1125,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t 
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	renamed, changes, _ := securityRenameHarness(roleID, "Old Role Name", "New Role Name")
+	h := securityRenameHarness(roleID, "Old Role Name", "New Role Name")
 
 	config := func(name string) string {
 		return `
@@ -1112,7 +1146,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t 
 			{
 				Config: config("Old Role Name"),
 				Check: func(_ *terraform.State) error {
-					renamed()
+					h.flip()
 					return nil
 				},
 			},
@@ -1122,8 +1156,8 @@ func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t 
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "New Role Name"),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleID),
 					func(_ *terraform.State) error {
-						if *changes != 1 {
-							return fmt.Errorf("a same-role rename must not touch the association; expected only the create, got %d changes", *changes)
+						if h.changes != 1 {
+							return fmt.Errorf("a same-role rename must not touch the association; expected only the create, got %d changes", h.changes)
 						}
 						return nil
 					},
@@ -1139,7 +1173,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_To_Different_Role_Fails(t *te
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _, _ = securityRenameHarness(roleID, "Old Role Name", "unused")
+	_ = securityRenameHarness(roleID, "Old Role Name", "unused")
 
 	config := func(name string) string {
 		return `
@@ -1171,7 +1205,7 @@ func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
+	h := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	config := func(principal string) string {
 		return `
@@ -1206,8 +1240,8 @@ func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleID),
 					func(_ *terraform.State) error {
 						// create P8 (1), then the replacement: dissociate P8 (2), associate P9 (3)
-						if *changes != 3 {
-							return fmt.Errorf("expected exactly the create and the explicit-id replacement, got %d association changes", *changes)
+						if h.changes != 3 {
+							return fmt.Errorf("expected exactly the create and the explicit-id replacement, got %d association changes", h.changes)
 						}
 						return nil
 					},
@@ -1224,7 +1258,7 @@ func TestUnitSecurityRoleAssignmentResource_Environment_Move_By_Name_Fails(t *te
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	_ = securityRenameHarness(roleID, "Shared Role", "unused")
 
 	config := func(env string) string {
 		return `
@@ -1254,7 +1288,7 @@ func TestUnitSecurityRoleAssignmentResource_Business_Unit_Move_By_Name_Fails(t *
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	_ = securityRenameHarness(roleID, "Shared Role", "unused")
 
 	base := `
 	resource "powerplatform_security_role_assignment" "test" {
@@ -1282,7 +1316,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_With_Replacement_Fails(t *tes
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	renamed, _, _ := securityRenameHarness(roleID, "Shared Role", "Renamed Role")
+	h := securityRenameHarness(roleID, "Shared Role", "Renamed Role")
 
 	config := func(principal, name string) string {
 		return `
@@ -1300,7 +1334,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_With_Replacement_Fails(t *tes
 			{
 				Config: config("00000000-0000-0000-0000-000000000008", "Shared Role"),
 				Check: func(_ *terraform.State) error {
-					renamed()
+					h.flip()
 					return nil
 				},
 			},
@@ -1319,7 +1353,7 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Name_Replacement_Refused(t *
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
+	h := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -1353,8 +1387,8 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Name_Replacement_Refused(t *
 					security_role_name = "Shared Role"
 				}`,
 				Check: func(_ *terraform.State) error {
-					if *changes != 1 {
-						return fmt.Errorf("the refused plan must not touch associations, got %d changes", *changes)
+					if h.changes != 1 {
+						return fmt.Errorf("the refused plan must not touch associations, got %d changes", h.changes)
 					}
 					return nil
 				},
@@ -1370,7 +1404,7 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Business_Unit_Move_Refused(t
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
+	h := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	base := `
 	resource "powerplatform_security_role_assignment" "test" {
@@ -1395,8 +1429,8 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Business_Unit_Move_Refused(t
 			{
 				Config: base + `}`,
 				Check: func(_ *terraform.State) error {
-					if *changes != 1 {
-						return fmt.Errorf("the refused plan must not touch associations, got %d changes", *changes)
+					if h.changes != 1 {
+						return fmt.Errorf("the refused plan must not touch associations, got %d changes", h.changes)
 					}
 					return nil
 				},
@@ -1521,7 +1555,7 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 		t.Run(tc.name, func(t *testing.T) {
 			httpmock.Activate()
 			defer httpmock.DeactivateAndReset()
-			_, changes, hasRole := securityRenameHarness(roleID, "Shared Role", "unused")
+			h := securityRenameHarness(roleID, "Shared Role", "unused")
 
 			config := `
 			resource "powerplatform_security_role_assignment" "test" {
@@ -1549,10 +1583,10 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 						// still live. A count alone cannot tell the safe pair (create plus
 						// cleanup) from an unsafe one (create plus an illicit removal).
 						PreConfig: func() {
-							if *changes != 1 {
-								t.Errorf("only the original create may have touched associations before cleanup, got %d changes", *changes)
+							if h.changes != 1 {
+								t.Errorf("only the original create may have touched associations before cleanup, got %d changes", h.changes)
 							}
-							if !hasRole("00000000-0000-0000-0000-000000000008", roleID) {
+							if !h.hasRole("00000000-0000-0000-0000-000000000008", roleID) {
 								t.Error("the original association must still exist before cleanup")
 							}
 						},
@@ -1562,8 +1596,8 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 				},
 			})
 			// After the explicit destroy: exactly the create and the cleanup dissociation.
-			if *changes != 2 {
-				t.Errorf("expected exactly the create and the final cleanup, got %d association changes", *changes)
+			if h.changes != 2 {
+				t.Errorf("expected exactly the create and the final cleanup, got %d association changes", h.changes)
 			}
 		})
 	}

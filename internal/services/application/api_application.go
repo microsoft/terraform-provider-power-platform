@@ -502,10 +502,26 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	return resolved, nil
 }
 
+// associationPostError marks an error raised by the association POST itself or its response, as
+// opposed to the environment host resolution that precedes it. Only a marked error can mean the
+// association was attempted, so only marked errors may classify as ambiguous outcomes.
+type associationPostError struct {
+	err error
+}
+
+func (e associationPostError) Error() string {
+	return e.err.Error()
+}
+
+func (e associationPostError) Unwrap() error {
+	return e.err
+}
+
 func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
-		return err
+		// The association was never attempted, so this must not read as an ambiguous outcome.
+		return fmt.Errorf("could not resolve the environment host before associating: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -522,13 +538,13 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 		// concurrent caller's grant, so the caller classifies the failure instead of retrying.
 		resp, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
-			return err
+			return associationPostError{err: err}
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-			return err
+			return associationPostError{err: err}
 		}
 		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-			return err
+			return associationPostError{err: err}
 		}
 	}
 

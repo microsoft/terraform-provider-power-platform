@@ -762,7 +762,8 @@ func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Existing_Assignment_
 	})
 }
 
-// Duplicate existing relationships cannot be adopted safely, so create refuses them.
+// Several duplicate existing relationships are refused with instructions to deduplicate, since
+// even importing needs to know which one is meant.
 func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Duplicate_Existing_Assignments(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -1202,8 +1203,8 @@ func TestUnitRoleAssignmentResource_Validate_Import_After_Ambiguous_Commit_Succe
 	})
 }
 
-// An expiring assignment is a relationship this resource cannot represent, so it is never adopted:
-// the create proceeds and makes the permanent assignment the configuration declares.
+// An expiring assignment is a relationship this resource cannot represent, so it never counts as
+// existing: the create proceeds and makes the permanent assignment the configuration declares.
 func TestUnitRoleAssignmentResource_Validate_Create_Does_Not_Adopt_Expiring_Assignment(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

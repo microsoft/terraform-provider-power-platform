@@ -7,7 +7,7 @@ description: |-
   ~> The role based access control API is in preview https://learn.microsoft.com/en-us/power-platform/admin/security/role-based-access-control and Microsoft does not recommend it for production use yet. Managing assignments requires the caller to hold the Power Platform Administrator Entra role or the Power Platform Role Based Access Control Administrator role.
   The assignment is scoped by the required scope_type: tenant, environment with environment_id, or environment_group with environment_group_id. Tenant scope is the broadest grant available, so it must be named explicitly.
   The role is selected by exactly one of role_definition_id or role_definition_name; a name is resolved to its id at create time and the assignment is anchored on the id from then on.
-  The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.
+  The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. The same refusal makes a forced recreate under create_before_destroy fail safely before anything is deleted, since the create leg finds the existing assignment first. An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.
 ---
 
 # powerplatform_rbac_role_assignment (Resource)
@@ -20,7 +20,7 @@ The assignment is scoped by the required `scope_type`: `tenant`, `environment` w
 
 The role is selected by exactly one of `role_definition_id` or `role_definition_name`; a name is resolved to its id at create time and the assignment is anchored on the id from then on.
 
-The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.
+The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. The same refusal makes a forced recreate under create_before_destroy fail safely before anything is deleted, since the create leg finds the existing assignment first. An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.
 
 ## Example Usage
 

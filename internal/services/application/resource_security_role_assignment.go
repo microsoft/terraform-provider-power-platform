@@ -89,7 +89,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it.",
+		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it. The same refusal makes a forced recreate under create_before_destroy fail safely before anything is dissociated, since the create leg finds the existing association first.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -254,11 +254,17 @@ func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req res
 }
 
 // isAmbiguousAssociateFailure reports whether the association POST might have committed despite
-// the error. A definitive refusal, an HTTP 4xx other than timeout or throttle, or a failure before
-// the request was sent proves nothing was committed; a failure on or after the wire without a
-// status, which the api client marks with RequestSentError, or a timeout, throttle or server
-// error leaves the outcome unknown.
+// the error. Only an error the client marked as originating from the POST itself can be
+// ambiguous: anything earlier, like resolving the environment host, proves the association was
+// never attempted. Of the marked errors, a definitive refusal or an HTTP 4xx other than timeout
+// or throttle proves the server refused it; a failure on or after the wire without a status,
+// which the api client marks with RequestSentError, or a timeout, throttle or server error
+// leaves the outcome unknown.
 func isAmbiguousAssociateFailure(err error) bool {
+	var postErr associationPostError
+	if !errors.As(err, &postErr) {
+		return false
+	}
 	var httpErr customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &httpErr) {
 		return httpErr.StatusCode == http.StatusRequestTimeout ||
