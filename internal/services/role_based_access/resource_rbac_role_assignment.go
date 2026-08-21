@@ -34,20 +34,20 @@ import (
 // `ApplicationUser` here.
 var principalTypes = []string{"ApplicationUser", "Group", "User"}
 
-var _ resource.Resource = &roleAssignmentResource{}
-var _ resource.ResourceWithImportState = &roleAssignmentResource{}
-var _ resource.ResourceWithValidateConfig = &roleAssignmentResource{}
-var _ resource.ResourceWithModifyPlan = &roleAssignmentResource{}
+var _ resource.Resource = &rbacRoleAssignmentResource{}
+var _ resource.ResourceWithImportState = &rbacRoleAssignmentResource{}
+var _ resource.ResourceWithValidateConfig = &rbacRoleAssignmentResource{}
+var _ resource.ResourceWithModifyPlan = &rbacRoleAssignmentResource{}
 
-func NewRoleAssignmentResource() resource.Resource {
-	return &roleAssignmentResource{
+func NewRbacRoleAssignmentResource() resource.Resource {
+	return &rbacRoleAssignmentResource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "role_assignment",
+			TypeName: "rbac_role_assignment",
 		},
 	}
 }
 
-func (r *roleAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *rbacRoleAssignmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	r.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
@@ -57,7 +57,7 @@ func (r *roleAssignmentResource) Metadata(ctx context.Context, req resource.Meta
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *rbacRoleAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a Power Platform administrative [role assignment](https://learn.microsoft.com/en-us/rest/api/power-platform/authorization/role-based-access-control). " +
 			"Use this resource to assign Power Platform roles to service principals, users or groups. For Dataverse security roles inside an environment, use `powerplatform_security_role_assignment` instead.\n\n" +
@@ -195,7 +195,7 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 //   - a forced recreate (a taint or -replace, which can also happen automatically after a failed
 //     create) carries no attribute change to detect, so it re-resolves the name like the fresh
 //     create it is.
-func (r *roleAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *rbacRoleAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		// A destroy needs no plan changes.
 		return
@@ -208,7 +208,7 @@ func (r *roleAssignmentResource) ModifyPlan(ctx context.Context, req resource.Mo
 		return
 	}
 
-	var config, plan, state roleAssignmentResourceModel
+	var config, plan, state rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -283,8 +283,8 @@ func provablyEqualStrings(a, b types.String) bool {
 // ValidateConfig enforces that scope_type and its matching id arrive together. The per-attribute
 // validators cannot cover the missing-id case, because a validator attached to an absent attribute
 // never runs.
-func (r *roleAssignmentResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var config roleAssignmentResourceModel
+func (r *rbacRoleAssignmentResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -292,7 +292,7 @@ func (r *roleAssignmentResource) ValidateConfig(ctx context.Context, req resourc
 	resp.Diagnostics.Append(validateScopeSelection(config.ScopeType, config.EnvironmentId, config.EnvironmentGroupId)...)
 }
 
-func (r *roleAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *rbacRoleAssignmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -311,11 +311,11 @@ func (r *roleAssignmentResource) Configure(ctx context.Context, req resource.Con
 	r.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
-func (r *roleAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *rbacRoleAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan roleAssignmentResourceModel
+	var plan rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -387,11 +387,11 @@ func nullableNameValue(value string) customtypes.CaseInsensitiveString {
 	return customtypes.NewCaseInsensitiveStringValue(value)
 }
 
-func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *rbacRoleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state roleAssignmentResourceModel
+	var state rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -437,11 +437,11 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 // instance then destroys it, silently revoking the grant under create_before_destroy. Instead the
 // new name is resolved: the same role id is a pure state update, and a different role id fails
 // with instructions, since moving the grant is what role_definition_id is for.
-func (r *roleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *rbacRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan, state roleAssignmentResourceModel
+	var plan, state rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -472,11 +472,11 @@ func (r *roleAssignmentResource) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *roleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *rbacRoleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state roleAssignmentResourceModel
+	var state rbacRoleAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -496,7 +496,7 @@ func (r *roleAssignmentResource) Delete(ctx context.Context, req resource.Delete
 //	{role_assignment_id}                                   tenant scope
 //	environments/{environment_id}/{role_assignment_id}      environment scope
 //	environmentGroups/{group_id}/{role_assignment_id}        environment group scope
-func (r *roleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *rbacRoleAssignmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	const importFormats = "Import ID must be one of: `{role_assignment_id}`, " +
 		"`environments/{environment_id}/{role_assignment_id}`, or " +
 		"`environmentGroups/{environment_group_id}/{role_assignment_id}`"

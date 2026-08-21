@@ -79,22 +79,22 @@ func TestUnitRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "tenant"
 					principal_id       = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", tenantAssignmentId),
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_id"),
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_group_id"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "created_on", "2026-06-22T15:09:35Z"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", tenantAssignmentId),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "environment_id"),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "environment_group_id"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "created_on", "2026-06-22T15:09:35Z"),
 				),
 			},
 			{
-				ResourceName:      "powerplatform_role_assignment.test",
+				ResourceName:      "powerplatform_rbac_role_assignment.test",
 				ImportState:       true,
 				ImportStateId:     tenantAssignmentId,
 				ImportStateVerify: true,
@@ -116,7 +116,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
@@ -124,13 +124,13 @@ func TestUnitRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "environment_id", testEnvironmentId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environments/"+testEnvironmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "environment_id", testEnvironmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environments/"+testEnvironmentId),
 				),
 			},
 			{
-				ResourceName:      "powerplatform_role_assignment.test",
+				ResourceName:      "powerplatform_rbac_role_assignment.test",
 				ImportState:       true,
 				ImportStateId:     "environments/" + testEnvironmentId + "/" + environmentAssignmentId,
 				ImportStateVerify: true,
@@ -152,7 +152,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type                       = "environment_group"
 					environment_group_id             = "` + testEnvironmentGroupId + `"
 					principal_id = "` + testPrincipalId + `"
@@ -160,13 +160,13 @@ func TestUnitRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *te
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", envGroupAssignmentId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "environment_group_id", testEnvironmentGroupId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentgroups/"+testEnvironmentGroupId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", envGroupAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "environment_group_id", testEnvironmentGroupId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentgroups/"+testEnvironmentGroupId),
 				),
 			},
 			{
-				ResourceName:      "powerplatform_role_assignment.test",
+				ResourceName:      "powerplatform_rbac_role_assignment.test",
 				ImportState:       true,
 				ImportStateId:     "environmentGroups/" + testEnvironmentGroupId + "/" + envGroupAssignmentId,
 				ImportStateVerify: true,
@@ -187,7 +187,7 @@ func TestUnitRoleAssignmentResource_Validate_Scopes_Are_Mutually_Exclusive(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					environment_group_id             = "` + testEnvironmentGroupId + `"
@@ -236,7 +236,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -244,7 +244,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retries_When_Scope_Not_Propa
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
 					func(_ *terraform.State) error {
 						if postAttempts < 2 {
 							return fmt.Errorf("expected the create request to be retried, got %d attempts", postAttempts)
@@ -273,7 +273,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Error(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
@@ -298,14 +298,14 @@ func TestUnitRoleAssignmentResource_Validate_Import_InvalidId(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type                       = "environment"
 					environment_id                   = "` + testEnvironmentId + `"
 					principal_id = "` + testPrincipalId + `"
 					principal_type                   = "ApplicationUser"
 					role_definition_id               = "` + testRoleDefinitionId + `"
 				}`,
-				ResourceName:  "powerplatform_role_assignment.test",
+				ResourceName:  "powerplatform_rbac_role_assignment.test",
 				ImportState:   true,
 				ImportStateId: "environments/" + testEnvironmentId,
 				ExpectError:   regexp.MustCompile(`Invalid import ID`),
@@ -354,7 +354,7 @@ func acceptancePreamble(scopeConfig, scopeAttribute string) string {
 		}
 		` + scopeConfig + `
 
-		resource "powerplatform_role_assignment" "test" {
+		resource "powerplatform_rbac_role_assignment" "test" {
 			` + scopeAttribute + `
 			principal_id       = azuread_service_principal.test_sp.object_id
 			principal_type     = "ApplicationUser"
@@ -367,10 +367,10 @@ func acceptancePreamble(scopeConfig, scopeAttribute string) string {
 // commonAcceptanceChecks are true of an assignment at any scope.
 func commonAcceptanceChecks() []resource.TestCheckFunc {
 	return []resource.TestCheckFunc{
-		resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "id", regexp.MustCompile(helpers.GuidRegex)),
-		resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "principal_id", "azuread_service_principal.test_sp", "object_id"),
-		resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_type", "ApplicationUser"),
-		resource.TestCheckResourceAttrSet("powerplatform_role_assignment.test", "created_on"),
+		resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.test", "id", regexp.MustCompile(helpers.GuidRegex)),
+		resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.test", "principal_id", "azuread_service_principal.test_sp", "object_id"),
+		resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "principal_type", "ApplicationUser"),
+		resource.TestCheckResourceAttrSet("powerplatform_rbac_role_assignment.test", "created_on"),
 	}
 }
 
@@ -383,9 +383,9 @@ func TestAccRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 			{
 				Config: acceptancePreamble("", `scope_type = "tenant"`),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`^/tenants/`)),
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_id"),
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "environment_group_id"),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.test", "scope", regexp.MustCompile(`^/tenants/`)),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "environment_id"),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "environment_group_id"),
 				)...),
 			},
 		},
@@ -405,8 +405,8 @@ func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.
 			environment_type = "Sandbox"
 		}`, "scope_type     = \"environment\"\n\t\t\tenvironment_id = powerplatform_environment.test_environment.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_id", "powerplatform_environment.test_environment", "id"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
+					resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.test", "environment_id", "powerplatform_environment.test_environment", "id"),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.test", "scope", regexp.MustCompile(`/environments/`)),
 				)...),
 			},
 		},
@@ -425,8 +425,8 @@ func TestAccRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *tes
 			description  = "Environment group for role assignment acceptance test"
 		}`, "scope_type           = \"environment_group\"\n\t\t\tenvironment_group_id = powerplatform_environment_group.test_env_group.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.test", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
+					resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.test", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
 				)...),
 			},
 		},
@@ -537,7 +537,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 				# The tenant assignment selects the role by name, deliberately case-different, to
 				# exercise the resolution live; the resolved id is asserted below. The others keep
 				# the id selector so both paths run.
-				resource "powerplatform_role_assignment" "sp_tenant" {
+				resource "powerplatform_rbac_role_assignment" "sp_tenant" {
 					scope_type           = "tenant"
 					principal_id         = azuread_service_principal.test_sp.object_id
 					principal_type       = "ApplicationUser"
@@ -546,7 +546,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 					depends_on = [time_sleep.wait_for_principals]
 				}
 
-				resource "powerplatform_role_assignment" "sp_environment" {
+				resource "powerplatform_rbac_role_assignment" "sp_environment" {
 					scope_type         = "environment"
 					environment_id     = powerplatform_environment.test_environment.id
 					principal_id       = azuread_service_principal.test_sp.object_id
@@ -556,7 +556,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 					depends_on = [time_sleep.wait_for_principals]
 				}
 
-				resource "powerplatform_role_assignment" "sp_environment_group" {
+				resource "powerplatform_rbac_role_assignment" "sp_environment_group" {
 					scope_type           = "environment_group"
 					environment_group_id = powerplatform_environment_group.test_env_group.id
 					principal_id         = azuread_service_principal.test_sp.object_id
@@ -568,7 +568,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 
 				# --- group, at environment scope ------------------------------------------------
 
-				resource "powerplatform_role_assignment" "group_environment" {
+				resource "powerplatform_rbac_role_assignment" "group_environment" {
 					scope_type         = "environment"
 					environment_id     = powerplatform_environment.test_environment.id
 					principal_id       = azuread_group.test_group.object_id
@@ -585,7 +585,7 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 				# email, but that describes the portal; a UPN fails JSON conversion with a 400
 				# before any lookup happens.
 
-				resource "powerplatform_role_assignment" "user_environment" {
+				resource "powerplatform_rbac_role_assignment" "user_environment" {
 					scope_type         = "environment"
 					environment_id     = powerplatform_environment.test_environment.id
 					principal_id       = azuread_user.test_user.object_id
@@ -597,48 +597,48 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 
 				# --- the assignments are discoverable through the data source at their scopes -----
 
-				data "powerplatform_role_assignments" "environment" {
+				data "powerplatform_rbac_role_assignments" "environment" {
 					scope_type     = "environment"
 					environment_id = powerplatform_environment.test_environment.id
 
 					depends_on = [
-						powerplatform_role_assignment.sp_environment,
-						powerplatform_role_assignment.group_environment,
-						powerplatform_role_assignment.user_environment,
+						powerplatform_rbac_role_assignment.sp_environment,
+						powerplatform_rbac_role_assignment.group_environment,
+						powerplatform_rbac_role_assignment.user_environment,
 					]
 				}
 
-				data "powerplatform_role_assignments" "environment_group" {
+				data "powerplatform_rbac_role_assignments" "environment_group" {
 					scope_type           = "environment_group"
 					environment_group_id = powerplatform_environment_group.test_env_group.id
 
-					depends_on = [powerplatform_role_assignment.sp_environment_group]
+					depends_on = [powerplatform_rbac_role_assignment.sp_environment_group]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// service principal, three scopes
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_tenant", "scope", regexp.MustCompile(`^/tenants/[^/]+$`)),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.sp_tenant", "scope", regexp.MustCompile(`^/tenants/[^/]+$`)),
 					// The case-different name must have resolved to the stable role id.
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.sp_tenant", "role_definition_id", roleBasedAccessAdministratorRoleId),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment", "scope", regexp.MustCompile(`/environments/`)),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment", "environment_id", "powerplatform_environment.test_environment", "id"),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.sp_environment_group", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.sp_tenant", "role_definition_id", roleBasedAccessAdministratorRoleId),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.sp_environment", "scope", regexp.MustCompile(`/environments/`)),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.sp_environment_group", "scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
+					resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.sp_environment", "environment_id", "powerplatform_environment.test_environment", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.sp_environment_group", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
 
 					// group
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.group_environment", "principal_type", "Group"),
-					resource.TestCheckResourceAttrPair("powerplatform_role_assignment.group_environment", "principal_id", "azuread_group.test_group", "object_id"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.group_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.group_environment", "principal_type", "Group"),
+					resource.TestCheckResourceAttrPair("powerplatform_rbac_role_assignment.group_environment", "principal_id", "azuread_group.test_group", "object_id"),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.group_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
 
 					// user
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.user_environment", "principal_type", "User"),
-					resource.TestMatchResourceAttr("powerplatform_role_assignment.user_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.user_environment", "principal_type", "User"),
+					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.user_environment", "id", regexp.MustCompile(helpers.GuidRegex)),
 
 					// the data source finds the assignments at their scopes: three on the
 					// environment (service principal, group, user) and one on the group
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.environment", "role_assignments.#", "3"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.environment_group", "role_assignments.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.environment", "role_assignments.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.environment_group", "role_assignments.#", "1"),
 
-					resource.TestCheckResourceAttrSet("powerplatform_role_assignment.sp_tenant", "created_on"),
+					resource.TestCheckResourceAttrSet("powerplatform_rbac_role_assignment.sp_tenant", "created_on"),
 				),
 			},
 		},
@@ -680,7 +680,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Commit_Is_Unknown_
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -740,7 +740,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Existing_Assignment_
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -782,7 +782,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Duplicate_Existing_A
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -818,7 +818,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Definitive_Failure_Does_Not_
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -855,7 +855,7 @@ func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "missing_env_id" {
+				resource "powerplatform_rbac_role_assignment" "missing_env_id" {
 					scope_type         = "environment"
 					principal_id       = "` + testPrincipalId + `"
 					principal_type     = "ApplicationUser"
@@ -865,7 +865,7 @@ func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testin
 			},
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "missing_group_id" {
+				resource "powerplatform_rbac_role_assignment" "missing_group_id" {
 					scope_type         = "environment_group"
 					principal_id       = "` + testPrincipalId + `"
 					principal_type     = "ApplicationUser"
@@ -875,7 +875,7 @@ func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testin
 			},
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "tenant_with_id" {
+				resource "powerplatform_rbac_role_assignment" "tenant_with_id" {
 					scope_type         = "tenant"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -926,7 +926,7 @@ func TestUnitRoleAssignmentResource_Validate_Read_404_Tenant_Errors_Environment_
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "tenant"
 					principal_id       = "` + testPrincipalId + `"
 					principal_type     = "ApplicationUser"
@@ -975,7 +975,7 @@ func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -1004,7 +1004,7 @@ func TestUnitRoleAssignmentResource_Validate_PrincipalId_Must_Be_A_Guid(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "someone@contoso.com"
@@ -1041,7 +1041,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Fails_When_Preflight_List_Fa
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -1102,7 +1102,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Retryable_Statuses_Are_Unkno
 				Steps: []resource.TestStep{
 					{
 						Config: `
-						resource "powerplatform_role_assignment" "test" {
+						resource "powerplatform_rbac_role_assignment" "test" {
 							scope_type         = "environment"
 							environment_id     = "` + testEnvironmentId + `"
 							principal_id       = "` + testPrincipalId + `"
@@ -1160,7 +1160,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_After_Ambiguous_Commit_Succe
 		})
 
 	config := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type         = "environment"
 		environment_id     = "` + testEnvironmentId + `"
 		principal_id       = "` + testPrincipalId + `"
@@ -1178,7 +1178,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_After_Ambiguous_Commit_Succe
 			},
 			{
 				Config:             config,
-				ResourceName:       "powerplatform_role_assignment.test",
+				ResourceName:       "powerplatform_rbac_role_assignment.test",
 				ImportState:        true,
 				ImportStateId:      "environments/" + testEnvironmentId + "/" + environmentAssignmentId,
 				ImportStatePersist: true,
@@ -1237,7 +1237,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Does_Not_Adopt_Expiring_Assi
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -1245,7 +1245,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Does_Not_Adopt_Expiring_Assi
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
 					func(_ *terraform.State) error {
 						if postAttempts != 1 {
 							return fmt.Errorf("the expiring assignment must not be adopted; expected one POST, got %d", postAttempts)
@@ -1271,14 +1271,14 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Malformed_Guids(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
 					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
-				ResourceName:  "powerplatform_role_assignment.test",
+				ResourceName:  "powerplatform_rbac_role_assignment.test",
 				ImportState:   true,
 				ImportStateId: "environments/not-a-guid/" + environmentAssignmentId,
 				ExpectError:   regexp.MustCompile(`(?s)Invalid import ID.*Every\s+id\s+segment\s+must\s+be\s+a\s+guid`),
@@ -1309,7 +1309,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Cancellation_During_Post_Is_
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -1340,7 +1340,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Reserved_Word_Bypass
 	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
 
 	config := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type         = "environment"
 		environment_id     = "` + testEnvironmentId + `"
 		principal_id       = "` + testPrincipalId + `"
@@ -1359,7 +1359,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_Rejects_Reserved_Word_Bypass
 			Steps: []resource.TestStep{
 				{
 					Config:        config,
-					ResourceName:  "powerplatform_role_assignment.test",
+					ResourceName:  "powerplatform_rbac_role_assignment.test",
 					ImportState:   true,
 					ImportStateId: importId,
 					ExpectError:   regexp.MustCompile(`Invalid import ID`),
@@ -1423,7 +1423,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type           = "environment"
 					environment_id       = "` + testEnvironmentId + `"
 					principal_id         = "` + testPrincipalId + `"
@@ -1431,9 +1431,9 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 					role_definition_name = "environment admin TEST"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "environment admin TEST"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name", "environment admin TEST"),
 					func(_ *terraform.State) error {
 						if postAttempts != 1 {
 							return fmt.Errorf("the name-selected create must send exactly one POST with the resolved id, got %d", postAttempts)
@@ -1456,7 +1456,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Id_Fills_Name_On_Read(t *
 	registerNamedDefinitions("Environment Admin Test")
 
 	config := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type         = "environment"
 		environment_id     = "` + testEnvironmentId + `"
 		principal_id       = "` + testPrincipalId + `"
@@ -1470,11 +1470,11 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Id_Fills_Name_On_Read(t *
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+				Check:  resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name"),
 			},
 			{
 				RefreshState: true,
-				Check:        resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "Environment Admin Test"),
+				Check:        resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name", "Environment Admin Test"),
 			},
 		},
 	})
@@ -1506,7 +1506,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Ambiguous_Role_Defin
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type           = "environment"
 					environment_id       = "` + testEnvironmentId + `"
 					principal_id         = "` + testPrincipalId + `"
@@ -1539,7 +1539,7 @@ func TestUnitRoleAssignmentResource_Validate_Create_Unknown_Role_Definition_Name
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type           = "environment"
 					environment_id       = "` + testEnvironmentId + `"
 					principal_id         = "` + testPrincipalId + `"
@@ -1559,7 +1559,7 @@ func TestUnitRoleAssignmentResource_Validate_Role_Selector_Exactly_One(t *testin
 	mocks.ActivateEnvironmentHttpMocks()
 
 	base := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type     = "environment"
 		environment_id = "` + testEnvironmentId + `"
 		principal_id   = "` + testPrincipalId + `"
@@ -1613,7 +1613,7 @@ func TestUnitRoleAssignmentResource_Validate_Name_Case_Edit_Plans_No_Change(t *t
 
 	config := func(name string) string {
 		return `
-		resource "powerplatform_role_assignment" "test" {
+		resource "powerplatform_rbac_role_assignment" "test" {
 			scope_type           = "environment"
 			environment_id       = "` + testEnvironmentId + `"
 			principal_id         = "` + testPrincipalId + `"
@@ -1650,7 +1650,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_Case_Different_Name_Plans_No
 		})
 
 	config := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type           = "environment"
 		environment_id       = "` + testEnvironmentId + `"
 		principal_id         = "` + testPrincipalId + `"
@@ -1664,7 +1664,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_Case_Different_Name_Plans_No
 		Steps: []resource.TestStep{
 			{
 				Config:             config,
-				ResourceName:       "powerplatform_role_assignment.test",
+				ResourceName:       "powerplatform_rbac_role_assignment.test",
 				ImportState:        true,
 				ImportStateId:      "environments/" + testEnvironmentId + "/" + environmentAssignmentId,
 				ImportStatePersist: true,
@@ -1690,7 +1690,7 @@ func TestUnitRoleAssignmentResource_Validate_Import_Case_Different_Name_Plans_No
 // so nothing is planned in either direction.
 func TestUnitRoleAssignmentResource_Validate_Selector_Swap_Plans_No_Change(t *testing.T) {
 	byName := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type           = "environment"
 		environment_id       = "` + testEnvironmentId + `"
 		principal_id         = "` + testPrincipalId + `"
@@ -1698,7 +1698,7 @@ func TestUnitRoleAssignmentResource_Validate_Selector_Swap_Plans_No_Change(t *te
 		role_definition_name = "Environment Admin Test"
 	}`
 	byId := `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type         = "environment"
 		environment_id     = "` + testEnvironmentId + `"
 		principal_id       = "` + testPrincipalId + `"
@@ -1780,7 +1780,7 @@ func TestUnitRoleAssignmentResource_Validate_Rename_Same_Role_Updates_In_Place(t
 
 	config := func(name string) string {
 		return `
-		resource "powerplatform_role_assignment" "test" {
+		resource "powerplatform_rbac_role_assignment" "test" {
 			scope_type           = "environment"
 			environment_id       = "` + testEnvironmentId + `"
 			principal_id         = "` + testPrincipalId + `"
@@ -1800,9 +1800,9 @@ func TestUnitRoleAssignmentResource_Validate_Rename_Same_Role_Updates_In_Place(t
 			{
 				Config: config("New Role Name"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "New Role Name"),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name", "New Role Name"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
 					func(_ *terraform.State) error {
 						if posts != 1 || deletes != 0 {
 							return fmt.Errorf("a same-role rename must not touch the assignment, got %d posts and %d deletes", posts, deletes)
@@ -1834,7 +1834,7 @@ func TestUnitRoleAssignmentResource_Validate_Rename_To_Different_Role_Fails(t *t
 
 	config := func(name string) string {
 		return `
-		resource "powerplatform_role_assignment" "test" {
+		resource "powerplatform_rbac_role_assignment" "test" {
 			scope_type           = "environment"
 			environment_id       = "` + testEnvironmentId + `"
 			principal_id         = "` + testPrincipalId + `"
@@ -1896,7 +1896,7 @@ func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_N
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_role_assignment" "test" {
+				resource "powerplatform_rbac_role_assignment" "test" {
 					scope_type         = "environment"
 					environment_id     = "` + testEnvironmentId + `"
 					principal_id       = "` + testPrincipalId + `"
@@ -1904,8 +1904,8 @@ func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_N
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name"),
 					func(_ *terraform.State) error {
 						if posts != 1 {
 							return fmt.Errorf("the id-selected create must send exactly one POST, got %d", posts)
@@ -1920,7 +1920,7 @@ func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_N
 			{
 				RefreshState: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_name"),
 					func(_ *terraform.State) error {
 						// The harness reads more than once around a refresh step; the invariant is
 						// one attempt per read, since a retrying lookup would run far past this
@@ -1990,7 +1990,7 @@ const secondPrincipalId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab"
 
 func anchoredConfig(principal, roleLine string) string {
 	return `
-	resource "powerplatform_role_assignment" "test" {
+	resource "powerplatform_rbac_role_assignment" "test" {
 		scope_type     = "environment"
 		environment_id = "` + testEnvironmentId + `"
 		principal_id   = "` + principal + `"
@@ -2029,7 +2029,7 @@ func TestUnitRoleAssignmentResource_Validate_Replacement_Requires_Explicit_Id(t 
 			{
 				Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", testRoleDefinitionId),
 					func(_ *terraform.State) error {
 						remapped = true
 						return nil
@@ -2045,8 +2045,8 @@ func TestUnitRoleAssignmentResource_Validate_Replacement_Requires_Explicit_Id(t 
 				// the id the error handed over, granting exactly the anchored role.
 				Config: anchoredConfig(secondPrincipalId, `role_definition_id = "`+testRoleDefinitionId+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_id", secondPrincipalId),
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "principal_id", secondPrincipalId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", testRoleDefinitionId),
 					func(_ *terraform.State) error {
 						if h.lastPostRole != testRoleDefinitionId {
 							return fmt.Errorf("the explicit-id replacement must grant the anchored role, POSTed %s", h.lastPostRole)
@@ -2098,9 +2098,9 @@ func TestUnitRoleAssignmentResource_Validate_Taint_Reresolves_Name(t *testing.T)
 			},
 			{
 				Config: config,
-				Taint:  []string{"powerplatform_role_assignment.test"},
+				Taint:  []string{"powerplatform_rbac_role_assignment.test"},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", otherRoleId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", otherRoleId),
 					func(_ *terraform.State) error {
 						if h.lastPostRole != otherRoleId {
 							return fmt.Errorf("a tainted recreate resolves the name afresh, POSTed %s", h.lastPostRole)
@@ -2160,7 +2160,7 @@ func TestUnitRoleAssignmentResource_Validate_Id_Change_Replaces(t *testing.T) {
 			{
 				Config: anchoredConfig(testPrincipalId, `role_definition_id = "`+otherRoleId+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", otherRoleId),
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "role_definition_id", otherRoleId),
 					func(_ *terraform.State) error {
 						if h.lastPostRole != otherRoleId {
 							return fmt.Errorf("the id change must grant the new role, POSTed %s", h.lastPostRole)
@@ -2225,7 +2225,7 @@ func TestUnitRoleAssignmentResource_Validate_Replacement_Refused_Create_Before_D
 
 	config := func(principal string) string {
 		return `
-		resource "powerplatform_role_assignment" "test" {
+		resource "powerplatform_rbac_role_assignment" "test" {
 			scope_type           = "environment"
 			environment_id       = "` + testEnvironmentId + `"
 			principal_id         = "` + principal + `"
@@ -2281,7 +2281,7 @@ func TestUnitRoleAssignmentResource_Validate_CBD_Taint_Same_Tuple_Fails_Safely(t
 			registerNamedDefinitions("Shared Name")
 
 			config := `
-			resource "powerplatform_role_assignment" "test" {
+			resource "powerplatform_rbac_role_assignment" "test" {
 				scope_type     = "environment"
 				environment_id = "` + testEnvironmentId + `"
 				principal_id   = "` + testPrincipalId + `"
@@ -2299,7 +2299,7 @@ func TestUnitRoleAssignmentResource_Validate_CBD_Taint_Same_Tuple_Fails_Safely(t
 					{Config: config},
 					{
 						Config:      config,
-						Taint:       []string{"powerplatform_role_assignment.test"},
+						Taint:       []string{"powerplatform_rbac_role_assignment.test"},
 						ExpectError: regexp.MustCompile(`(?s)already exists; import\s+it`),
 					},
 				},
@@ -2332,7 +2332,7 @@ func TestUnitRoleAssignmentResource_Validate_Default_Taint_Same_Tuple_Recreates(
 			{Config: config},
 			{
 				Config: config,
-				Taint:  []string{"powerplatform_role_assignment.test"},
+				Taint:  []string{"powerplatform_rbac_role_assignment.test"},
 				Check: func(_ *terraform.State) error {
 					if h.posts != 2 || h.deletes != 1 {
 						return fmt.Errorf("a default-order recreate deletes then creates, got %d posts and %d deletes", h.posts, h.deletes)

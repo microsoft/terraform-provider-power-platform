@@ -1,4 +1,4 @@
 # List all tenant scoped role assignments
-data "powerplatform_role_assignments" "all" {
+data "powerplatform_rbac_role_assignments" "all" {
   scope_type = "tenant"
 }

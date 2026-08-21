@@ -21,9 +21,9 @@ import (
 )
 
 var (
-	_ datasource.DataSource                   = &roleAssignmentsDataSource{}
-	_ datasource.DataSourceWithConfigure      = &roleAssignmentsDataSource{}
-	_ datasource.DataSourceWithValidateConfig = &roleAssignmentsDataSource{}
+	_ datasource.DataSource                   = &rbacRoleAssignmentsDataSource{}
+	_ datasource.DataSourceWithConfigure      = &rbacRoleAssignmentsDataSource{}
+	_ datasource.DataSourceWithValidateConfig = &rbacRoleAssignmentsDataSource{}
 )
 
 // roleAssignmentsAttribute returns the shared schema of the list of role assignments returned by the RBAC API.
@@ -74,15 +74,15 @@ func roleAssignmentsAttribute(markdownDescription string) schema.ListNestedAttri
 	}
 }
 
-func NewRoleAssignmentsDataSource() datasource.DataSource {
-	return &roleAssignmentsDataSource{
+func NewRbacRoleAssignmentsDataSource() datasource.DataSource {
+	return &rbacRoleAssignmentsDataSource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "role_assignments",
+			TypeName: "rbac_role_assignments",
 		},
 	}
 }
 
-func (d *roleAssignmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *rbacRoleAssignmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	d.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
@@ -92,7 +92,7 @@ func (d *roleAssignmentsDataSource) Metadata(ctx context.Context, req datasource
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *rbacRoleAssignmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
@@ -135,8 +135,8 @@ func (d *roleAssignmentsDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 // ValidateConfig mirrors the resource: scope_type and its matching id must arrive together.
-func (d *roleAssignmentsDataSource) ValidateConfig(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
-	var config roleAssignmentsDataSourceModel
+func (d *rbacRoleAssignmentsDataSource) ValidateConfig(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	var config rbacRoleAssignmentsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,7 +144,7 @@ func (d *roleAssignmentsDataSource) ValidateConfig(ctx context.Context, req data
 	resp.Diagnostics.Append(validateScopeSelection(config.ScopeType, config.EnvironmentId, config.EnvironmentGroupId)...)
 }
 
-func (d *roleAssignmentsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *rbacRoleAssignmentsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
@@ -163,11 +163,11 @@ func (d *roleAssignmentsDataSource) Configure(ctx context.Context, req datasourc
 	d.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
-func (d *roleAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *rbacRoleAssignmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	var state roleAssignmentsDataSourceModel
+	var state rbacRoleAssignmentsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,9 +192,9 @@ func (d *roleAssignmentsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	state.RoleAssignments = make([]roleAssignmentDataSourceModel, 0, len(assignments))
+	state.RoleAssignments = make([]rbacRoleAssignmentDataSourceModel, 0, len(assignments))
 	for _, assignment := range assignments {
-		state.RoleAssignments = append(state.RoleAssignments, convertRoleAssignmentDtoToDataSourceModel(assignment))
+		state.RoleAssignments = append(state.RoleAssignments, convertRbacRoleAssignmentDtoToDataSourceModel(assignment))
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

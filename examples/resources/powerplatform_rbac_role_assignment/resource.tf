@@ -21,7 +21,7 @@ variable "principal_id" {
 # powerplatform_role_definitions lists the whole catalogue.
 
 # Assign a role to a service principal at the tenant level, selecting the role by name
-resource "powerplatform_role_assignment" "example" {
+resource "powerplatform_rbac_role_assignment" "example" {
   scope_type           = "tenant"
   principal_id         = var.principal_id
   principal_type       = "ApplicationUser"
@@ -36,7 +36,7 @@ locals {
 
 # The same resource scopes the assignment by which identifier you set.
 # Set environment_id for an environment:
-resource "powerplatform_role_assignment" "environment" {
+resource "powerplatform_rbac_role_assignment" "environment" {
   scope_type         = "environment"
   environment_id     = var.environment_id
   principal_id       = var.principal_id
@@ -45,7 +45,7 @@ resource "powerplatform_role_assignment" "environment" {
 }
 
 # Set environment_group_id for an environment group:
-resource "powerplatform_role_assignment" "environment_group" {
+resource "powerplatform_rbac_role_assignment" "environment_group" {
   scope_type           = "environment_group"
   environment_group_id = var.environment_group_id
   principal_id         = var.principal_id

@@ -34,12 +34,12 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Tenant_Scope(t *testing.T) 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "powerplatform_role_assignments" "test" { scope_type = "tenant" }`,
+				Config: `data "powerplatform_rbac_role_assignments" "test" { scope_type = "tenant" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.id", tenantAssignmentId),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.principal_type", "ApplicationUser"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", tenantAssignmentId),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.principal_type", "ApplicationUser"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.role_definition_id", testRoleDefinitionId),
 				),
 			},
 		},
@@ -58,14 +58,14 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Environment_Scope(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				data "powerplatform_role_assignments" "test" {
+				data "powerplatform_rbac_role_assignments" "test" {
 					scope_type     = "environment"
 					environment_id = "` + testEnvironmentId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.id", environmentAssignmentId),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.scope", "/environments/"+testEnvironmentId),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", environmentAssignmentId),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.scope", "/environments/"+testEnvironmentId),
 				),
 			},
 		},
@@ -85,14 +85,14 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_EnvironmentGroup_Scope(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				data "powerplatform_role_assignments" "test" {
+				data "powerplatform_rbac_role_assignments" "test" {
 					scope_type           = "environment_group"
 					environment_group_id = "` + testDataSourceEnvironmentGroupId + `"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.id", "44444444-4444-4444-4444-444444444444"),
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.0.scope", "/environmentgroups/"+testDataSourceEnvironmentGroupId),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", "44444444-4444-4444-4444-444444444444"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.scope", "/environmentgroups/"+testDataSourceEnvironmentGroupId),
 				),
 			},
 		},
@@ -110,9 +110,9 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Empty(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `data "powerplatform_role_assignments" "test" { scope_type = "tenant" }`,
+				Config: `data "powerplatform_rbac_role_assignments" "test" { scope_type = "tenant" }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_role_assignments.test", "role_assignments.#", "0"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "0"),
 				),
 			},
 		},
@@ -152,7 +152,7 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Error(t *testing.T) {
 				Steps: []resource.TestStep{
 					{
 						Config: `
-						data "powerplatform_role_assignments" "test" {` + tc.config + `
+						data "powerplatform_rbac_role_assignments" "test" {` + tc.config + `
 						}`,
 						ExpectError: regexp.MustCompile(`(?s)Failed to list role assignments at.*scope`),
 					},

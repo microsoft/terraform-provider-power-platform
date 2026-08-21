@@ -12,14 +12,14 @@ import (
 
 // Resource structs
 
-type roleAssignmentResource struct {
+type rbacRoleAssignmentResource struct {
 	helpers.TypeInfo
 	Client client
 }
 
 // Resource models
 
-type roleAssignmentResourceModel struct {
+type rbacRoleAssignmentResourceModel struct {
 	Timeouts           timeouts.Value                    `tfsdk:"timeouts"`
 	Id                 types.String                      `tfsdk:"id"`
 	ScopeType          types.String                      `tfsdk:"scope_type"`
@@ -35,7 +35,7 @@ type roleAssignmentResourceModel struct {
 
 // assignmentScope is where the assignment applies. The kind comes from the `scope_type` attribute rather
 // than being inferred, so an empty or missing id is a validation error instead of a tenant grant.
-func (m roleAssignmentResourceModel) assignmentScope() assignmentScope {
+func (m rbacRoleAssignmentResourceModel) assignmentScope() assignmentScope {
 	switch m.ScopeType.ValueString() {
 	case scopeEnvironment:
 		return environmentAssignmentScope(m.EnvironmentId.ValueString())
@@ -58,14 +58,14 @@ type roleDefinitionsDataSourceModel struct {
 	RoleDefinitions types.List     `tfsdk:"role_definitions"`
 }
 
-type roleAssignmentsDataSource struct {
+type rbacRoleAssignmentsDataSource struct {
 	helpers.TypeInfo
 	Client client
 }
 
 // Data source models
 
-type roleAssignmentDataSourceModel struct {
+type rbacRoleAssignmentDataSourceModel struct {
 	Id                         types.String `tfsdk:"id"`
 	Scope                      types.String `tfsdk:"scope"`
 	PrincipalType              types.String `tfsdk:"principal_type"`
@@ -77,16 +77,16 @@ type roleAssignmentDataSourceModel struct {
 	ExpiresOn                  types.String `tfsdk:"expires_on"`
 }
 
-type roleAssignmentsDataSourceModel struct {
-	Timeouts           timeouts.Value                  `tfsdk:"timeouts"`
-	ScopeType          types.String                    `tfsdk:"scope_type"`
-	EnvironmentId      customtypes.UUID                `tfsdk:"environment_id"`
-	EnvironmentGroupId customtypes.UUID                `tfsdk:"environment_group_id"`
-	RoleAssignments    []roleAssignmentDataSourceModel `tfsdk:"role_assignments"`
+type rbacRoleAssignmentsDataSourceModel struct {
+	Timeouts           timeouts.Value                      `tfsdk:"timeouts"`
+	ScopeType          types.String                        `tfsdk:"scope_type"`
+	EnvironmentId      customtypes.UUID                    `tfsdk:"environment_id"`
+	EnvironmentGroupId customtypes.UUID                    `tfsdk:"environment_group_id"`
+	RoleAssignments    []rbacRoleAssignmentDataSourceModel `tfsdk:"role_assignments"`
 }
 
 // assignmentScope is which assignments to read, taken from the explicit `scope_type` attribute.
-func (m roleAssignmentsDataSourceModel) assignmentScope() assignmentScope {
+func (m rbacRoleAssignmentsDataSourceModel) assignmentScope() assignmentScope {
 	switch m.ScopeType.ValueString() {
 	case scopeEnvironment:
 		return environmentAssignmentScope(m.EnvironmentId.ValueString())
@@ -97,8 +97,8 @@ func (m roleAssignmentsDataSourceModel) assignmentScope() assignmentScope {
 	}
 }
 
-func convertRoleAssignmentDtoToDataSourceModel(assignment roleAssignmentDto) roleAssignmentDataSourceModel {
-	model := roleAssignmentDataSourceModel{
+func convertRbacRoleAssignmentDtoToDataSourceModel(assignment roleAssignmentDto) rbacRoleAssignmentDataSourceModel {
+	model := rbacRoleAssignmentDataSourceModel{
 		Id:                         types.StringValue(assignment.RoleAssignmentId),
 		Scope:                      types.StringValue(assignment.Scope),
 		PrincipalType:              types.StringValue(assignment.PrincipalType),
