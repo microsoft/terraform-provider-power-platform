@@ -29,6 +29,7 @@ import (
 
 var _ resource.Resource = &SecurityRoleAssignmentResource{}
 var _ resource.ResourceWithImportState = &SecurityRoleAssignmentResource{}
+var _ resource.ResourceWithModifyPlan = &SecurityRoleAssignmentResource{}
 
 type SecurityRoleAssignmentResource struct {
 	helpers.TypeInfo
@@ -91,8 +92,9 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
-				Delete: true,
 				Read:   true,
+				Update: true,
+				Delete: true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Composite ID `{environment_id}/{entity_set}/{principal_id}/{security_role_id}`, where entity set is `systemusers` or `teams`. The role is identified by its immutable id, not its name, so renaming a role does not orphan the assignment.",
@@ -143,7 +145,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				CustomType: customtypes.UUIDType{},
 			},
 			"security_role_name": schema.StringAttribute{
-				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
+				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Replacing a name-selected assignment (for example by changing the holder) or moving it to another environment or business unit is refused with instructions to use `security_role_id`. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
@@ -181,6 +183,97 @@ func (r *SecurityRoleAssignmentResource) Configure(ctx context.Context, req reso
 		return
 	}
 	r.ApplicationClient = newApplicationClient(client.Api)
+}
+
+// ModifyPlan anchors a name-selected assignment to its stored role id at the planning boundary.
+// Update alone cannot do this: a replacement (a changed holder, a taint, -replace) bypasses Update
+// and runs Create, which would re-resolve the unchanged name against the live role catalogue and
+// could silently retarget the grant if the name now maps to a different role. Dataverse roles are
+// environment and business unit local, so a move to another environment or business unit cannot
+// carry the stored id either; a name-selected move is rejected and needs the destination
+// security_role_id instead.
+func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		// Nothing is anchored on a fresh create, and a destroy needs no plan changes.
+		return
+	}
+
+	var config, plan, state SecurityRoleAssignmentResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !helpers.IsKnown(config.SecurityRoleName) {
+		// Id-selected: the configured id is the explicit anchor and the only retarget mechanism.
+		return
+	}
+
+	if !uuidEqual(plan.EnvironmentId, state.EnvironmentId) ||
+		(helpers.IsKnown(config.BusinessUnitId) && !uuidEqual(config.BusinessUnitId, state.BusinessUnitId)) {
+		resp.Diagnostics.AddError(
+			"A name-selected assignment cannot move to another environment or business unit",
+			"Security roles are rows in one environment and business unit, so the stored role id does not exist at the destination and the name could resolve to a different role there. Set security_role_id to the destination role's id to make the move explicit.",
+		)
+		return
+	}
+
+	nameChanged := config.SecurityRoleName.ValueString() != state.SecurityRoleName.ValueString()
+	holderChanged := !uuidEqual(plan.SystemUserId, state.SystemUserId) || !uuidEqual(plan.TeamId, state.TeamId)
+
+	if nameChanged && holderChanged {
+		resp.Diagnostics.AddError(
+			"The role name cannot change in the same apply as a replacement",
+			"This change replaces the assignment and also edits security_role_name. A replacement re-creates the association, and resolving a new name during it could target a different role than the one this assignment holds. Apply the name change on its own first, then the replacement.",
+		)
+		return
+	}
+
+	if holderChanged {
+		// Terraform plans the replacement's new instance from the configuration alone, so the
+		// stored role id cannot be carried through and the unchanged name would be re-resolved
+		// against the live catalogue, which can silently retarget the grant if a same-named role
+		// appeared or the original was recreated. The replacement therefore requires the explicit
+		// id, which the error hands over.
+		resp.Diagnostics.AddError(
+			"Replacing a name-selected security role assignment requires the explicit role id",
+			fmt.Sprintf("This change replaces the assignment, and a replacement re-resolves security_role_name against the live roles at apply time, which can silently target a different role than the one this assignment holds. Set security_role_id = %q for the replacement instead of the name; switch back to the name afterwards if preferred.", state.SecurityRoleId.ValueString()),
+		)
+		return
+	}
+
+	if nameChanged {
+		// Fail a retargeting rename at plan time when the catalogue answers; Update stays the
+		// authoritative check at apply time in case the catalogue changes in between.
+		resolvedRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString(), []string{config.SecurityRoleName.ValueString()})
+		if err == nil && len(resolvedRoles) == 1 {
+			if !strings.EqualFold(resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()) {
+				resp.Diagnostics.AddError(
+					"The new security role name resolves to a different role",
+					fmt.Sprintf("'%s' resolves to role %s, but this assignment holds %s. A name edit only follows a rename of the same role. To assign a different role, set security_role_id, which replaces the assignment.", config.SecurityRoleName.ValueString(), resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()),
+				)
+			}
+		} else {
+			tflog.Debug(ctx, fmt.Sprintf("Deferring the rename validation of '%s' to apply: %v", config.SecurityRoleName.ValueString(), err))
+		}
+		return
+	}
+
+	// The name is unchanged and nothing is being replaced, so in-place planning carries the
+	// stored id forward on its own.
+	if helpers.IsKnown(state.SecurityRoleId) && !helpers.IsKnown(plan.SecurityRoleId) {
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("security_role_id"), state.SecurityRoleId)...)
+	}
+}
+
+// uuidEqual compares two uuid values case-insensitively, treating null and unknown as equal only
+// to themselves.
+func uuidEqual(a, b customtypes.UUID) bool {
+	if !helpers.IsKnown(a) || !helpers.IsKnown(b) {
+		return helpers.IsKnown(a) == helpers.IsKnown(b)
+	}
+	return strings.EqualFold(a.ValueString(), b.ValueString())
 }
 
 func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -414,7 +507,8 @@ type resolvedRoleAssignment struct {
 }
 
 // resolveRequestedRole resolves the configured role selector, a NAME or an ID, to the role row for
-// Create. This is the only place the name is used; every later operation works from the resolved id.
+// Create. Update and ModifyPlan also resolve an edited name; every other operation works from the
+// resolved id.
 func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName, securityRoleID string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {

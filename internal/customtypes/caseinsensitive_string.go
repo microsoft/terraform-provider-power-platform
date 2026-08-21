@@ -22,7 +22,10 @@ var (
 
 // CaseInsensitiveStringType is a string whose values differing only by case are semantically
 // equal. Use it for attributes the service matches case-insensitively, such as role definition
-// display names, so a case-only edit or a differently cased import never plans a change.
+// display names. Semantic equality normalizes refresh and apply results against the prior value;
+// suppressing a case-only CONFIG edit from planning a change additionally needs a plan modifier
+// that folds a case-equal planned value back to state, since the framework does not consult
+// semantic equality for configured value changes at plan time.
 type CaseInsensitiveStringType struct {
 	basetypes.StringType
 }

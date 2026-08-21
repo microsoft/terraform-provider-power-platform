@@ -1071,3 +1071,130 @@ func TestUnitSecurityRoleAssignmentResource_Rename_To_Different_Role_Fails(t *te
 		},
 	})
 }
+
+// Terraform plans a replacement's new instance from the configuration alone, so a holder change on
+// a name-selected assignment cannot carry the stored role id and is refused with the id handed
+// over.
+func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit_Id(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+
+	config := func(principal string) string {
+		return `
+		resource "powerplatform_security_role_assignment" "test" {
+			environment_id     = "00000000-0000-0000-0000-000000000001"
+			system_user_id     = "` + principal + `"
+			security_role_name = "Shared Role"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("00000000-0000-0000-0000-000000000008")},
+			{
+				Config:      config("00000000-0000-0000-0000-000000000009"),
+				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+		},
+	})
+}
+
+// A name-selected assignment cannot move to another environment: the stored role id does not exist
+// there and the name could resolve to a different role.
+func TestUnitSecurityRoleAssignmentResource_Environment_Move_By_Name_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+
+	config := func(env string) string {
+		return `
+		resource "powerplatform_security_role_assignment" "test" {
+			environment_id     = "` + env + `"
+			system_user_id     = "00000000-0000-0000-0000-000000000008"
+			security_role_name = "Shared Role"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("00000000-0000-0000-0000-000000000001")},
+			{
+				Config:      config("00000000-0000-0000-0000-000000000002"),
+				ExpectError: regexp.MustCompile(`(?s)cannot move to another\s+environment or business unit`),
+			},
+		},
+	})
+}
+
+// The same rule covers an explicit business unit change, which re-scopes the name resolution.
+func TestUnitSecurityRoleAssignmentResource_Business_Unit_Move_By_Name_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+
+	base := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		system_user_id     = "00000000-0000-0000-0000-000000000008"
+		security_role_name = "Shared Role"
+	`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: base + `}`},
+			{
+				Config:      base + `	business_unit_id = "00000000-0000-0000-0000-000000000004"` + "\n\t}",
+				ExpectError: regexp.MustCompile(`(?s)cannot move to another\s+environment or business unit`),
+			},
+		},
+	})
+}
+
+// A name edit combined with a holder replacement is refused: the rename must be applied first.
+func TestUnitSecurityRoleAssignmentResource_Rename_With_Replacement_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	renamed, _ := securityRenameHarness(roleID, "Shared Role", "Renamed Role")
+
+	config := func(principal, name string) string {
+		return `
+		resource "powerplatform_security_role_assignment" "test" {
+			environment_id     = "00000000-0000-0000-0000-000000000001"
+			system_user_id     = "` + principal + `"
+			security_role_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config("00000000-0000-0000-0000-000000000008", "Shared Role"),
+				Check: func(_ *terraform.State) error {
+					renamed()
+					return nil
+				},
+			},
+			{
+				Config:      config("00000000-0000-0000-0000-000000000009", "Renamed Role"),
+				ExpectError: regexp.MustCompile(`(?s)cannot change in the same apply as a\s+replacement`),
+			},
+		},
+	})
+}

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1431,34 +1432,35 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 	})
 }
 
-// A role selected by id gets its display name filled in from the catalogue as a courtesy.
-func TestUnitRoleAssignmentResource_Validate_Create_By_Id_Fills_Name(t *testing.T) {
+// A role selected by id keeps a null display name through the create, since nothing cosmetic may
+// run before the POST; the next Read fills it in from the catalogue.
+func TestUnitRoleAssignmentResource_Validate_Create_By_Id_Fills_Name_On_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+	registerNamedDefinitions("Environment Admin Test")
 
-	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
-				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"Environment Admin Test"}
-			]}`), nil
-		})
+	config := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type         = "environment"
+		environment_id     = "` + testEnvironmentId + `"
+		principal_id       = "` + testPrincipalId + `"
+		principal_type     = "ApplicationUser"
+		role_definition_id = "` + testRoleDefinitionId + `"
+	}`
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-				resource "powerplatform_role_assignment" "test" {
-					scope_type         = "environment"
-					environment_id     = "` + testEnvironmentId + `"
-					principal_id       = "` + testPrincipalId + `"
-					principal_type     = "ApplicationUser"
-					role_definition_id = "` + testRoleDefinitionId + `"
-				}`,
-				Check: resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "Environment Admin Test"),
+				Config: config,
+				Check:  resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+			},
+			{
+				RefreshState: true,
+				Check:        resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "Environment Admin Test"),
 			},
 		},
 	})
@@ -1704,6 +1706,9 @@ func TestUnitRoleAssignmentResource_Validate_Selector_Swap_Plans_No_Change(t *te
 				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{Config: tc.first},
+					// A refresh first, because an id-selected create leaves the display name
+					// null until Read fills it, exactly as a real plan's refresh would.
+					{RefreshState: true},
 					{Config: tc.second, PlanOnly: true},
 				},
 			})
@@ -1829,14 +1834,33 @@ func TestUnitRoleAssignmentResource_Validate_Rename_To_Different_Role_Fails(t *t
 	})
 }
 
-// The courtesy id-to-name lookup must never block an id-selected create: with the catalogue
-// persistently failing, exactly one lookup attempt is made and the assignment POST still runs.
+// The display name is cosmetic, so an id-selected create runs no catalogue request at all before
+// its POST, and Read's later fill makes exactly one attempt that cannot fail the refresh even
+// against a persistently failing catalogue.
 func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_Not_Block_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
 
+	posts := 0
+	created := false
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			if created {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			posts++
+			created = true
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
 	definitionsCalls := 0
 	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
 		func(_ *http.Request) (*http.Response, error) {
@@ -1861,8 +1885,266 @@ func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_N
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
 					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
 					func(_ *terraform.State) error {
-						if definitionsCalls != 1 {
-							return fmt.Errorf("the courtesy lookup must send exactly one request, got %d", definitionsCalls)
+						if posts != 1 {
+							return fmt.Errorf("the id-selected create must send exactly one POST, got %d", posts)
+						}
+						if definitionsCalls != 0 {
+							return fmt.Errorf("no catalogue request may run before the POST, got %d", definitionsCalls)
+						}
+						return nil
+					},
+				),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+					func(_ *terraform.State) error {
+						// The harness reads more than once around a refresh step; the invariant is
+						// one attempt per read, since a retrying lookup would run far past this
+						// (and hangs outright in test mode, where the retry loop never sleeps).
+						if definitionsCalls < 1 || definitionsCalls > 2 {
+							return fmt.Errorf("the refresh fill must attempt once per read, got %d calls", definitionsCalls)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// anchoredScopeHarness wires a stateful environment scope whose POST echoes the requested
+// principal and role, so replacement tests can assert exactly what was granted and destroyed.
+type anchoredScopeHarness struct {
+	posts        int
+	deletes      int
+	lastPostRole string
+	rows         map[string][2]string // assignment id -> principal, role
+	nextId       int
+}
+
+func registerAnchoredScopeMocks() *anchoredScopeHarness {
+	h := &anchoredScopeHarness{rows: map[string][2]string{}, nextId: 0}
+	envSuffix := "/environments/" + testEnvironmentId
+	assignmentIds := []string{environmentAssignmentId, "44444444-4444-4444-4444-444444444444", "55555555-5555-5555-5555-555555555555"}
+
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			rows := make([]string, 0, len(h.rows))
+			for id, pr := range h.rows {
+				row := assignmentJSON(id, pr[0], pr[1], envSuffix, "")
+				rows = append(rows, row)
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+strings.Join(rows, ",")+`]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(req *http.Request) (*http.Response, error) {
+			h.posts++
+			var body struct {
+				PrincipalObjectId string `json:"principalObjectId"`
+				RoleDefinitionId  string `json:"roleDefinitionId"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return httpmock.NewStringResponse(http.StatusBadRequest, "unreadable body"), nil
+			}
+			h.lastPostRole = body.RoleDefinitionId
+			id := assignmentIds[h.nextId%len(assignmentIds)]
+			h.nextId++
+			h.rows[id] = [2]string{body.PrincipalObjectId, body.RoleDefinitionId}
+			return httpmock.NewStringResponse(http.StatusCreated, assignmentJSON(id, body.PrincipalObjectId, body.RoleDefinitionId, envSuffix, "")), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^`+regexp.QuoteMeta(environmentCollection)+`/[0-9a-f-]+\?api-version=2024-10-01$`,
+		func(req *http.Request) (*http.Response, error) {
+			h.deletes++
+			parts := strings.Split(req.URL.Path, "/")
+			delete(h.rows, parts[len(parts)-1])
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	return h
+}
+
+const secondPrincipalId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab"
+
+func anchoredConfig(principal, roleLine string) string {
+	return `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type     = "environment"
+		environment_id = "` + testEnvironmentId + `"
+		principal_id   = "` + principal + `"
+		principal_type = "ApplicationUser"
+		` + roleLine + `
+	}`
+}
+
+// The replacement branch of the rename hazard: Terraform plans a replacement's new instance from
+// the configuration alone, so the stored id cannot be carried through and an unchanged name would
+// be re-resolved against a possibly drifted catalogue. The plan refuses and hands the id over,
+// and the replacement then runs safely with the explicit id.
+func TestUnitRoleAssignmentResource_Validate_Replacement_Requires_Explicit_Id(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+
+	remapped := false
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			roleId := testRoleDefinitionId
+			if remapped {
+				// The same display name now belongs to a different role definition.
+				roleId = "99999999-9999-9999-9999-999999999999"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+roleId+`","roleDefinitionName":"Shared Name"}
+			]}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					func(_ *terraform.State) error {
+						remapped = true
+						return nil
+					},
+				),
+			},
+			{
+				Config:      anchoredConfig(secondPrincipalId, `role_definition_name = "Shared Name"`),
+				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+			{
+				// The refused plan must not have deleted anything, and the replacement runs with
+				// the id the error handed over, granting exactly the anchored role.
+				Config: anchoredConfig(secondPrincipalId, `role_definition_id = "`+testRoleDefinitionId+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "principal_id", secondPrincipalId),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					func(_ *terraform.State) error {
+						if h.lastPostRole != testRoleDefinitionId {
+							return fmt.Errorf("the explicit-id replacement must grant the anchored role, POSTed %s", h.lastPostRole)
+						}
+						if h.deletes != 1 {
+							return fmt.Errorf("only the replacement itself may delete, got %d deletes", h.deletes)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A taint carries no attribute change to detect, so the recreate resolves the name afresh like
+// any create: it is an explicit operator recreate of this exact resource, not an unrelated
+// change, and the resolved id lands visibly in state.
+func TestUnitRoleAssignmentResource_Validate_Taint_Reresolves_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+
+	const otherRoleId = "99999999-9999-9999-9999-999999999999"
+	remapped := false
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			roleId := testRoleDefinitionId
+			if remapped {
+				roleId = otherRoleId
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+roleId+`","roleDefinitionName":"Shared Name"}
+			]}`), nil
+		})
+
+	config := anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`)
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: func(_ *terraform.State) error {
+					remapped = true
+					return nil
+				},
+			},
+			{
+				Config: config,
+				Taint:  []string{"powerplatform_role_assignment.test"},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", otherRoleId),
+					func(_ *terraform.State) error {
+						if h.lastPostRole != otherRoleId {
+							return fmt.Errorf("a tainted recreate resolves the name afresh, POSTed %s", h.lastPostRole)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A name edit combined with a replacement is rejected at plan time, before anything is deleted.
+func TestUnitRoleAssignmentResource_Validate_Rename_With_Replacement_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+	registerNamedDefinitions("Shared Name")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`)},
+			{
+				Config:      anchoredConfig(secondPrincipalId, `role_definition_name = "Another Name"`),
+				ExpectError: regexp.MustCompile(`(?s)cannot change in the same apply as a\s+replacement`),
+			},
+			{
+				Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`),
+				Check: func(_ *terraform.State) error {
+					if h.deletes != 0 {
+						return fmt.Errorf("the rejected plan must not delete anything, got %d deletes", h.deletes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// Changing the explicit id remains the retarget operation: the old assignment is destroyed and the
+// new role granted.
+func TestUnitRoleAssignmentResource_Validate_Id_Change_Replaces(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+
+	const otherRoleId = "99999999-9999-9999-9999-999999999999"
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: anchoredConfig(testPrincipalId, `role_definition_id = "`+testRoleDefinitionId+`"`)},
+			{
+				Config: anchoredConfig(testPrincipalId, `role_definition_id = "`+otherRoleId+`"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", otherRoleId),
+					func(_ *terraform.State) error {
+						if h.lastPostRole != otherRoleId {
+							return fmt.Errorf("the id change must grant the new role, POSTed %s", h.lastPostRole)
+						}
+						if h.deletes != 1 {
+							return fmt.Errorf("the id change must destroy the old assignment, got %d deletes", h.deletes)
 						}
 						return nil
 					},
