@@ -66,9 +66,8 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 			"Tenant scope is the broadest grant available, so it must be named explicitly.\n\n" +
 			"The role is selected by exactly one of `role_definition_id` or `role_definition_name`; a name is resolved to its id at create time and the assignment is anchored on the id from then on.\n\n" +
 			"The configuration identifies the relationship between a principal, a role and a scope, while the assignment id is computed. " +
-			"If exactly one assignment for that relationship already exists it is adopted, and destroying the resource removes it. " +
-			"If several duplicates exist the create fails: deduplicate them or import one first. " +
-			"Expiring assignments are not adopted: this resource represents a non-expiring relationship, so configuring the same principal, role and scope alongside an expiring assignment creates a separate permanent assignment.",
+			"If an assignment for that relationship already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it, and deduplicate first if several exist. " +
+			"An expiring assignment does not count as existing, since this resource represents a non-expiring relationship: creating alongside one makes a separate permanent assignment.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -151,7 +150,7 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"role_definition_name": schema.StringAttribute{
-				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create",
+				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since a replacement re-resolves the name. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create",
 				Optional:            true,
 				Computed:            true,
 				CustomType:          customtypes.CaseInsensitiveStringType{},

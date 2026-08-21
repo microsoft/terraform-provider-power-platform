@@ -35,15 +35,22 @@ const (
 )
 
 // registerScopeMocks wires create, list and delete for one scope of the RBAC API. collectionPath is
-// the roleAssignments collection for that scope, and fixtureDir holds its recorded responses.
+// the roleAssignments collection for that scope, and fixtureDir holds its recorded responses. The
+// listing is empty until the POST commits, because create refuses an existing relationship, so a
+// pre-populated listing would turn every create into a refusal.
 func registerScopeMocks(collectionPath, fixtureDir, assignmentId string) {
+	created := false
 	httpmock.RegisterResponder("POST", collectionPath+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File(fixtureDir+"/post_role_assignment.json").String()), nil
 		})
 	httpmock.RegisterResponder("GET", collectionPath+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtureDir+"/get_role_assignments.json").String()), nil
+			if created {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtureDir+"/get_role_assignments.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
 	httpmock.RegisterResponder("DELETE", collectionPath+"/"+assignmentId+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
@@ -706,9 +713,12 @@ func TestUnitRoleAssignmentResource_Validate_Create_Ambiguous_Commit_Is_Unknown_
 	})
 }
 
-// A relationship that already exists uniquely is adopted without a POST, since the configuration
-// identifies the relationship and the assignment id is computed.
-func TestUnitRoleAssignmentResource_Validate_Create_Adopts_Unique_Existing_Assignment(t *testing.T) {
+// A relationship that already exists fails the create like any idiomatic resource, handing over
+// the scope-shaped import id and sending no POST. Automatic adoption is deliberately absent: a
+// create cannot tell a fresh configuration from the create leg of a replacement, and adopting
+// during a create_before_destroy replacement would let the deposed instance destroy the very
+// grant just adopted.
+func TestUnitRoleAssignmentResource_Validate_Create_Refuses_Existing_Assignment_With_Import_Id(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
@@ -722,10 +732,6 @@ func TestUnitRoleAssignmentResource_Validate_Create_Adopts_Unique_Existing_Assig
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
-		})
-	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
-		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -741,15 +747,16 @@ func TestUnitRoleAssignmentResource_Validate_Create_Adopts_Unique_Existing_Assig
 					principal_type     = "ApplicationUser"
 					role_definition_id = "` + testRoleDefinitionId + `"
 				}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
-					func(_ *terraform.State) error {
-						if postAttempts != 0 {
-							return fmt.Errorf("an existing unique relationship must be adopted without a POST, got %d attempts", postAttempts)
-						}
-						return nil
-					},
-				),
+				ExpectError: regexp.MustCompile(`(?s)already exists; import\s+it.*environments/` + testEnvironmentId + `/` + environmentAssignmentId),
+			},
+			{
+				Config: `# empty`,
+				Check: func(_ *terraform.State) error {
+					if postAttempts != 0 {
+						return fmt.Errorf("an existing relationship must be refused without a POST, got %d attempts", postAttempts)
+					}
+					return nil
+				},
 			},
 		},
 	})
@@ -898,8 +905,12 @@ func TestUnitRoleAssignmentResource_Validate_Read_404_Tenant_Errors_Environment_
 	httpmock.RegisterResponder("GET", tenantCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			tenantGets++
-			// preflight and the post-apply refresh see the assignment; the 404 starts afterwards
-			if tenantGets <= 2 {
+			// the preflight sees an empty collection, the post-apply refresh sees the created
+			// assignment, and the 404 starts afterwards
+			if tenantGets == 1 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			if tenantGets == 2 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Tenant/get_role_assignments.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
@@ -943,9 +954,12 @@ func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			envGets++
-			// preflight and the post-apply refresh see the assignment; then the environment is
-			// deleted out of band
-			if envGets <= 2 {
+			// the preflight sees an empty collection, the post-apply refresh sees the created
+			// assignment, and then the environment is deleted out of band
+			if envGets == 1 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			if envGets == 2 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
@@ -1629,6 +1643,11 @@ func TestUnitRoleAssignmentResource_Validate_Import_Case_Different_Name_Plans_No
 	mocks.ActivateEnvironmentHttpMocks()
 	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
 	registerNamedDefinitions("Environment Admin Test")
+	// This test starts from an import, so the assignment exists remotely without any POST.
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+		})
 
 	config := `
 	resource "powerplatform_role_assignment" "test" {
@@ -2044,8 +2063,8 @@ func TestUnitRoleAssignmentResource_Validate_Replacement_Requires_Explicit_Id(t 
 }
 
 // A taint carries no attribute change to detect, so the recreate resolves the name afresh like
-// any create: it is an explicit operator recreate of this exact resource, not an unrelated
-// change, and the resolved id lands visibly in state.
+// any create. A forced recreate is not always operator-triggered, since a taint can be automatic
+// after a failed create, and the resolved id lands visibly in state either way.
 func TestUnitRoleAssignmentResource_Validate_Taint_Reresolves_Name(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -2232,6 +2251,94 @@ func TestUnitRoleAssignmentResource_Validate_Replacement_Refused_Create_Before_D
 				Check: func(_ *terraform.State) error {
 					if h.deletes != 0 {
 						return fmt.Errorf("the refused plan must not delete anything, got %d deletes", h.deletes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// The scenario that rules out automatic adoption: a forced recreate under create_before_destroy
+// plans create first, and an adopting create would seize the deposed instance's own grant, which
+// the deposed delete would then destroy. With adoption removed the create leg refuses instead,
+// before anything is deleted, and the grant survives. The default ordering keeps working, since
+// its deposed delete runs first and the create leg then finds a clean scope.
+func TestUnitRoleAssignmentResource_Validate_CBD_Taint_Same_Tuple_Fails_Safely(t *testing.T) {
+	selectors := []struct {
+		name     string
+		roleLine string
+	}{
+		{"by_name", `role_definition_name = "Shared Name"`},
+		{"by_id", `role_definition_id = "` + testRoleDefinitionId + `"`},
+	}
+	for _, tc := range selectors {
+		t.Run(tc.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			mocks.ActivateEnvironmentHttpMocks()
+			h := registerAnchoredScopeMocks()
+			registerNamedDefinitions("Shared Name")
+
+			config := `
+			resource "powerplatform_role_assignment" "test" {
+				scope_type     = "environment"
+				environment_id = "` + testEnvironmentId + `"
+				principal_id   = "` + testPrincipalId + `"
+				principal_type = "ApplicationUser"
+				` + tc.roleLine + `
+				lifecycle {
+					create_before_destroy = true
+				}
+			}`
+
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{Config: config},
+					{
+						Config:      config,
+						Taint:       []string{"powerplatform_role_assignment.test"},
+						ExpectError: regexp.MustCompile(`(?s)already exists; import\s+it`),
+					},
+				},
+			})
+			// The refusal must not have let the deposed delete run: the only delete across the
+			// whole test is the suite's own final destroy of the surviving grant.
+			if h.deletes != 1 {
+				t.Errorf("expected only the final cleanup delete, got %d deletes", h.deletes)
+			}
+			if h.posts != 1 {
+				t.Errorf("the refused recreate must not create, got %d posts", h.posts)
+			}
+		})
+	}
+}
+
+// The same forced recreate under the default ordering destroys first, so the create leg finds a
+// clean scope and the recreate succeeds.
+func TestUnitRoleAssignmentResource_Validate_Default_Taint_Same_Tuple_Recreates(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+
+	config := anchoredConfig(testPrincipalId, `role_definition_id = "`+testRoleDefinitionId+`"`)
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config},
+			{
+				Config: config,
+				Taint:  []string{"powerplatform_role_assignment.test"},
+				Check: func(_ *terraform.State) error {
+					if h.posts != 2 || h.deletes != 1 {
+						return fmt.Errorf("a default-order recreate deletes then creates, got %d posts and %d deletes", h.posts, h.deletes)
+					}
+					if len(h.rows) != 1 {
+						return fmt.Errorf("exactly one grant must remain, got %d", len(h.rows))
 					}
 					return nil
 				},

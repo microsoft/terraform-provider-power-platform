@@ -61,10 +61,12 @@ func (client *client) tenantScope(ctx context.Context) (string, error) {
 // semantics. The configuration identifies the relationship (scope, principal, type, role) while the
 // assignment id is computed, and the API happily stores duplicates of the same relationship, so:
 //
-//   - if exactly one matching assignment already exists it is adopted without a POST, and
-//     destroying the resource will remove it;
-//   - if several already exist the create fails, because adopting any one of them would leave
-//     Terraform managing an arbitrary duplicate: deduplicate or import instead;
+//   - if a matching assignment already exists the create fails and hands over its import id,
+//     like any idiomatic resource: importing is the way to manage an existing grant. Automatic
+//     adoption is deliberately absent, because a create cannot tell a fresh configuration from
+//     the create leg of a replacement, and adopting during a create_before_destroy replacement
+//     would let the deposed instance destroy the very grant just adopted;
+//   - if several already exist the create fails too: deduplicate or import one;
 //   - otherwise the relationship is created with a single POST. The POST is never replayed, since
 //     a retry after an ambiguous failure could grant twice. The one exception is the specific
 //     scope-propagation 400, which proves nothing was committed. Any other failure that leaves
@@ -101,8 +103,7 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 
 	matches := matchingAssignments(existing, request)
 	if len(matches) == 1 {
-		tflog.Debug(ctx, fmt.Sprintf("Adopting existing role assignment %s at scope %s", matches[0].RoleAssignmentId, request.Scope))
-		return &matches[0], nil
+		return nil, fmt.Errorf("a role assignment for this principal, role and scope already exists; import it instead of creating it: terraform import <address> %q", scope.importId(matches[0].RoleAssignmentId))
 	}
 	if len(matches) > 1 {
 		return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))

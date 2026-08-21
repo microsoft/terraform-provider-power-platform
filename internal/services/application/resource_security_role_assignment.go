@@ -88,7 +88,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists it is adopted, and destroying the resource removes the association.",
+		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists the create fails and hands over its import id: import an existing grant instead of re-declaring it.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -291,21 +291,33 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	if findAssignedRole(resolved.principal, resolved.role.RoleId) == nil {
-		if err := r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId}); err != nil {
-			// The POST may have committed despite the failure. The association is idempotent, so
-			// reading the relationship back settles it: if the role is there, the grant is live and
-			// must be recorded in state rather than left as an active privilege outside it.
-			principal, readErr := r.ApplicationClient.GetRoleHolder(ctx, plan.EnvironmentId.ValueString(), plan.holder())
-			if readErr != nil || findAssignedRole(principal, resolved.role.RoleId) == nil {
-				resp.Diagnostics.AddError(
-					fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
-					err.Error(),
-				)
-				return
-			}
-			tflog.Debug(ctx, fmt.Sprintf("Associating security role '%s' with %s failed but the association exists; recording it", resolved.role.RoleId, plan.holder()))
+	if existing := findAssignedRole(resolved.principal, resolved.role.RoleId); existing != nil {
+		// An existing association fails like any idiomatic resource, with its import id handed
+		// over. Automatic adoption is deliberately absent: a create cannot tell a fresh
+		// configuration from the create leg of a replacement, and adopting during a
+		// create_before_destroy replacement would let the deposed instance dissociate the very
+		// grant just adopted.
+		h := plan.holder()
+		resp.Diagnostics.AddError(
+			"This security role is already assigned to the principal",
+			fmt.Sprintf("Import the existing association instead of creating it: terraform import <address> %q", fmt.Sprintf("%s/%s/%s/%s", plan.EnvironmentId.ValueString(), h.entitySet(), h.id(), resolved.role.RoleId)),
+		)
+		return
+	}
+	if err := r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId}); err != nil {
+		// The POST may have committed despite the failure. The association is idempotent, so
+		// reading the relationship back settles it: if the role is there, the grant is live and
+		// must be recorded in state rather than left as an active privilege outside it. The
+		// pre-check above proved the association was absent, so a present one now is this create's.
+		principal, readErr := r.ApplicationClient.GetRoleHolder(ctx, plan.EnvironmentId.ValueString(), plan.holder())
+		if readErr != nil || findAssignedRole(principal, resolved.role.RoleId) == nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
+				err.Error(),
+			)
+			return
 		}
+		tflog.Debug(ctx, fmt.Sprintf("Associating security role '%s' with %s failed but the association exists; recording it", resolved.role.RoleId, plan.holder()))
 	}
 
 	plan.BusinessUnitId = customtypes.NewUUIDValue(resolved.businessUnitID)
@@ -496,8 +508,7 @@ type resolvedRoleAssignment struct {
 }
 
 // resolveRequestedRole resolves the configured role selector, a NAME or an ID, to the role row for
-// Create. Update and ModifyPlan also resolve an edited name; every other operation works from the
-// resolved id.
+// Create. Update also resolves an edited name; every other operation works from the resolved id.
 func (r *SecurityRoleAssignmentResource) resolveRequestedRole(ctx context.Context, environmentID string, holder roleHolder, requestedBusinessUnitID, securityRoleName, securityRoleID string) (*resolvedRoleAssignment, error) {
 	dvExists, err := r.ApplicationClient.DataverseExists(ctx, environmentID)
 	if err != nil {

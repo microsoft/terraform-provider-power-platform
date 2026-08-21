@@ -192,10 +192,15 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Import(t *
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
 		})
 
+	assigned := false
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}]}`,
-				principalID, applicationID, rootBusinessID, roleAdminID, rootBusinessID)
+			roles := ""
+			if assigned {
+				roles = fmt.Sprintf(`{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}`, roleAdminID, rootBusinessID)
+			}
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[%s]}`,
+				principalID, applicationID, rootBusinessID, roles)
 			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
 				return httpmock.NewStringResponse(http.StatusOK, body), nil
 			}
@@ -211,6 +216,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_Import(t *
 
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
 		func(req *http.Request) (*http.Response, error) {
+			assigned = true
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
@@ -260,10 +266,15 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
 		})
 
+	assigned := false
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}]}`,
-				principalID, applicationID, rootBusinessID, roleAdminID, roleName, rootBusinessID)
+			roles := ""
+			if assigned {
+				roles = fmt.Sprintf(`{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}`, roleAdminID, roleName, rootBusinessID)
+			}
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[%s]}`,
+				principalID, applicationID, rootBusinessID, roles)
 			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
 				return httpmock.NewStringResponse(http.StatusOK, body), nil
 			}
@@ -279,6 +290,7 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
 		func(req *http.Request) (*http.Response, error) {
+			assigned = true
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
@@ -679,7 +691,7 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 		roleName       = "MetaForm Global Admin"
 	)
 
-	assigned := true
+	assigned := false
 	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/`+environmentID,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
@@ -1450,4 +1462,54 @@ func TestUnitSecurityRoleAssignmentResource_Taint_Reresolves_Name(t *testing.T) 
 			},
 		},
 	})
+}
+
+// The scenario that rules out automatic adoption: a forced recreate under create_before_destroy
+// plans create first, and an adopting create would record the deposed instance's own association,
+// which the deposed delete would then dissociate. With adoption removed the create leg refuses
+// instead, before anything is dissociated, and the grant survives.
+func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t *testing.T) {
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	selectors := []struct {
+		name     string
+		roleLine string
+	}{
+		{"by_name", `security_role_name = "Shared Role"`},
+		{"by_id", `security_role_id = "` + roleID + `"`},
+	}
+	for _, tc := range selectors {
+		t.Run(tc.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+
+			config := `
+			resource "powerplatform_security_role_assignment" "test" {
+				environment_id = "00000000-0000-0000-0000-000000000001"
+				system_user_id = "00000000-0000-0000-0000-000000000008"
+				` + tc.roleLine + `
+				lifecycle {
+					create_before_destroy = true
+				}
+			}`
+
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{Config: config},
+					{
+						Config:      config,
+						Taint:       []string{"powerplatform_security_role_assignment.test"},
+						ExpectError: regexp.MustCompile(`(?s)already assigned`),
+					},
+				},
+			})
+			// The refusal must not have dissociated anything: the only association changes across
+			// the whole test are the original create and the suite's final cleanup dissociation.
+			if *changes != 2 {
+				t.Errorf("expected exactly the create and the final cleanup, got %d association changes", *changes)
+			}
+		})
+	}
 }

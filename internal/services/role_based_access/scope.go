@@ -69,6 +69,19 @@ func (s assignmentScope) assignmentPath(roleAssignmentId string) string {
 }
 
 // qualify renders the scope string the API stores on the assignment.
+// importId renders the scope-shaped import id for an assignment at this scope, matching the
+// formats ImportState accepts.
+func (s assignmentScope) importId(roleAssignmentId string) string {
+	switch s.kind {
+	case scopeEnvironment:
+		return "environments/" + s.id + "/" + roleAssignmentId
+	case scopeEnvironmentGroup:
+		return "environmentGroups/" + s.id + "/" + roleAssignmentId
+	default:
+		return roleAssignmentId
+	}
+}
+
 func (s assignmentScope) qualify(tenantScope string) string {
 	return tenantScope + s.segment()
 }
