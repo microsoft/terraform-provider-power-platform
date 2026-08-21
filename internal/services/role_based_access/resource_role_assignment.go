@@ -151,7 +151,7 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"role_definition_name": schema.StringAttribute{
-				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a taint or -replace is an explicit recreate and resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create",
+				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create",
 				Optional:            true,
 				Computed:            true,
 				CustomType:          customtypes.CaseInsensitiveStringType{},
@@ -180,20 +180,22 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-// ModifyPlan protects a name-selected assignment's stored role id at the planning boundary.
-// Update alone cannot: a replacement (a changed principal or scope, a taint, -replace) bypasses
-// Update and runs Create, and Terraform plans a replacement's new instance from the configuration
-// alone, so neither state nor plan values nor private state reach that create. Re-resolving the
-// unchanged name there against a drifted catalogue would silently retarget the grant. So:
+// ModifyPlan protects a name-selected assignment's stored role id at the planning boundary,
+// structurally and without any network access. Update alone cannot: a replacement (a changed
+// principal or scope, a taint, -replace) bypasses Update and runs Create, and Terraform plans a
+// replacement's new instance from the configuration alone, so neither state nor plan values nor
+// private state reach that create. Re-resolving the name there against a drifted catalogue would
+// silently retarget the grant. So:
 //
-//   - a replacement of a name-selected assignment is refused at plan time, with the stored id
-//     handed over so the replacement can be applied with role_definition_id explicitly;
-//   - a changed name combined with a replacement is refused, since the rename must be applied on
-//     its own first;
-//   - a changed name alone is validated against the stored id at plan time when the catalogue
-//     answers, with Update keeping the authoritative check at apply time;
-//   - a taint or -replace carries no attribute change to detect, so it re-resolves the name like
-//     the fresh create it is: an explicit operator recreate of this exact resource.
+//   - the name selector owns the assignment whenever it is configured, which means non-null:
+//     an unknown name is still name-selected, just not resolvable yet;
+//   - a replacement of a name-selected assignment is refused at plan time with the stored id
+//     handed over, and an input that cannot be proven unchanged counts as a replacement;
+//   - name edits, known or unknown, defer their validation to Update, which resolves under the
+//     update timeout and refuses a name that maps to a different role;
+//   - a forced recreate (a taint or -replace, which can also happen automatically after a failed
+//     create) carries no attribute change to detect, so it re-resolves the name like the fresh
+//     create it is.
 func (r *roleAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		// A destroy needs no plan changes.
@@ -214,19 +216,30 @@ func (r *roleAssignmentResource) ModifyPlan(ctx context.Context, req resource.Mo
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !helpers.IsKnown(config.RoleDefinitionName) {
+	if config.RoleDefinitionName.IsNull() {
 		// Id-selected: the configured id is the explicit anchor and the only retarget mechanism.
+		// Only NULL means id-selected; an UNKNOWN name is still name-selected, just through an
+		// expression whose value has not resolved yet, and gets the same protections.
 		return
 	}
 
-	nameChanged := !strings.EqualFold(config.RoleDefinitionName.ValueString(), state.RoleDefinitionName.ValueString())
-	replacing := !strings.EqualFold(config.ScopeType.ValueString(), state.ScopeType.ValueString()) ||
-		!uuidEqual(plan.EnvironmentId, state.EnvironmentId) ||
-		!uuidEqual(plan.EnvironmentGroupId, state.EnvironmentGroupId) ||
-		!uuidEqual(plan.PrincipalId, state.PrincipalId) ||
-		plan.PrincipalType.ValueString() != state.PrincipalType.ValueString()
+	// A replacement input that is changed, or that cannot be proven unchanged because it is not
+	// yet known, forces the refusal: an unprovable replacement of a name-selected assignment is
+	// exactly as dangerous as a proven one.
+	replacing := !provablyEqualStrings(config.ScopeType, state.ScopeType) ||
+		!provablyEqualUUIDs(plan.EnvironmentId, state.EnvironmentId) ||
+		!provablyEqualUUIDs(plan.EnvironmentGroupId, state.EnvironmentGroupId) ||
+		!provablyEqualUUIDs(plan.PrincipalId, state.PrincipalId) ||
+		!provablyEqualStrings(plan.PrincipalType, state.PrincipalType)
 
-	if nameChanged && replacing {
+	if !replacing {
+		// In-place changes need nothing from planning: a known name edit is validated by Update
+		// at apply time under the update timeout, and an unknown name defers there too.
+		return
+	}
+
+	if helpers.IsKnown(config.RoleDefinitionName) &&
+		!strings.EqualFold(config.RoleDefinitionName.ValueString(), state.RoleDefinitionName.ValueString()) {
 		resp.Diagnostics.AddError(
 			"The role name cannot change in the same apply as a replacement",
 			"This change replaces the assignment and also edits role_definition_name. A replacement re-creates the assignment, and resolving a new name during it could target a different role than the one this assignment holds. Apply the name change on its own first, then the replacement.",
@@ -234,47 +247,38 @@ func (r *roleAssignmentResource) ModifyPlan(ctx context.Context, req resource.Mo
 		return
 	}
 
-	if replacing {
-		// Terraform plans the replacement's new instance from the configuration alone, so the
-		// stored role id cannot be carried through and the unchanged name would be re-resolved
-		// against today's catalogue. If the catalogue has drifted, that silently retargets the
-		// grant. The replacement therefore requires the explicit id, which the error hands over.
-		resp.Diagnostics.AddError(
-			"Replacing a name-selected role assignment requires the explicit role id",
-			fmt.Sprintf("This change replaces the assignment, and a replacement re-resolves role_definition_name against the catalogue at apply time, which can silently target a different role than the one this assignment holds. Set role_definition_id = %q for the replacement instead of the name; switch back to the name afterwards if preferred.", state.RoleDefinitionId.ValueString()),
-		)
-		return
-	}
-
-	if nameChanged {
-		// Fail a retargeting rename at plan time when the catalogue answers; Update stays the
-		// authoritative check at apply time in case the catalogue changes in between.
-		if definition, err := r.Client.ResolveRoleDefinitionByName(ctx, config.RoleDefinitionName.ValueString()); err == nil {
-			if !strings.EqualFold(definition.RoleDefinitionId, state.RoleDefinitionId.ValueString()) {
-				resp.Diagnostics.AddError(
-					"The new role definition name resolves to a different role",
-					fmt.Sprintf("%q resolves to role definition %s, but this assignment holds %s. A name edit only follows a rename of the same role. To assign a different role, set role_definition_id, which replaces the assignment.", config.RoleDefinitionName.ValueString(), definition.RoleDefinitionId, state.RoleDefinitionId.ValueString()),
-				)
-			}
-		} else {
-			tflog.Debug(ctx, fmt.Sprintf("Deferring the rename validation of %q to apply: %s", config.RoleDefinitionName.ValueString(), err))
-		}
-		return
-	}
-
-	// The name is unchanged, so the stored id is the assignment's identity through any plan.
-	if helpers.IsKnown(state.RoleDefinitionId) && !helpers.IsKnown(plan.RoleDefinitionId) {
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("role_definition_id"), state.RoleDefinitionId)...)
-	}
+	// Terraform plans the replacement's new instance from the configuration alone, so the stored
+	// role id cannot be carried through and the name would be re-resolved against today's
+	// catalogue. If the catalogue has drifted, that silently retargets the grant. The replacement
+	// therefore requires the explicit id, which the error hands over.
+	resp.Diagnostics.AddError(
+		"Replacing a name-selected role assignment requires the explicit role id",
+		fmt.Sprintf("This change replaces the assignment, or changes inputs whose values are not known yet, and a replacement re-resolves role_definition_name against the catalogue at apply time, which can silently target a different role than the one this assignment holds. Set role_definition_id = %q for the replacement instead of the name; switch back to the name afterwards if preferred.", state.RoleDefinitionId.ValueString()),
+	)
 }
 
-// uuidEqual compares two uuid values case-insensitively, treating null and unknown as equal only
-// to themselves.
-func uuidEqual(a, b customtypes.UUID) bool {
+// provablyEqualUUIDs reports that two uuid values are certainly the same: both null, or both known
+// and equal ignoring case. An unknown value can never be proven equal, so it reports false; for
+// safety-sensitive replacement detection, unprovable must count as changed.
+func provablyEqualUUIDs(a, b customtypes.UUID) bool {
+	if a.IsNull() && b.IsNull() {
+		return true
+	}
 	if !helpers.IsKnown(a) || !helpers.IsKnown(b) {
-		return helpers.IsKnown(a) == helpers.IsKnown(b)
+		return false
 	}
 	return strings.EqualFold(a.ValueString(), b.ValueString())
+}
+
+// provablyEqualStrings is provablyEqualUUIDs for plain strings, compared exactly.
+func provablyEqualStrings(a, b types.String) bool {
+	if a.IsNull() && b.IsNull() {
+		return true
+	}
+	if !helpers.IsKnown(a) || !helpers.IsKnown(b) {
+		return false
+	}
+	return a.ValueString() == b.ValueString()
 }
 
 // ValidateConfig enforces that scope_type and its matching id arrive together. The per-attribute

@@ -252,9 +252,10 @@ func (client *client) ResolveRoleDefinitionByName(ctx context.Context, name stri
 
 // RoleDefinitionNameById returns the display name for a role definition id, or "" when the
 // catalogue cannot be listed or does not hold the id. The name is cosmetic alongside the id
-// identity, so this lookup must never block a lifecycle operation: it sends exactly one request,
+// identity, so this lookup cannot be allowed to starve a mutation: it sends exactly one request,
 // because a retried request against a persistently failing catalogue would consume the operation's
-// whole context and starve the call that actually matters.
+// whole context. It runs only from Read, where a single stalled request can still occupy the read
+// until its timeout, and that is the accepted cost of the courtesy.
 func (client *client) RoleDefinitionNameById(ctx context.Context, roleDefinitionId string) string {
 	response := roleDefinitionsListDto{}
 	_, err := client.Api.ExecuteWithoutRetry(ctx, nil, "GET", client.url("/authorization/roleDefinitions"), nil, nil, []int{http.StatusOK}, &response)

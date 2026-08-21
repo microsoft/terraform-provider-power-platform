@@ -1588,8 +1588,8 @@ func registerNamedDefinitions(name string) {
 }
 
 // A case-only edit of the name is semantically the same value, so nothing is planned. Without
-// that, the replacement would adopt the existing assignment and the deposed instance would then
-// destroy it under create_before_destroy.
+// that, the edit would run Update and a needless catalogue resolution for a value that has not
+// meaningfully changed.
 func TestUnitRoleAssignmentResource_Validate_Name_Case_Edit_Plans_No_Change(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -1767,6 +1767,9 @@ func TestUnitRoleAssignmentResource_Validate_Rename_Same_Role_Updates_In_Place(t
 			principal_id         = "` + testPrincipalId + `"
 			principal_type       = "ApplicationUser"
 			role_definition_name = "` + name + `"
+			timeouts = {
+				update = "5m"
+			}
 		}`
 	}
 
@@ -2149,6 +2152,89 @@ func TestUnitRoleAssignmentResource_Validate_Id_Change_Replaces(t *testing.T) {
 						return nil
 					},
 				),
+			},
+		},
+	})
+}
+
+// An unknown name is still name-selected: a name supplied through an expression that has not
+// resolved yet must not be mistaken for the id selector, or a replacement would slip past the
+// refusal and re-resolve the eventual name against a drifted catalogue.
+func TestUnitRoleAssignmentResource_Validate_Unknown_Name_Replacement_Refused(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+	registerNamedDefinitions("Shared Name")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`)},
+			{
+				// terraform_data is new in this step, so its output is unknown at plan time
+				// while the principal change forces a replacement.
+				Config: `
+				resource "terraform_data" "name" {
+					input = "Shared Name"
+				}
+				` + anchoredConfig(secondPrincipalId, `role_definition_name = terraform_data.name.output`),
+				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+			{
+				Config: anchoredConfig(testPrincipalId, `role_definition_name = "Shared Name"`),
+				Check: func(_ *terraform.State) error {
+					if h.deletes != 0 {
+						return fmt.Errorf("the refused plan must not delete anything, got %d deletes", h.deletes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// The refusal is identical under create_before_destroy, where the silent retarget would otherwise
+// be an adopt-then-destroy of the surviving grant.
+func TestUnitRoleAssignmentResource_Validate_Replacement_Refused_Create_Before_Destroy(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	h := registerAnchoredScopeMocks()
+	registerNamedDefinitions("Shared Name")
+
+	config := func(principal string) string {
+		return `
+		resource "powerplatform_role_assignment" "test" {
+			scope_type           = "environment"
+			environment_id       = "` + testEnvironmentId + `"
+			principal_id         = "` + principal + `"
+			principal_type       = "ApplicationUser"
+			role_definition_name = "Shared Name"
+			lifecycle {
+				create_before_destroy = true
+			}
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config(testPrincipalId)},
+			{
+				Config:      config(secondPrincipalId),
+				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+			{
+				Config: config(testPrincipalId),
+				Check: func(_ *terraform.State) error {
+					if h.deletes != 0 {
+						return fmt.Errorf("the refused plan must not delete anything, got %d deletes", h.deletes)
+					}
+					return nil
+				},
 			},
 		},
 	})

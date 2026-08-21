@@ -85,7 +85,7 @@ variable "team_id" {
 
 - `business_unit_id` (String) Business unit the role belongs to. With `security_role_name` it scopes the name resolution and defaults to the principal's current business unit; with `security_role_id` it is computed from the role row, and a configured value must agree with it.
 - `security_role_id` (String) Dataverse role ID of the security role to assign, computed when `security_role_name` is used. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it, and it is the way to pin one of several same-named roles in different business units.
-- `security_role_name` (String) Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Replacing a name-selected assignment (for example by changing the holder) or moving it to another environment or business unit is refused with instructions to use `security_role_id`. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.
+- `security_role_name` (String) Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Replacing a name-selected assignment (for example by changing the holder) or moving it to another environment or business unit is refused with instructions to use `security_role_id`; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.
 - `system_user_id` (String) Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.
 - `team_id` (String) Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Only owner teams and Microsoft Entra group teams can hold security roles; an access team is refused. Exactly one of `system_user_id` or `team_id` must be set.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -115,9 +115,15 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 # system user id and a team id are rows in different tables, and role names can be renamed or
 # duplicated across business units.
 
-# assignment to a user or application user
+# Assignment to a user or application user: {environment id}/systemusers/{system user id}/{role id}
+# 00000000-0000-0000-0000-000000000001 = environment id
+# 00000000-0000-0000-0000-000000000002 = systemuserid of the user or application user
+# 00000000-0000-0000-0000-000000000004 = roleid of the security role
 terraform import powerplatform_security_role_assignment.example "00000000-0000-0000-0000-000000000001/systemusers/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000004"
 
-# assignment to a team
+# Assignment to a team: {environment id}/teams/{team id}/{role id}
+# 00000000-0000-0000-0000-000000000001 = environment id
+# 00000000-0000-0000-0000-000000000003 = teamid of the owner or group team
+# 00000000-0000-0000-0000-000000000004 = roleid of the security role
 terraform import powerplatform_security_role_assignment.team_admin "00000000-0000-0000-0000-000000000001/teams/00000000-0000-0000-0000-000000000003/00000000-0000-0000-0000-000000000004"
 ```

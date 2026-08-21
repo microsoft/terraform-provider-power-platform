@@ -145,7 +145,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				CustomType: customtypes.UUIDType{},
 			},
 			"security_role_name": schema.StringAttribute{
-				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Replacing a name-selected assignment (for example by changing the holder) or moving it to another environment or business unit is refused with instructions to use `security_role_id`. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
+				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Replacing a name-selected assignment (for example by changing the holder) or moving it to another environment or business unit is refused with instructions to use `security_role_id`; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
@@ -185,13 +185,16 @@ func (r *SecurityRoleAssignmentResource) Configure(ctx context.Context, req reso
 	r.ApplicationClient = newApplicationClient(client.Api)
 }
 
-// ModifyPlan anchors a name-selected assignment to its stored role id at the planning boundary.
-// Update alone cannot do this: a replacement (a changed holder, a taint, -replace) bypasses Update
-// and runs Create, which would re-resolve the unchanged name against the live role catalogue and
-// could silently retarget the grant if the name now maps to a different role. Dataverse roles are
-// environment and business unit local, so a move to another environment or business unit cannot
-// carry the stored id either; a name-selected move is rejected and needs the destination
-// security_role_id instead.
+// ModifyPlan protects a name-selected assignment's stored role id at the planning boundary,
+// structurally and without any network access. Terraform plans a replacement's new instance from
+// the configuration alone, so the stored id cannot be carried through, and Dataverse roles are
+// environment and business unit local, so a move cannot carry it either. The name selector owns
+// the assignment whenever it is configured, which means non-null: an unknown name is still
+// name-selected. Any move or replacement input that cannot be proven unchanged counts as changed
+// and is refused before anything is deleted. Name edits defer their validation to Update. A
+// forced recreate (a taint or -replace, which can also happen automatically after a failed
+// create) carries no attribute change to detect, so it re-resolves the name like the fresh
+// create it is.
 func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		// Nothing is anchored on a fresh create, and a destroy needs no plan changes.
@@ -205,24 +208,34 @@ func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !helpers.IsKnown(config.SecurityRoleName) {
+	if config.SecurityRoleName.IsNull() {
 		// Id-selected: the configured id is the explicit anchor and the only retarget mechanism.
+		// Only NULL means id-selected; an UNKNOWN name is still name-selected, just through an
+		// expression whose value has not resolved yet, and gets the same protections.
 		return
 	}
 
-	if !uuidEqual(plan.EnvironmentId, state.EnvironmentId) ||
-		(helpers.IsKnown(config.BusinessUnitId) && !uuidEqual(config.BusinessUnitId, state.BusinessUnitId)) {
+	// A move input that is changed, or that cannot be proven unchanged because it is not yet
+	// known, is an unprovable cross-catalogue move and must fail before anything is deleted.
+	if !provablyEqualUUIDs(plan.EnvironmentId, state.EnvironmentId) ||
+		(!config.BusinessUnitId.IsNull() && !provablyEqualUUIDs(config.BusinessUnitId, state.BusinessUnitId)) {
 		resp.Diagnostics.AddError(
 			"A name-selected assignment cannot move to another environment or business unit",
-			"Security roles are rows in one environment and business unit, so the stored role id does not exist at the destination and the name could resolve to a different role there. Set security_role_id to the destination role's id to make the move explicit.",
+			"Security roles are rows in one environment and business unit, so the stored role id does not exist at the destination and the name could resolve to a different role there. This change moves the assignment, or supplies a destination that is not known yet. Set security_role_id to the destination role's id to make the move explicit.",
 		)
 		return
 	}
 
-	nameChanged := config.SecurityRoleName.ValueString() != state.SecurityRoleName.ValueString()
-	holderChanged := !uuidEqual(plan.SystemUserId, state.SystemUserId) || !uuidEqual(plan.TeamId, state.TeamId)
+	holderChanged := !provablyEqualUUIDs(plan.SystemUserId, state.SystemUserId) ||
+		!provablyEqualUUIDs(plan.TeamId, state.TeamId)
+	if !holderChanged {
+		// In-place changes need nothing from planning: a known name edit is validated by Update
+		// at apply time under the update timeout, and an unknown name defers there too.
+		return
+	}
 
-	if nameChanged && holderChanged {
+	if helpers.IsKnown(config.SecurityRoleName) &&
+		config.SecurityRoleName.ValueString() != state.SecurityRoleName.ValueString() {
 		resp.Diagnostics.AddError(
 			"The role name cannot change in the same apply as a replacement",
 			"This change replaces the assignment and also edits security_role_name. A replacement re-creates the association, and resolving a new name during it could target a different role than the one this assignment holds. Apply the name change on its own first, then the replacement.",
@@ -230,48 +243,24 @@ func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req res
 		return
 	}
 
-	if holderChanged {
-		// Terraform plans the replacement's new instance from the configuration alone, so the
-		// stored role id cannot be carried through and the unchanged name would be re-resolved
-		// against the live catalogue, which can silently retarget the grant if a same-named role
-		// appeared or the original was recreated. The replacement therefore requires the explicit
-		// id, which the error hands over.
-		resp.Diagnostics.AddError(
-			"Replacing a name-selected security role assignment requires the explicit role id",
-			fmt.Sprintf("This change replaces the assignment, and a replacement re-resolves security_role_name against the live roles at apply time, which can silently target a different role than the one this assignment holds. Set security_role_id = %q for the replacement instead of the name; switch back to the name afterwards if preferred.", state.SecurityRoleId.ValueString()),
-		)
-		return
-	}
-
-	if nameChanged {
-		// Fail a retargeting rename at plan time when the catalogue answers; Update stays the
-		// authoritative check at apply time in case the catalogue changes in between.
-		resolvedRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString(), []string{config.SecurityRoleName.ValueString()})
-		if err == nil && len(resolvedRoles) == 1 {
-			if !strings.EqualFold(resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()) {
-				resp.Diagnostics.AddError(
-					"The new security role name resolves to a different role",
-					fmt.Sprintf("'%s' resolves to role %s, but this assignment holds %s. A name edit only follows a rename of the same role. To assign a different role, set security_role_id, which replaces the assignment.", config.SecurityRoleName.ValueString(), resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()),
-				)
-			}
-		} else {
-			tflog.Debug(ctx, fmt.Sprintf("Deferring the rename validation of '%s' to apply: %v", config.SecurityRoleName.ValueString(), err))
-		}
-		return
-	}
-
-	// The name is unchanged and nothing is being replaced, so in-place planning carries the
-	// stored id forward on its own.
-	if helpers.IsKnown(state.SecurityRoleId) && !helpers.IsKnown(plan.SecurityRoleId) {
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("security_role_id"), state.SecurityRoleId)...)
-	}
+	// Terraform plans the replacement's new instance from the configuration alone, so the stored
+	// role id cannot be carried through and the name would be re-resolved against the live
+	// catalogue. The replacement therefore requires the explicit id, which the error hands over.
+	resp.Diagnostics.AddError(
+		"Replacing a name-selected security role assignment requires the explicit role id",
+		fmt.Sprintf("This change replaces the assignment, or changes inputs whose values are not known yet, and a replacement re-resolves security_role_name against the live roles at apply time, which can silently target a different role than the one this assignment holds. Set security_role_id = %q for the replacement instead of the name; switch back to the name afterwards if preferred.", state.SecurityRoleId.ValueString()),
+	)
 }
 
-// uuidEqual compares two uuid values case-insensitively, treating null and unknown as equal only
-// to themselves.
-func uuidEqual(a, b customtypes.UUID) bool {
+// provablyEqualUUIDs reports that two uuid values are certainly the same: both null, or both known
+// and equal ignoring case. An unknown value can never be proven equal, so it reports false; for
+// safety-sensitive replacement detection, unprovable must count as changed.
+func provablyEqualUUIDs(a, b customtypes.UUID) bool {
+	if a.IsNull() && b.IsNull() {
+		return true
+	}
 	if !helpers.IsKnown(a) || !helpers.IsKnown(b) {
-		return helpers.IsKnown(a) == helpers.IsKnown(b)
+		return false
 	}
 	return strings.EqualFold(a.ValueString(), b.ValueString())
 }

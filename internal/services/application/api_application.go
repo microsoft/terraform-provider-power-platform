@@ -399,15 +399,12 @@ func (client *client) GetRoleHolder(ctx context.Context, environmentId string, h
 
 	// Dataverse only lets owner teams and Microsoft Entra group teams hold security roles; an
 	// access team (teamtype 1) cannot, so failing here beats a confusing association error later.
-	if response.TeamType == teamTypeAccess {
+	if response.TeamType == TEAM_TYPE_ACCESS {
 		return nil, fmt.Errorf("team %s (%s) is an access team, and access teams cannot hold security roles; use an owner team or a Microsoft Entra group team", response.TeamId, response.Name)
 	}
 
 	return &roleHolderDto{Id: response.TeamId, BusinessUnitId: response.BusinessUnitId, SecurityRoles: response.SecurityRoles}, nil
 }
-
-// teamTypeAccess is Dataverse's teamtype value for access teams.
-const teamTypeAccess = 1
 
 func (client *client) GetDataverseSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]applicationSecurityRoleDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)

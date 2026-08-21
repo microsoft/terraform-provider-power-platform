@@ -943,18 +943,27 @@ func TestUnitSecurityRoleAssignmentResource_Role_Selector_Exactly_One(t *testing
 	}
 }
 
-// securityRenameHarness wires the mocks for a user with one assignable role whose display name
-// can change between steps. The returned function switches the catalogue to the renamed form.
+// securityRenameHarness wires principal-generic mocks for an environment with one assignable role
+// whose display name can change between steps. Any systemuser id is served, so replacement tests
+// can move the holder. The returned function switches the catalogue to the renamed form, and the
+// counter tracks every association add or removal.
 func securityRenameHarness(roleID, oldName, newName string) (renamed func(), associationChanges *int) {
 	const (
 		environmentID = "00000000-0000-0000-0000-000000000001"
 		applicationID = "00000000-0000-0000-0000-000000000007"
-		principalID   = "00000000-0000-0000-0000-000000000008"
 		rootBusiness  = "00000000-0000-0000-0000-000000000003"
 	)
 	currentName := oldName
-	assigned := false
+	assigned := map[string][]string{}
 	changes := 0
+	guidRe := regexp.MustCompile(`systemusers(?:%28|\()([0-9a-f-]+)(?:%29|\))`)
+	principalOf := func(raw string) string {
+		m := guidRe.FindStringSubmatch(raw)
+		if len(m) == 2 {
+			return m[1]
+		}
+		return ""
+	}
 
 	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -962,15 +971,27 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 		})
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			roles := "[]"
-			if assigned {
-				roles = `[{"roleid":"` + roleID + `","name":"` + currentName + `","_businessunitid_value":"` + rootBusiness + `"}]`
+			principal := principalOf(req.URL.RawPath + req.URL.Path)
+			if principal == "" {
+				principal = "00000000-0000-0000-0000-000000000008"
 			}
-			body := `{"systemuserid":"` + principalID + `","applicationid":"` + applicationID + `","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":` + roles + `}`
-			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+			roles := make([]string, 0, len(assigned[principal]))
+			for _, id := range assigned[principal] {
+				name := currentName
+				if id != roleID {
+					name = "A Different Role"
+				}
+				roles = append(roles, `{"roleid":"`+id+`","name":"`+name+`","_businessunitid_value":"`+rootBusiness+`"}`)
+			}
+			body := `{"systemuserid":"` + principal + `","applicationid":"` + applicationID + `","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":[` + strings.Join(roles, ",") + `]}`
+			if strings.Contains(req.URL.Path, "/systemusers(") || strings.Contains(req.URL.RawPath, "/systemusers%28") {
 				return httpmock.NewStringResponse(http.StatusOK, body), nil
 			}
 			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+body+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles(%28|\()`+roleID+`(%29|\)).*`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"roleid":"`+roleID+`","name":"`+currentName+`","_businessunitid_value":"`+rootBusiness+`"}`), nil
 		})
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -980,17 +1001,32 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 			]}`
 			return httpmock.NewStringResponse(http.StatusOK, body), nil
 		})
-	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
-		func(_ *http.Request) (*http.Response, error) {
-			assigned = true
-			changes++
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			principal := principalOf(req.URL.RawPath + req.URL.Path)
+			var payload map[string]string
+			if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+				return nil, err
+			}
+			for _, candidate := range []string{roleID, "99999999-0000-0000-0000-000000000009"} {
+				if strings.Contains(payload["@odata.id"], candidate) && !slices.Contains(assigned[principal], candidate) {
+					assigned[principal] = append(assigned[principal], candidate)
+					changes++
+				}
+			}
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))/systemuserroles_association/\$ref.*`,
-		func(_ *http.Request) (*http.Response, error) {
-			assigned = false
-			changes++
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref.*`,
+		func(req *http.Request) (*http.Response, error) {
+			principal := principalOf(req.URL.RawPath + req.URL.Path)
+			for _, candidate := range []string{roleID, "99999999-0000-0000-0000-000000000009"} {
+				if strings.Contains(req.URL.RawQuery, candidate) && slices.Contains(assigned[principal], candidate) {
+					assigned[principal] = slices.DeleteFunc(assigned[principal], func(id string) bool { return id == candidate })
+					changes++
+					return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+				}
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
 	return func() { currentName = newName }, &changes
@@ -1011,6 +1047,9 @@ func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t 
 			environment_id     = "00000000-0000-0000-0000-000000000001"
 			system_user_id     = "00000000-0000-0000-0000-000000000008"
 			security_role_name = "` + name + `"
+			timeouts = {
+				update = "5m"
+			}
 		}`
 	}
 
@@ -1080,7 +1119,7 @@ func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	config := func(principal string) string {
 		return `
@@ -1099,6 +1138,28 @@ func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit
 			{
 				Config:      config("00000000-0000-0000-0000-000000000009"),
 				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+			{
+				// The refused plan must not have dissociated anything, and the replacement runs
+				// with the id the error handed over, granting exactly the anchored role to the
+				// new holder.
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id   = "00000000-0000-0000-0000-000000000001"
+					system_user_id   = "00000000-0000-0000-0000-000000000009"
+					security_role_id = "` + roleID + `"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", "00000000-0000-0000-0000-000000000009"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleID),
+					func(_ *terraform.State) error {
+						// create P8 (1), then the replacement: dissociate P8 (2), associate P9 (3)
+						if *changes != 3 {
+							return fmt.Errorf("expected exactly the create and the explicit-id replacement, got %d association changes", *changes)
+						}
+						return nil
+					},
+				),
 			},
 		},
 	})
@@ -1194,6 +1255,198 @@ func TestUnitSecurityRoleAssignmentResource_Rename_With_Replacement_Fails(t *tes
 			{
 				Config:      config("00000000-0000-0000-0000-000000000009", "Renamed Role"),
 				ExpectError: regexp.MustCompile(`(?s)cannot change in the same apply as a\s+replacement`),
+			},
+		},
+	})
+}
+
+// An unknown name is still name-selected: supplied through an unresolved expression it must not be
+// mistaken for the id selector, or a holder replacement would slip past the refusal.
+func TestUnitSecurityRoleAssignmentResource_Unknown_Name_Replacement_Refused(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					system_user_id     = "00000000-0000-0000-0000-000000000008"
+					security_role_name = "Shared Role"
+				}`,
+			},
+			{
+				Config: `
+				resource "terraform_data" "name" {
+					input = "Shared Role"
+				}
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					system_user_id     = "00000000-0000-0000-0000-000000000009"
+					security_role_name = terraform_data.name.output
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)requires the explicit role\s+id`),
+			},
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					system_user_id     = "00000000-0000-0000-0000-000000000008"
+					security_role_name = "Shared Role"
+				}`,
+				Check: func(_ *terraform.State) error {
+					if *changes != 1 {
+						return fmt.Errorf("the refused plan must not touch associations, got %d changes", *changes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// An unknown business unit is an unprovable cross-catalogue move and must fail before anything is
+// dissociated, not on the refresh after the damage.
+func TestUnitSecurityRoleAssignmentResource_Unknown_Business_Unit_Move_Refused(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+
+	base := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		system_user_id     = "00000000-0000-0000-0000-000000000008"
+		security_role_name = "Shared Role"
+	`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: base + `}`},
+			{
+				Config: `
+				resource "terraform_data" "bu" {
+					input = "00000000-0000-0000-0000-000000000003"
+				}
+				` + base + `	business_unit_id = terraform_data.bu.output` + "\n\t}",
+				ExpectError: regexp.MustCompile(`(?s)cannot move to another\s+environment or business unit`),
+			},
+			{
+				Config: base + `}`,
+				Check: func(_ *terraform.State) error {
+					if *changes != 1 {
+						return fmt.Errorf("the refused plan must not touch associations, got %d changes", *changes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// A forced recreate carries no attribute change to detect, so it resolves the name afresh like the
+// create it is, and the resolved id lands visibly in state.
+func TestUnitSecurityRoleAssignmentResource_Taint_Reresolves_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		roleA        = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		roleB        = "99999999-0000-0000-0000-000000000009"
+		rootBusiness = "00000000-0000-0000-0000-000000000003"
+		principalID  = "00000000-0000-0000-0000-000000000008"
+	)
+	// After the flip, the display name belongs to a different role row.
+	flipped := false
+	assigned := []string{}
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	roleName := func(id string) string {
+		if (id == roleA) != flipped {
+			return "Shared Role"
+		}
+		return "Some Other Name"
+	}
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			roles := make([]string, 0, len(assigned))
+			for _, id := range assigned {
+				roles = append(roles, `{"roleid":"`+id+`","name":"`+roleName(id)+`","_businessunitid_value":"`+rootBusiness+`"}`)
+			}
+			body := `{"systemuserid":"` + principalID + `","applicationid":"00000000-0000-0000-0000-000000000007","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":[` + strings.Join(roles, ",") + `]}`
+			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+body+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(_ *http.Request) (*http.Response, error) {
+			body := `{"value":[
+				{"roleid":"` + roleA + `","name":"` + roleName(roleA) + `","_businessunitid_value":"` + rootBusiness + `"},
+				{"roleid":"` + roleB + `","name":"` + roleName(roleB) + `","_businessunitid_value":"` + rootBusiness + `"}
+			]}`
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			var payload map[string]string
+			if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+				return nil, err
+			}
+			for _, candidate := range []string{roleA, roleB} {
+				if strings.Contains(payload["@odata.id"], candidate) && !slices.Contains(assigned, candidate) {
+					assigned = append(assigned, candidate)
+				}
+			}
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref.*`,
+		func(req *http.Request) (*http.Response, error) {
+			for _, candidate := range []string{roleA, roleB} {
+				if strings.Contains(req.URL.RawQuery, candidate) {
+					assigned = slices.DeleteFunc(assigned, func(id string) bool { return id == candidate })
+				}
+			}
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	config := `
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		system_user_id     = "` + principalID + `"
+		security_role_name = "Shared Role"
+	}`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleA),
+					func(_ *terraform.State) error {
+						flipped = true
+						return nil
+					},
+				),
+			},
+			{
+				Config: config,
+				Taint:  []string{"powerplatform_security_role_assignment.test"},
+				Check:  resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleB),
 			},
 		},
 	})

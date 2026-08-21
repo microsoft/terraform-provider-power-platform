@@ -105,7 +105,7 @@ variable "environment_group_id" {
 - `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise
 - `environment_id` (String) The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise
 - `role_definition_id` (String) The ID of the role definition to assign. Exactly one of `role_definition_id` or `role_definition_name` must be set; the id is computed when the name is used
-- `role_definition_name` (String) The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a taint or -replace is an explicit recreate and resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create
+- `role_definition_name` (String) The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Replacing a name-selected assignment (for example by changing the principal) is refused with the stored id handed over, since a replacement would re-resolve the name; a forced recreate (a taint or -replace, including an automatic taint after a failed create) resolves the name afresh. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used, on the read after the create
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -131,12 +131,17 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Tenant scope: the role assignment id on its own
+# Tenant scope: the import id is the role assignment id on its own
+# 00000000-0000-0000-0000-000000000000 = role assignment id
 terraform import powerplatform_role_assignment.example 00000000-0000-0000-0000-000000000000
 
-# Environment scope
+# Environment scope: environments/{environment id}/{role assignment id}
+# 00000000-0000-0000-0000-000000000001 = environment id
+# 00000000-0000-0000-0000-000000000000 = role assignment id
 terraform import powerplatform_role_assignment.environment environments/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000000
 
-# Environment group scope
+# Environment group scope: environmentGroups/{environment group id}/{role assignment id}
+# 00000000-0000-0000-0000-000000000002 = environment group id
+# 00000000-0000-0000-0000-000000000000 = role assignment id
 terraform import powerplatform_role_assignment.environment_group environmentGroups/00000000-0000-0000-0000-000000000002/00000000-0000-0000-0000-000000000000
 ```
