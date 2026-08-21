@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -252,6 +253,22 @@ func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req res
 	)
 }
 
+// isAmbiguousAssociateFailure reports whether the association POST might have committed despite
+// the error. A definitive refusal, an HTTP 4xx other than timeout or throttle, or a failure before
+// the request was sent proves nothing was committed; a failure on or after the wire without a
+// status, which the api client marks with RequestSentError, or a timeout, throttle or server
+// error leaves the outcome unknown.
+func isAmbiguousAssociateFailure(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if errors.As(err, &httpErr) {
+		return httpErr.StatusCode == http.StatusRequestTimeout ||
+			httpErr.StatusCode == http.StatusTooManyRequests ||
+			httpErr.StatusCode >= http.StatusInternalServerError
+	}
+	var sent api.RequestSentError
+	return errors.As(err, &sent)
+}
+
 // provablyEqualUUIDs reports that two uuid values are certainly the same: both null, or both known
 // and equal ignoring case. An unknown value can never be proven equal, so it reports false; for
 // safety-sensitive replacement detection, unprovable must count as changed.
@@ -300,24 +317,27 @@ func (r *SecurityRoleAssignmentResource) Create(ctx context.Context, req resourc
 		h := plan.holder()
 		resp.Diagnostics.AddError(
 			"This security role is already assigned to the principal",
-			fmt.Sprintf("Import the existing association instead of creating it: terraform import <address> %q", fmt.Sprintf("%s/%s/%s/%s", plan.EnvironmentId.ValueString(), h.entitySet(), h.id(), resolved.role.RoleId)),
+			fmt.Sprintf("Import the existing association instead of creating it: terraform import <address> %q. If this create is the forced recreate of the association Terraform already manages, remove create_before_destroy or untaint the resource, since the existing association is that one.", fmt.Sprintf("%s/%s/%s/%s", plan.EnvironmentId.ValueString(), h.entitySet(), h.id(), resolved.role.RoleId)),
 		)
 		return
 	}
 	if err := r.ApplicationClient.AddPrincipalSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.holder(), []string{resolved.role.RoleId}); err != nil {
-		// The POST may have committed despite the failure. The association is idempotent, so
-		// reading the relationship back settles it: if the role is there, the grant is live and
-		// must be recorded in state rather than left as an active privilege outside it. The
-		// pre-check above proved the association was absent, so a present one now is this create's.
-		principal, readErr := r.ApplicationClient.GetRoleHolder(ctx, plan.EnvironmentId.ValueString(), plan.holder())
-		if readErr != nil || findAssignedRole(principal, resolved.role.RoleId) == nil {
+		// A failed POST never becomes successful state. Reading the relationship back cannot
+		// prove ownership: a concurrent caller can associate the same role between the pre-check
+		// and the read, and recording their grant would let this resource's destroy remove it.
+		h := plan.holder()
+		if isAmbiguousAssociateFailure(err) {
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
-				err.Error(),
+				fmt.Sprintf("The outcome of assigning security role %s to %s is unknown", plan.roleSelector(), plan.holder()),
+				fmt.Sprintf("The request failed in a way that does not prove whether the association was committed. Inspect the principal's roles: if the role is assigned, import it with %q. Terraform has not recorded the assignment in state. Original failure: %s", fmt.Sprintf("%s/%s/%s/%s", plan.EnvironmentId.ValueString(), h.entitySet(), h.id(), resolved.role.RoleId), err.Error()),
 			)
 			return
 		}
-		tflog.Debug(ctx, fmt.Sprintf("Associating security role '%s' with %s failed but the association exists; recording it", resolved.role.RoleId, plan.holder()))
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to assign security role %s to %s", plan.roleSelector(), plan.holder()),
+			err.Error(),
+		)
+		return
 	}
 
 	plan.BusinessUnitId = customtypes.NewUUIDValue(resolved.businessUnitID)
@@ -381,10 +401,10 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 }
 
 // Update handles the one in-place change: an edited security_role_name. Names must not force
-// replacement, because a replacement create adopts the existing association and the deposed
-// instance then removes it, silently revoking the grant under create_before_destroy, and Dataverse
-// roles are genuinely renamable. The new name is resolved within the assignment's business unit:
-// the same role id is a pure state update, and a different role id fails with instructions.
+// replacement: a replacement re-creates the association, and its create leg either refuses the
+// existing relationship or, on a forced recreate, re-resolves the name, neither of which a rename
+// of the same role should trigger. The new name is resolved within the assignment's business
+// unit: the same role id is a pure state update, and a different role id fails with instructions.
 func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()

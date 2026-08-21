@@ -433,10 +433,11 @@ func (r *rbacRoleAssignmentResource) Read(ctx context.Context, req resource.Read
 }
 
 // Update handles the one in-place change: an edited role_definition_name. Names must not force
-// replacement, because a replacement create adopts the existing assignment and the deposed
-// instance then destroys it, silently revoking the grant under create_before_destroy. Instead the
-// new name is resolved: the same role id is a pure state update, and a different role id fails
-// with instructions, since moving the grant is what role_definition_id is for.
+// replacement: a replacement re-creates the assignment, and its create leg either refuses the
+// existing relationship or, on a forced recreate, re-resolves the name, neither of which a rename
+// of the same role should trigger. Instead the new name is resolved: the same role id is a pure
+// state update, and a different role id fails with instructions, since moving the grant is what
+// role_definition_id is for.
 func (r *rbacRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()

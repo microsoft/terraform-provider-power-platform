@@ -518,7 +518,9 @@ func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environment
 		roleToAssociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/%s/roles(%s)", environmentHost, constants.DATAVERSE_API_VERSION, roleId),
 		}
-		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
+		// Exactly one POST: replaying an association whose outcome is unknown could mask a
+		// concurrent caller's grant, so the caller classifies the failure instead of retrying.
+		resp, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
 			return err
 		}

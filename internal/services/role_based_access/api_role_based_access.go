@@ -103,7 +103,7 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 
 	matches := matchingAssignments(existing, request)
 	if len(matches) == 1 {
-		return nil, fmt.Errorf("a role assignment for this principal, role and scope already exists; import it instead of creating it: terraform import <address> %q", scope.importId(matches[0].RoleAssignmentId))
+		return nil, fmt.Errorf("a role assignment for this principal, role and scope already exists; import it instead of creating it: terraform import <address> %q. If this create is the forced recreate of the assignment Terraform already manages, remove create_before_destroy or untaint the resource, since the existing assignment is that one", scope.importId(matches[0].RoleAssignmentId))
 	}
 	if len(matches) > 1 {
 		return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))

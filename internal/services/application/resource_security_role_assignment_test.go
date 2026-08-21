@@ -739,50 +739,22 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 	})
 }
 
-// The association POST is idempotent, so a failure whose grant actually committed is settled by
-// reading the relationship back; a live grant must land in state, not outside it.
-func TestUnitSecurityRoleAssignmentResource_Create_Reconciles_Committed_Association(t *testing.T) {
+// A failed association POST never becomes successful state, even when the mock proves the
+// association was committed: ownership cannot be read back, since a concurrent caller can
+// associate the same role between the pre-check and any read. The grant stays remote-only and
+// the error hands over the import id.
+func TestUnitSecurityRoleAssignmentResource_Create_Ambiguous_Failure_Never_Writes_State(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	const (
-		environmentID  = "00000000-0000-0000-0000-000000000001"
-		applicationID  = "00000000-0000-0000-0000-000000000002"
-		principalID    = "00000000-0000-0000-0000-000000000008"
-		rootBusinessID = "00000000-0000-0000-0000-000000000003"
-		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-		roleName       = "MetaForm Global Admin"
-	)
-
-	posted := false
-	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/`+environmentID,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
-		})
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
-		func(req *http.Request) (*http.Response, error) {
-			roles := ""
-			if posted {
-				// the failed-looking POST actually committed
-				roles = `{"roleid":"` + roleAdminID + `","name":"` + roleName + `","_businessunitid_value":"` + rootBusinessID + `"}`
-			}
-			return httpmock.NewStringResponse(http.StatusOK,
-				`{"systemuserid":"`+principalID+`","applicationid":"`+applicationID+`","fullname":"Example","_businessunitid_value":"`+rootBusinessID+`","isdisabled":false,"systemuserroles_association":[`+roles+`]}`), nil
-		})
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK,
-				`{"value":[{"roleid":"`+roleAdminID+`","name":"`+roleName+`","_businessunitid_value":"`+rootBusinessID+`"}]}`), nil
-		})
-	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref$`,
-		func(req *http.Request) (*http.Response, error) {
-			posted = true
-			// a transport failure whose request nevertheless committed server-side
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	// The POST commits the association but the response is lost in transit.
+	committed := false
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
+		func(_ *http.Request) (*http.Response, error) {
+			committed = true
 			return nil, errors.New("connection reset by peer")
-		})
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref.*`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -792,11 +764,77 @@ func TestUnitSecurityRoleAssignmentResource_Create_Reconciles_Committed_Associat
 			{
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
-					environment_id     = "` + environmentID + `"
-					system_user_id     = "` + principalID + `"
-					security_role_name = "` + roleName + `"
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					system_user_id     = "00000000-0000-0000-0000-000000000008"
+					security_role_name = "Shared Role"
 				}`,
-				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
+				ExpectError: regexp.MustCompile(`(?s)outcome of assigning.*is\s+unknown`),
+			},
+			{
+				Config: `# empty`,
+				Check: func(state *terraform.State) error {
+					if len(state.RootModule().Resources) != 0 {
+						return fmt.Errorf("no association may reach state after an unknown outcome, found %d resources", len(state.RootModule().Resources))
+					}
+					if !committed {
+						return errors.New("the mock must hold the committed association for this test to prove the deliberate gap")
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// A definitive rejection of the association POST fails immediately: no read-back runs and nothing
+// reaches state.
+func TestUnitSecurityRoleAssignmentResource_Create_Definitive_Failure_Fails_Immediately(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	principalReads := 0
+	// Wrap the principal fetch to count reads that happen after the POST fails.
+	postFailed := false
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*systemuserroles_association/\$ref$`,
+		func(_ *http.Request) (*http.Response, error) {
+			postFailed = true
+			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"code":"0x80048306","message":"principal is disabled"}}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))\?.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if postFailed {
+				principalReads++
+			}
+			body := `{"systemuserid":"00000000-0000-0000-0000-000000000008","applicationid":"00000000-0000-0000-0000-000000000007","fullname":"Example Application User","_businessunitid_value":"00000000-0000-0000-0000-000000000003","isdisabled":false,"systemuserroles_association":[]}`
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					system_user_id     = "00000000-0000-0000-0000-000000000008"
+					security_role_name = "Shared Role"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s)Failed to assign security\s+role.*principal is disabled`),
+			},
+			{
+				Config: `# empty`,
+				Check: func(state *terraform.State) error {
+					if len(state.RootModule().Resources) != 0 {
+						return fmt.Errorf("no association may reach state after a definitive failure, found %d resources", len(state.RootModule().Resources))
+					}
+					if principalReads != 0 {
+						return fmt.Errorf("a definitive failure must not read the relationship back, got %d reads after the POST", principalReads)
+					}
+					return nil
+				},
 			},
 		},
 	})
@@ -959,7 +997,7 @@ func TestUnitSecurityRoleAssignmentResource_Role_Selector_Exactly_One(t *testing
 // whose display name can change between steps. Any systemuser id is served, so replacement tests
 // can move the holder. The returned function switches the catalogue to the renamed form, and the
 // counter tracks every association add or removal.
-func securityRenameHarness(roleID, oldName, newName string) (renamed func(), associationChanges *int) {
+func securityRenameHarness(roleID, oldName, newName string) (renamed func(), associationChanges *int, hasRole func(principal, role string) bool) {
 	const (
 		environmentID = "00000000-0000-0000-0000-000000000001"
 		applicationID = "00000000-0000-0000-0000-000000000007"
@@ -1041,7 +1079,9 @@ func securityRenameHarness(roleID, oldName, newName string) (renamed func(), ass
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	return func() { currentName = newName }, &changes
+	return func() { currentName = newName }, &changes, func(principal, role string) bool {
+		return slices.Contains(assigned[principal], role)
+	}
 }
 
 // A renamed Dataverse role is followed in place: the association is neither removed nor re-added,
@@ -1051,7 +1091,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t 
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	renamed, changes := securityRenameHarness(roleID, "Old Role Name", "New Role Name")
+	renamed, changes, _ := securityRenameHarness(roleID, "Old Role Name", "New Role Name")
 
 	config := func(name string) string {
 		return `
@@ -1099,7 +1139,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_To_Different_Role_Fails(t *te
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _ = securityRenameHarness(roleID, "Old Role Name", "unused")
+	_, _, _ = securityRenameHarness(roleID, "Old Role Name", "unused")
 
 	config := func(name string) string {
 		return `
@@ -1131,7 +1171,7 @@ func TestUnitSecurityRoleAssignmentResource_Holder_Replacement_Requires_Explicit
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	config := func(principal string) string {
 		return `
@@ -1184,7 +1224,7 @@ func TestUnitSecurityRoleAssignmentResource_Environment_Move_By_Name_Fails(t *te
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
 
 	config := func(env string) string {
 		return `
@@ -1214,7 +1254,7 @@ func TestUnitSecurityRoleAssignmentResource_Business_Unit_Move_By_Name_Fails(t *
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, _ = securityRenameHarness(roleID, "Shared Role", "unused")
+	_, _, _ = securityRenameHarness(roleID, "Shared Role", "unused")
 
 	base := `
 	resource "powerplatform_security_role_assignment" "test" {
@@ -1242,7 +1282,7 @@ func TestUnitSecurityRoleAssignmentResource_Rename_With_Replacement_Fails(t *tes
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	renamed, _ := securityRenameHarness(roleID, "Shared Role", "Renamed Role")
+	renamed, _, _ := securityRenameHarness(roleID, "Shared Role", "Renamed Role")
 
 	config := func(principal, name string) string {
 		return `
@@ -1279,7 +1319,7 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Name_Replacement_Refused(t *
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -1330,7 +1370,7 @@ func TestUnitSecurityRoleAssignmentResource_Unknown_Business_Unit_Move_Refused(t
 	defer httpmock.DeactivateAndReset()
 
 	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
-	_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+	_, changes, _ := securityRenameHarness(roleID, "Shared Role", "unused")
 
 	base := `
 	resource "powerplatform_security_role_assignment" "test" {
@@ -1481,7 +1521,7 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 		t.Run(tc.name, func(t *testing.T) {
 			httpmock.Activate()
 			defer httpmock.DeactivateAndReset()
-			_, changes := securityRenameHarness(roleID, "Shared Role", "unused")
+			_, changes, hasRole := securityRenameHarness(roleID, "Shared Role", "unused")
 
 			config := `
 			resource "powerplatform_security_role_assignment" "test" {
@@ -1503,10 +1543,25 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 						Taint:       []string{"powerplatform_security_role_assignment.test"},
 						ExpectError: regexp.MustCompile(`(?s)already assigned`),
 					},
+					{
+						// Before the suite's cleanup destroy runs, prove the refusal touched
+						// nothing: exactly one mutation so far, and the original association is
+						// still live. A count alone cannot tell the safe pair (create plus
+						// cleanup) from an unsafe one (create plus an illicit removal).
+						PreConfig: func() {
+							if *changes != 1 {
+								t.Errorf("only the original create may have touched associations before cleanup, got %d changes", *changes)
+							}
+							if !hasRole("00000000-0000-0000-0000-000000000008", roleID) {
+								t.Error("the original association must still exist before cleanup")
+							}
+						},
+						Config:  config,
+						Destroy: true,
+					},
 				},
 			})
-			// The refusal must not have dissociated anything: the only association changes across
-			// the whole test are the original create and the suite's final cleanup dissociation.
+			// After the explicit destroy: exactly the create and the cleanup dissociation.
 			if *changes != 2 {
 				t.Errorf("expected exactly the create and the final cleanup, got %d association changes", *changes)
 			}
