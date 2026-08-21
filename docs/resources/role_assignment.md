@@ -105,7 +105,7 @@ variable "environment_group_id" {
 - `environment_group_id` (String) The unique identifier of the environment group to scope the assignment to. Required when `scope_type` is `environment_group`, and not valid otherwise
 - `environment_id` (String) The unique identifier of the environment to scope the assignment to. Required when `scope_type` is `environment`, and not valid otherwise
 - `role_definition_id` (String) The ID of the role definition to assign. Exactly one of `role_definition_id` or `role_definition_name` must be set; the id is computed when the name is used
-- `role_definition_name` (String) The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used
+- `role_definition_name` (String) The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

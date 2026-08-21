@@ -20,17 +20,17 @@ type roleAssignmentResource struct {
 // Resource models
 
 type roleAssignmentResourceModel struct {
-	Timeouts           timeouts.Value   `tfsdk:"timeouts"`
-	Id                 types.String     `tfsdk:"id"`
-	ScopeType          types.String     `tfsdk:"scope_type"`
-	EnvironmentId      customtypes.UUID `tfsdk:"environment_id"`
-	EnvironmentGroupId customtypes.UUID `tfsdk:"environment_group_id"`
-	PrincipalId        customtypes.UUID `tfsdk:"principal_id"`
-	PrincipalType      types.String     `tfsdk:"principal_type"`
-	RoleDefinitionId   customtypes.UUID `tfsdk:"role_definition_id"`
-	RoleDefinitionName types.String     `tfsdk:"role_definition_name"`
-	Scope              types.String     `tfsdk:"scope"`
-	CreatedOn          types.String     `tfsdk:"created_on"`
+	Timeouts           timeouts.Value                    `tfsdk:"timeouts"`
+	Id                 types.String                      `tfsdk:"id"`
+	ScopeType          types.String                      `tfsdk:"scope_type"`
+	EnvironmentId      customtypes.UUID                  `tfsdk:"environment_id"`
+	EnvironmentGroupId customtypes.UUID                  `tfsdk:"environment_group_id"`
+	PrincipalId        customtypes.UUID                  `tfsdk:"principal_id"`
+	PrincipalType      types.String                      `tfsdk:"principal_type"`
+	RoleDefinitionId   customtypes.UUID                  `tfsdk:"role_definition_id"`
+	RoleDefinitionName customtypes.CaseInsensitiveString `tfsdk:"role_definition_name"`
+	Scope              types.String                      `tfsdk:"scope"`
+	CreatedOn          types.String                      `tfsdk:"created_on"`
 }
 
 // assignmentScope is where the assignment applies. The kind comes from the `scope_type` attribute rather

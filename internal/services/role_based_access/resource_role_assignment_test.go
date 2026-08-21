@@ -1363,7 +1363,6 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
 
 	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
 		func(_ *http.Request) (*http.Response, error) {
@@ -1372,8 +1371,20 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 				{"roleDefinitionId":"99999999-9999-9999-9999-999999999999","roleDefinitionName":"Some Other Role"}
 			]}`), nil
 		})
+	// The list must be empty before the POST and populated afterwards, so the create actually
+	// creates: a pre-populated list would be adopted and the POST assertions would never run.
+	created := false
+	postAttempts := 0
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			if created {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
 	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
 		func(req *http.Request) (*http.Response, error) {
+			postAttempts++
 			var body struct {
 				RoleDefinitionId string `json:"roleDefinitionId"`
 			}
@@ -1383,7 +1394,12 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 			if body.RoleDefinitionId != testRoleDefinitionId {
 				return httpmock.NewStringResponse(http.StatusBadRequest, `the POST must carry the resolved id, got `+body.RoleDefinitionId), nil
 			}
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -1403,6 +1419,12 @@ func TestUnitRoleAssignmentResource_Validate_Create_By_Role_Definition_Name(t *t
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
 					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "environment admin TEST"),
+					func(_ *terraform.State) error {
+						if postAttempts != 1 {
+							return fmt.Errorf("the name-selected create must send exactly one POST with the resolved id, got %d", postAttempts)
+						}
+						return nil
+					},
 				),
 			},
 		},
@@ -1551,4 +1573,301 @@ func TestUnitRoleAssignmentResource_Validate_Role_Selector_Exactly_One(t *testin
 			})
 		})
 	}
+}
+
+// registerNamedDefinitions serves a catalogue mapping the test role id to the given name.
+func registerNamedDefinitions(name string) {
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"`+name+`"}
+			]}`), nil
+		})
+}
+
+// A case-only edit of the name is semantically the same value, so nothing is planned. Without
+// that, the replacement would adopt the existing assignment and the deposed instance would then
+// destroy it under create_before_destroy.
+func TestUnitRoleAssignmentResource_Validate_Name_Case_Edit_Plans_No_Change(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+	registerNamedDefinitions("Environment Admin Test")
+
+	config := func(name string) string {
+		return `
+		resource "powerplatform_role_assignment" "test" {
+			scope_type           = "environment"
+			environment_id       = "` + testEnvironmentId + `"
+			principal_id         = "` + testPrincipalId + `"
+			principal_type       = "ApplicationUser"
+			role_definition_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("Environment Admin Test")},
+			{
+				Config:   config("environment ADMIN test"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// An import fills the catalogue's canonical casing; a config with different casing must still
+// plan no change.
+func TestUnitRoleAssignmentResource_Validate_Import_Case_Different_Name_Plans_No_Change(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+	registerNamedDefinitions("Environment Admin Test")
+
+	config := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type           = "environment"
+		environment_id       = "` + testEnvironmentId + `"
+		principal_id         = "` + testPrincipalId + `"
+		principal_type       = "ApplicationUser"
+		role_definition_name = "ENVIRONMENT admin test"
+	}`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:             config,
+				ResourceName:       "powerplatform_role_assignment.test",
+				ImportState:        true,
+				ImportStateId:      "environments/" + testEnvironmentId + "/" + environmentAssignmentId,
+				ImportStatePersist: true,
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("expected one imported instance, got %d", len(states))
+					}
+					if states[0].Attributes["role_definition_name"] != "Environment Admin Test" {
+						return fmt.Errorf("import must fill the catalogue casing, got %q", states[0].Attributes["role_definition_name"])
+					}
+					return nil
+				},
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// Swapping the selector between the name and the id of the same role changes nothing remotely,
+// so nothing is planned in either direction.
+func TestUnitRoleAssignmentResource_Validate_Selector_Swap_Plans_No_Change(t *testing.T) {
+	byName := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type           = "environment"
+		environment_id       = "` + testEnvironmentId + `"
+		principal_id         = "` + testPrincipalId + `"
+		principal_type       = "ApplicationUser"
+		role_definition_name = "Environment Admin Test"
+	}`
+	byId := `
+	resource "powerplatform_role_assignment" "test" {
+		scope_type         = "environment"
+		environment_id     = "` + testEnvironmentId + `"
+		principal_id       = "` + testPrincipalId + `"
+		principal_type     = "ApplicationUser"
+		role_definition_id = "` + testRoleDefinitionId + `"
+	}`
+	cases := []struct {
+		name          string
+		first, second string
+	}{
+		{"name_to_id", byName, byId},
+		{"id_to_name", byId, byName},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			mocks.ActivateEnvironmentHttpMocks()
+			registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+			registerNamedDefinitions("Environment Admin Test")
+
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{Config: tc.first},
+					{Config: tc.second, PlanOnly: true},
+				},
+			})
+		})
+	}
+}
+
+// A rename of the same role updates the name in place: no assignment is created or destroyed, so
+// there is no adopt-then-destroy window for create_before_destroy to fall into.
+func TestUnitRoleAssignmentResource_Validate_Rename_Same_Role_Updates_In_Place(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	posts := 0
+	deletes := 0
+	definitionsCalls := 0
+	created := false
+	// The list is empty until the POST so the create genuinely creates instead of adopting.
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			if created {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			posts++
+			created = true
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Validate_Create_Environment/post_role_assignment.json").String()), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			deletes++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			definitionsCalls++
+			name := "Old Role Name"
+			if definitionsCalls > 1 {
+				// The catalogue entry was renamed after the create.
+				name = "New Role Name"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"`+name+`"}
+			]}`), nil
+		})
+
+	config := func(name string) string {
+		return `
+		resource "powerplatform_role_assignment" "test" {
+			scope_type           = "environment"
+			environment_id       = "` + testEnvironmentId + `"
+			principal_id         = "` + testPrincipalId + `"
+			principal_type       = "ApplicationUser"
+			role_definition_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("Old Role Name")},
+			{
+				Config: config("New Role Name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_name", "New Role Name"),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_definition_id", testRoleDefinitionId),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					func(_ *terraform.State) error {
+						if posts != 1 || deletes != 0 {
+							return fmt.Errorf("a same-role rename must not touch the assignment, got %d posts and %d deletes", posts, deletes)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A name edit that resolves to a different role is refused, because following it would either
+// replace the grant or silently retarget it; moving the assignment is what role_definition_id
+// is for.
+func TestUnitRoleAssignmentResource_Validate_Rename_To_Different_Role_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[
+				{"roleDefinitionId":"`+testRoleDefinitionId+`","roleDefinitionName":"Environment Admin Test"},
+				{"roleDefinitionId":"99999999-9999-9999-9999-999999999999","roleDefinitionName":"Some Other Role"}
+			]}`), nil
+		})
+
+	config := func(name string) string {
+		return `
+		resource "powerplatform_role_assignment" "test" {
+			scope_type           = "environment"
+			environment_id       = "` + testEnvironmentId + `"
+			principal_id         = "` + testPrincipalId + `"
+			principal_type       = "ApplicationUser"
+			role_definition_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("Environment Admin Test")},
+			{
+				Config:      config("Some Other Role"),
+				ExpectError: regexp.MustCompile(`(?s)resolves to a different\s+role`),
+			},
+		},
+	})
+}
+
+// The courtesy id-to-name lookup must never block an id-selected create: with the catalogue
+// persistently failing, exactly one lookup attempt is made and the assignment POST still runs.
+func TestUnitRoleAssignmentResource_Validate_Courtesy_Name_Lookup_Failure_Does_Not_Block_Create(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerScopeMocks(environmentCollection, "tests/resource/Validate_Create_Environment", environmentAssignmentId)
+
+	definitionsCalls := 0
+	httpmock.RegisterResponder("GET", roleDefinitionsUrl,
+		func(_ *http.Request) (*http.Response, error) {
+			definitionsCalls++
+			return httpmock.NewStringResponse(http.StatusServiceUnavailable, `{"error":"unavailable"}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentAssignmentId),
+					resource.TestCheckNoResourceAttr("powerplatform_role_assignment.test", "role_definition_name"),
+					func(_ *terraform.State) error {
+						if definitionsCalls != 1 {
+							return fmt.Errorf("the courtesy lookup must send exactly one request, got %d", definitionsCalls)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
 }

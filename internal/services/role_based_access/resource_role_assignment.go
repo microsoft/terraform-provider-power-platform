@@ -149,11 +149,12 @@ func (r *roleAssignmentResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"role_definition_name": schema.StringAttribute{
-				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used",
+				MarkdownDescription: "The name of the role definition to assign, matched case-insensitively and resolved to its id at create time. The assignment is anchored on the id from then on, so a name edit updates in place: if the new name resolves to the same role nothing changes remotely, and if it resolves to a different role the update fails rather than silently replacing the grant, since replacing by name could destroy an adopted assignment. Change `role_definition_id` to move the assignment. Exactly one of `role_definition_id` or `role_definition_name` must be set; the name is filled in from the catalogue when the id is used",
 				Optional:            true,
 				Computed:            true,
+				CustomType:          customtypes.CaseInsensitiveStringType{},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					caseInsensitiveUnchanged{},
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -232,7 +233,7 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 		}
 		plan.RoleDefinitionId = customtypes.NewUUIDValue(definition.RoleDefinitionId)
 	} else if !helpers.IsKnown(plan.RoleDefinitionName) {
-		plan.RoleDefinitionName = nullableStringValue(r.Client.RoleDefinitionNameById(ctx, plan.RoleDefinitionId.ValueString()))
+		plan.RoleDefinitionName = nullableNameValue(r.Client.RoleDefinitionNameById(ctx, plan.RoleDefinitionId.ValueString()))
 	}
 
 	assignment, err := r.Client.CreateRoleAssignment(ctx, scope, roleAssignmentRequestDto{
@@ -252,13 +253,35 @@ func (r *roleAssignmentResource) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// nullableStringValue returns a null string when the value is empty, since an Optional and
-// Computed attribute must end an apply known, and "absent" is more honest than "".
-func nullableStringValue(value string) types.String {
-	if value == "" {
-		return types.StringNull()
+// caseInsensitiveUnchanged keeps the state value when the planned value only differs from it by
+// case. Semantic equality alone does not stop the framework planning an in-place change for a
+// configured case-only edit, and any planned change on the name would run the update needlessly.
+type caseInsensitiveUnchanged struct{}
+
+func (m caseInsensitiveUnchanged) Description(context.Context) string {
+	return "Treats a case-only change as no change."
+}
+
+func (m caseInsensitiveUnchanged) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m caseInsensitiveUnchanged) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() || req.StateValue.IsUnknown() || req.PlanValue.IsNull() || req.PlanValue.IsUnknown() {
+		return
 	}
-	return types.StringValue(value)
+	if strings.EqualFold(req.PlanValue.ValueString(), req.StateValue.ValueString()) {
+		resp.PlanValue = req.StateValue
+	}
+}
+
+// nullableNameValue returns a null name when the value is empty, since an Optional and
+// Computed attribute must end an apply known, and "absent" is more honest than "".
+func nullableNameValue(value string) customtypes.CaseInsensitiveString {
+	if value == "" {
+		return customtypes.NewCaseInsensitiveStringNull()
+	}
+	return customtypes.NewCaseInsensitiveStringValue(value)
 }
 
 func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -300,14 +323,50 @@ func (r *roleAssignmentResource) Read(ctx context.Context, req resource.ReadRequ
 	// entry cannot churn state; the id anchors the assignment either way. The name is only filled
 	// in when absent, which is the import path and the id-configured path.
 	if !helpers.IsKnown(state.RoleDefinitionName) {
-		state.RoleDefinitionName = nullableStringValue(r.Client.RoleDefinitionNameById(ctx, found.RoleDefinitionId))
+		state.RoleDefinitionName = nullableNameValue(r.Client.RoleDefinitionNameById(ctx, found.RoleDefinitionId))
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// Update handles the one in-place change: an edited role_definition_name. Names must not force
+// replacement, because a replacement create adopts the existing assignment and the deposed
+// instance then destroys it, silently revoking the grant under create_before_destroy. Instead the
+// new name is resolved: the same role id is a pure state update, and a different role id fails
+// with instructions, since moving the grant is what role_definition_id is for.
 func (r *roleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Every attribute requires replace, so there is no in-place update.
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	var plan, state roleAssignmentResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	nameChanged := helpers.IsKnown(plan.RoleDefinitionName) &&
+		!strings.EqualFold(plan.RoleDefinitionName.ValueString(), state.RoleDefinitionName.ValueString())
+	if nameChanged {
+		definition, err := r.Client.ResolveRoleDefinitionByName(ctx, plan.RoleDefinitionName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Failed to resolve the role definition named %q", plan.RoleDefinitionName.ValueString()), err.Error())
+			return
+		}
+		if !strings.EqualFold(definition.RoleDefinitionId, state.RoleDefinitionId.ValueString()) {
+			resp.Diagnostics.AddError(
+				"The new role definition name resolves to a different role",
+				fmt.Sprintf("%q resolves to role definition %s, but this assignment holds %s. A name edit only follows a rename of the same role. To assign a different role, set role_definition_id, which replaces the assignment.", plan.RoleDefinitionName.ValueString(), definition.RoleDefinitionId, state.RoleDefinitionId.ValueString()),
+			)
+			return
+		}
+	}
+
+	plan.Id = state.Id
+	plan.RoleDefinitionId = state.RoleDefinitionId
+	plan.Scope = state.Scope
+	plan.CreatedOn = state.CreatedOn
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *roleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

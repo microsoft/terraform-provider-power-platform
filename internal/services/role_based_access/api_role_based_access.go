@@ -252,16 +252,19 @@ func (client *client) ResolveRoleDefinitionByName(ctx context.Context, name stri
 
 // RoleDefinitionNameById returns the display name for a role definition id, or "" when the
 // catalogue cannot be listed or does not hold the id. The name is cosmetic alongside the id
-// identity, so this lookup never fails a lifecycle operation.
+// identity, so this lookup must never block a lifecycle operation: it sends exactly one request,
+// because a retried request against a persistently failing catalogue would consume the operation's
+// whole context and starve the call that actually matters.
 func (client *client) RoleDefinitionNameById(ctx context.Context, roleDefinitionId string) string {
-	definitions, err := client.ListRoleDefinitions(ctx)
+	response := roleDefinitionsListDto{}
+	_, err := client.Api.ExecuteWithoutRetry(ctx, nil, "GET", client.url("/authorization/roleDefinitions"), nil, nil, []int{http.StatusOK}, &response)
 	if err != nil {
 		tflog.Debug(ctx, fmt.Sprintf("Could not list role definitions to name %s: %s", roleDefinitionId, err))
 		return ""
 	}
-	for i := range definitions {
-		if strings.EqualFold(definitions[i].RoleDefinitionId, roleDefinitionId) {
-			return definitions[i].RoleDefinitionName
+	for i := range response.Value {
+		if strings.EqualFold(response.Value[i].RoleDefinitionId, roleDefinitionId) {
+			return response.Value[i].RoleDefinitionName
 		}
 	}
 	return ""

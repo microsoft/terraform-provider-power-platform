@@ -77,6 +77,13 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
 		func(req *http.Request) (*http.Response, error) {
+			// A roles(<id>) path is the single-row fetch of the id selector and must return one
+			// object, not the list envelope.
+			for roleID, name := range roleNamesByID {
+				if strings.Contains(req.URL.Path, "roles("+roleID+")") || strings.Contains(req.URL.RawPath, "roles%28"+roleID+"%29") {
+					return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}`, roleID, name, rootBusinessID)), nil
+				}
+			}
 			body := fmt.Sprintf(`{"value":[{"roleid":"%s","name":"%s","_businessunitid_value":"%s"},{"roleid":"%s","name":"%s","_businessunitid_value":"%s"}]}`,
 				roleAdminID, roleNamesByID[roleAdminID], rootBusinessID,
 				roleUserID, roleNamesByID[roleUserID], rootBusinessID,
@@ -134,6 +141,9 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 				),
 			},
 			{
+				// A name edit resolving to a different role is refused: moving the grant is what
+				// security_role_id is for, since a name-driven replacement could adopt and then
+				// destroy the old assignment under create_before_destroy.
 				Config: `
 				resource "powerplatform_security_role_assignment" "test" {
 					environment_id     = "` + environmentID + `"
@@ -141,11 +151,24 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_CreateRepl
 					security_role_name = "MetaForm User"
 				}
 				`,
+				ExpectError: regexp.MustCompile(`(?s)resolves to a different\s+role`),
+			},
+			{
+				// Moving the grant by id replaces the assignment: the old association is removed
+				// and the new one added.
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id   = "` + environmentID + `"
+					system_user_id     = "` + principalID + `"
+					security_role_id = "` + roleUserID + `"
+				}
+				`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "id", environmentID+"/systemusers/"+principalID+"/"+roleUserID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "system_user_id", principalID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", rootBusinessID),
 					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleUserID),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "MetaForm User"),
 				),
 			},
 		},
@@ -282,8 +305,8 @@ func TestUnitEnvironmentApplicationUserSecurityRoleAssignmentResource_ImportRole
 				),
 			},
 			{
-				// The import ID contains "/" inside the security role name; SplitN must keep
-				// the role name's trailing segments intact.
+				// The import ID ends in the immutable role id, never the role name, so a rename
+				// or a name containing "/" cannot corrupt an import.
 				ResourceName:      "powerplatform_security_role_assignment.test",
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -918,4 +941,133 @@ func TestUnitSecurityRoleAssignmentResource_Role_Selector_Exactly_One(t *testing
 			})
 		})
 	}
+}
+
+// securityRenameHarness wires the mocks for a user with one assignable role whose display name
+// can change between steps. The returned function switches the catalogue to the renamed form.
+func securityRenameHarness(roleID, oldName, newName string) (renamed func(), associationChanges *int) {
+	const (
+		environmentID = "00000000-0000-0000-0000-000000000001"
+		applicationID = "00000000-0000-0000-0000-000000000007"
+		principalID   = "00000000-0000-0000-0000-000000000008"
+		rootBusiness  = "00000000-0000-0000-0000-000000000003"
+	)
+	currentName := oldName
+	assigned := false
+	changes := 0
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			roles := "[]"
+			if assigned {
+				roles = `[{"roleid":"` + roleID + `","name":"` + currentName + `","_businessunitid_value":"` + rootBusiness + `"}]`
+			}
+			body := `{"systemuserid":"` + principalID + `","applicationid":"` + applicationID + `","fullname":"Example Application User","_businessunitid_value":"` + rootBusiness + `","isdisabled":false,"systemuserroles_association":` + roles + `}`
+			if strings.Contains(req.URL.Path, "/systemusers("+principalID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+principalID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+body+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(_ *http.Request) (*http.Response, error) {
+			body := `{"value":[
+				{"roleid":"` + roleID + `","name":"` + currentName + `","_businessunitid_value":"` + rootBusiness + `"},
+				{"roleid":"99999999-0000-0000-0000-000000000009","name":"A Different Role","_businessunitid_value":"` + rootBusiness + `"}
+			]}`
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
+		func(_ *http.Request) (*http.Response, error) {
+			assigned = true
+			changes++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))/systemuserroles_association/\$ref.*`,
+		func(_ *http.Request) (*http.Response, error) {
+			assigned = false
+			changes++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	return func() { currentName = newName }, &changes
+}
+
+// A renamed Dataverse role is followed in place: the association is neither removed nor re-added,
+// so create_before_destroy has no adopt-then-destroy window to fall into.
+func TestUnitSecurityRoleAssignmentResource_Rename_Same_Role_Updates_In_Place(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	renamed, changes := securityRenameHarness(roleID, "Old Role Name", "New Role Name")
+
+	config := func(name string) string {
+		return `
+		resource "powerplatform_security_role_assignment" "test" {
+			environment_id     = "00000000-0000-0000-0000-000000000001"
+			system_user_id     = "00000000-0000-0000-0000-000000000008"
+			security_role_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config("Old Role Name"),
+				Check: func(_ *terraform.State) error {
+					renamed()
+					return nil
+				},
+			},
+			{
+				Config: config("New Role Name"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "New Role Name"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleID),
+					func(_ *terraform.State) error {
+						if *changes != 1 {
+							return fmt.Errorf("a same-role rename must not touch the association; expected only the create, got %d changes", *changes)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A name edit that resolves to a different role is refused instead of replacing the grant.
+func TestUnitSecurityRoleAssignmentResource_Rename_To_Different_Role_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const roleID = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	_, _ = securityRenameHarness(roleID, "Old Role Name", "unused")
+
+	config := func(name string) string {
+		return `
+		resource "powerplatform_security_role_assignment" "test" {
+			environment_id     = "00000000-0000-0000-0000-000000000001"
+			system_user_id     = "00000000-0000-0000-0000-000000000008"
+			security_role_name = "` + name + `"
+		}`
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("Old Role Name")},
+			{
+				Config:      config("A Different Role"),
+				ExpectError: regexp.MustCompile(`(?s)resolves to a different\s+role`),
+			},
+		},
+	})
 }

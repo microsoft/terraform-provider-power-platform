@@ -3,12 +3,12 @@
 page_title: "powerplatform_security_role_assignment Resource - Power Platform"
 subcategory: ""
 description: |-
-  Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.
+  Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of security_role_name, resolved within the target business unit at create time, or security_role_id, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what security_role_id is for. If the association already exists it is adopted, and destroying the resource removes the association.
 ---
 
 # powerplatform_security_role_assignment (Resource)
 
-Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.
+Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists it is adopted, and destroying the resource removes the association.
 
 ## Example Usage
 
@@ -85,7 +85,7 @@ variable "team_id" {
 
 - `business_unit_id` (String) Business unit the role belongs to. With `security_role_name` it scopes the name resolution and defaults to the principal's current business unit; with `security_role_id` it is computed from the role row, and a configured value must agree with it.
 - `security_role_id` (String) Dataverse role ID of the security role to assign, computed when `security_role_name` is used. This id, not the role name, anchors the assignment from then on, so renaming the role does not affect it, and it is the way to pin one of several same-named roles in different business units.
-- `security_role_name` (String) Dataverse security role name to assign, resolved to its id within the target business unit at create time. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.
+- `security_role_name` (String) Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.
 - `system_user_id` (String) Dataverse `systemuserid` of the user or application user the security role is assigned to. This is a Dataverse row id, not a Microsoft Entra object id, and `powerplatform_application_user` exposes it as `system_user_id`. Exactly one of `system_user_id` or `team_id` must be set.
 - `team_id` (String) Dataverse `teamid` of the team the security role is assigned to. Dataverse keeps teams in their own table with their own role association, so this is a different id from `system_user_id`. Only owner teams and Microsoft Entra group teams can hold security roles; an access team is refused. Exactly one of `system_user_id` or `team_id` must be set.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))

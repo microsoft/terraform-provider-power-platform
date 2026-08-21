@@ -87,7 +87,7 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role name is resolved to its id within the target business unit at create time; from then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it. If the association already exists it is adopted, and destroying the resource removes the association.",
+		MarkdownDescription: "Assigns a single Dataverse security role to a principal: a user, an application user, or a team. The role is selected by exactly one of `security_role_name`, resolved within the target business unit at create time, or `security_role_id`, which pins one of several same-named roles. From then on the assignment is anchored on the immutable role id, so renaming the role does not orphan it: a name edit updates in place when it resolves to the same role, and fails when it resolves to a different one, since moving the grant is what `security_role_id` is for. If the association already exists it is adopted, and destroying the resource removes the association.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -143,12 +143,9 @@ func (r *SecurityRoleAssignmentResource) Schema(ctx context.Context, req resourc
 				CustomType: customtypes.UUIDType{},
 			},
 			"security_role_name": schema.StringAttribute{
-				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
+				MarkdownDescription: "Dataverse security role name to assign, resolved to its id within the target business unit at create time. A name edit updates in place: the same role is a pure rename follow, and a different role fails rather than replacing the grant. Exactly one of `security_role_name` or `security_role_id` must be set; the name is filled in from the live role when the id is used. Role names are not unique across business units, so an ambiguous name is refused: use `security_role_id` to pin one.",
 				Optional:            true,
 				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
 					stringvalidator.ExactlyOneOf(path.MatchRoot("security_role_name"), path.MatchRoot("security_role_id")),
 					stringvalidator.LengthAtLeast(1),
@@ -279,9 +276,9 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 	}
 
 	state.BusinessUnitId = customtypes.NewUUIDValue(assigned.BusinessUnitId)
-	// The name is a create-time selector, so an existing value is left alone even if the role has
-	// been renamed since; the id keeps the assignment attached regardless. It is only filled in
-	// when absent, which is the import path.
+	// An existing name is left alone even if the role has been renamed since: the id keeps the
+	// assignment attached, and a configured name is only re-resolved when the practitioner edits
+	// it, in Update. The name is filled in when absent, which is the import path.
 	if !helpers.IsKnown(state.SecurityRoleName) {
 		state.SecurityRoleName = types.StringValue(assigned.Name)
 	}
@@ -289,8 +286,47 @@ func (r *SecurityRoleAssignmentResource) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// Update handles the one in-place change: an edited security_role_name. Names must not force
+// replacement, because a replacement create adopts the existing association and the deposed
+// instance then removes it, silently revoking the grant under create_before_destroy, and Dataverse
+// roles are genuinely renamable. The new name is resolved within the assignment's business unit:
+// the same role id is a pure state update, and a different role id fails with instructions.
 func (r *SecurityRoleAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Every attribute requires replacement, so there is no in-place update.
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	var plan, state SecurityRoleAssignmentResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	nameChanged := helpers.IsKnown(plan.SecurityRoleName) &&
+		plan.SecurityRoleName.ValueString() != state.SecurityRoleName.ValueString()
+	if nameChanged {
+		resolvedRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString(), []string{plan.SecurityRoleName.ValueString()})
+		if err != nil || len(resolvedRoles) != 1 {
+			detail := fmt.Sprintf("expected exactly one resolved security role for '%s', got %d", plan.SecurityRoleName.ValueString(), len(resolvedRoles))
+			if err != nil {
+				detail = err.Error()
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Failed to resolve security role '%s'", plan.SecurityRoleName.ValueString()), detail)
+			return
+		}
+		if !strings.EqualFold(resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()) {
+			resp.Diagnostics.AddError(
+				"The new security role name resolves to a different role",
+				fmt.Sprintf("'%s' resolves to role %s, but this assignment holds %s. A name edit only follows a rename of the same role. To assign a different role, set security_role_id, which replaces the assignment.", plan.SecurityRoleName.ValueString(), resolvedRoles[0].RoleId, state.SecurityRoleId.ValueString()),
+			)
+			return
+		}
+	}
+
+	plan.Id = state.Id
+	plan.SecurityRoleId = state.SecurityRoleId
+	plan.BusinessUnitId = state.BusinessUnitId
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *SecurityRoleAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
