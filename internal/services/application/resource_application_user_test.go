@@ -50,7 +50,7 @@ func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 
 				resource "powerplatform_application_user" "application_user" {
 					environment_id = powerplatform_environment.env.id
-					application_id = azuread_application_registration.example_app.client_id
+					application_id = azuread_service_principal.example_sp.client_id
 				}
 
 				resource "powerplatform_role_assignment" "example" {

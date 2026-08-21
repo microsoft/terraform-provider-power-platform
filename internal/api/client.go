@@ -221,9 +221,16 @@ func (client *Client) HandleNotFoundResponse(resp *Response) error {
 
 func (client *Client) HandleForbiddenResponse(resp *Response) error {
 	if resp.HttpResponse.StatusCode == http.StatusForbidden {
-		return fmt.Errorf("access denied to resource at '%s'. Please validate your permissions", resp.HttpResponse.Request.URL)
+		return customerrors.NewAccessDeniedError(requestUrl(resp), resp.BodyAsBytes)
 	}
 	return nil
+}
+
+func requestUrl(resp *Response) string {
+	if resp.HttpResponse.Request == nil || resp.HttpResponse.Request.URL == nil {
+		return ""
+	}
+	return resp.HttpResponse.Request.URL.String()
 }
 
 func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {
