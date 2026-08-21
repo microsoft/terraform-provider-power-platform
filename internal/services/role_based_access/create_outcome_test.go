@@ -34,6 +34,12 @@ func TestUnitIsAmbiguousCreateFailure_Classifies_Every_Status(t *testing.T) {
 	}
 
 	ambiguous := []int{
+		// An unexpected success or redirect is the opposite of a proven rejection.
+		http.StatusOK,
+		http.StatusAccepted,
+		http.StatusNoContent,
+		http.StatusMultipleChoices,
+		http.StatusFound,
 		http.StatusRequestTimeout,
 		http.StatusTooManyRequests,
 		http.StatusInternalServerError,

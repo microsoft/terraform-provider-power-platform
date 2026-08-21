@@ -256,10 +256,11 @@ func (r *SecurityRoleAssignmentResource) ModifyPlan(ctx context.Context, req res
 // isAmbiguousAssociateFailure reports whether the association POST might have committed despite
 // the error. Only an error the client marked as originating from the POST itself can be
 // ambiguous: anything earlier, like resolving the environment host, proves the association was
-// never attempted. Of the marked errors, a definitive refusal or an HTTP 4xx other than timeout
-// or throttle proves the server refused it; a failure on or after the wire without a status,
-// which the api client marks with RequestSentError, or a timeout, throttle or server error
-// leaves the outcome unknown.
+// never attempted. Of the marked errors, only a rejecting 4xx proves the server refused it, with
+// timeout and throttle excepted since those hide the outcome; every other unexpected status,
+// including an unexpected success like 202 Accepted or a redirect, and a failure on or after the
+// wire without a status, which the api client marks with RequestSentError, leaves the outcome
+// unknown.
 func isAmbiguousAssociateFailure(err error) bool {
 	var postErr associationPostError
 	if !errors.As(err, &postErr) {
@@ -267,12 +268,19 @@ func isAmbiguousAssociateFailure(err error) bool {
 	}
 	var httpErr customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &httpErr) {
-		return httpErr.StatusCode == http.StatusRequestTimeout ||
-			httpErr.StatusCode == http.StatusTooManyRequests ||
-			httpErr.StatusCode >= http.StatusInternalServerError
+		return isOutcomeHidingStatus(httpErr.StatusCode)
 	}
 	var sent api.RequestSentError
 	return errors.As(err, &sent)
+}
+
+// isOutcomeHidingStatus reports whether an unexpected status fails to prove the mutation was
+// rejected: anything below 400, a timeout, a throttle, or a server error.
+func isOutcomeHidingStatus(status int) bool {
+	return status < http.StatusBadRequest ||
+		status == http.StatusRequestTimeout ||
+		status == http.StatusTooManyRequests ||
+		status >= http.StatusInternalServerError
 }
 
 // provablyEqualUUIDs reports that two uuid values are certainly the same: both null, or both known

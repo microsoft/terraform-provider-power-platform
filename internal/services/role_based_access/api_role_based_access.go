@@ -138,20 +138,29 @@ func unknownOutcomeError(err error) error {
 	return fmt.Errorf("the create outcome is unknown. The API may have committed the assignment, but it provides no idempotency key or correlation identifier that would let the provider identify it safely. Inspect the role assignments at this scope: if one was created, import it using the scope-shaped import id, and if duplicates exist, deduplicate them first. Terraform has not recorded an assignment in state. Original failure: %w", err)
 }
 
-// isAmbiguousCreateFailure reports whether the request might have committed despite the error. A
-// definitive HTTP rejection (400, 401, 403, 404, 409) means the server refused it, and an error
-// raised before the request was sent (scope, url, token or request construction) proves nothing
-// was committed; a failure on or after the wire without a status, which the api client marks with
-// RequestSentError, leaves the outcome unknown.
+// isAmbiguousCreateFailure reports whether the request might have committed despite the error.
+// Only a rejecting 4xx proves the server refused it, with timeout and throttle excepted since
+// those hide the outcome. Every other unexpected status leaves the outcome unknown too: an
+// unexpected success like 202 Accepted, or a redirect, is the opposite of a proven rejection.
+// An error raised before the request was sent (scope, url, token or request construction) proves
+// nothing was committed, and a failure on or after the wire without a status, which the api
+// client marks with RequestSentError, leaves the outcome unknown.
 func isAmbiguousCreateFailure(err error) bool {
 	var httpErr customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &httpErr) {
-		return httpErr.StatusCode == http.StatusRequestTimeout ||
-			httpErr.StatusCode == http.StatusTooManyRequests ||
-			httpErr.StatusCode >= http.StatusInternalServerError
+		return isOutcomeHidingStatus(httpErr.StatusCode)
 	}
 	var sent api.RequestSentError
 	return errors.As(err, &sent)
+}
+
+// isOutcomeHidingStatus reports whether an unexpected status fails to prove the mutation was
+// rejected: anything below 400, a timeout, a throttle, or a server error.
+func isOutcomeHidingStatus(status int) bool {
+	return status < http.StatusBadRequest ||
+		status == http.StatusRequestTimeout ||
+		status == http.StatusTooManyRequests ||
+		status >= http.StatusInternalServerError
 }
 
 // matchingAssignments returns the assignments with the request's principal, role and type.
