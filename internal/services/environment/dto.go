@@ -32,6 +32,10 @@ var (
 	CadenceTypes                         = []string{CadenceTypesFrequent, CadenceTypesModerate}
 	ReleaseCycleTypes                    = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
 	ReleaseCycleFirstReleaseOnlyRegex    = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
+
+	// EuDataBoundaryLocations are the environment locations that sit inside the EU Data Boundary,
+	// which covers the European Union and the EFTA states.
+	EuDataBoundaryLocations = []string{"europe", "france", "germany", "italy", "norway", "poland", "sweden", "switzerland"}
 )
 
 type EnvironmentDto struct {

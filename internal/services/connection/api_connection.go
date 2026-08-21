@@ -5,13 +5,16 @@ package connection
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
@@ -40,12 +43,31 @@ func (client *client) CreateConnection(ctx context.Context, environmentId, conne
 	apiUrl.RawQuery = values.Encode()
 
 	connection := connectionDto{}
-	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create connection: %w", err)
-	}
+	deadline := time.Now().Add(constants.CONNECTIVITY_ENVIRONMENT_POLL_TIMEOUT)
+	for {
+		_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
+		if err == nil {
+			return &connection, nil
+		}
+		if !isEnvironmentNotYetVisible(err) || time.Now().After(deadline) {
+			return nil, fmt.Errorf("failed to create connection: %w", err)
+		}
 
-	return &connection, nil
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' is not yet visible to the connectivity endpoint, retrying connection creation", environmentId))
+		if sleepErr := client.Api.SleepWithContext(ctx, constants.CONNECTIVITY_ENVIRONMENT_POLL_INTERVAL); sleepErr != nil {
+			return nil, sleepErr
+		}
+	}
+}
+
+// isEnvironmentNotYetVisible reports whether the connectivity endpoint has not caught up with a
+// recently provisioned environment, which it signals with a 404 ServiceToServiceEnvironmentNotFound.
+func isEnvironmentNotYetVisible(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if !errors.As(err, &httpErr) {
+		return false
+	}
+	return httpErr.StatusCode == http.StatusNotFound && strings.Contains(string(httpErr.Body), "ServiceToServiceEnvironmentNotFound")
 }
 
 func (client *client) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*connectionDto, error) {

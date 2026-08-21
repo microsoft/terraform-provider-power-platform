@@ -74,7 +74,7 @@ resource "powerplatform_environment_variable_value" "text" {
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "cra6e_SolutionVariableText"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "display_name", "SolutionVariableText"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "type", "String"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Microsoft Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Azure Key Vault"),
 					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_definition_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
 					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_value_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
 				),
