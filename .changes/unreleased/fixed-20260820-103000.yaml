@@ -1,0 +1,5 @@
+kind: fixed
+body: A cancelled or timed out retry loop no longer returns an empty 503. It returns the last real HTTP failure instead.
+time: 2026-08-20T10:30:00.000000+10:00
+custom:
+    Issue: "1244"
