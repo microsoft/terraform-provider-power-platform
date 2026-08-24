@@ -329,11 +329,12 @@ func acceptanceProviders() map[string]resource.ExternalProvider {
 
 // acceptancePreamble creates the service principal to assign to and resolves a role definition by
 // name. scopeConfig adds whatever the scope under test needs, and scopeAttribute is spliced into the
-// role assignment itself.
-func acceptancePreamble(scopeConfig, scopeAttribute string) string {
+// role assignment itself. name is passed in rather than read from mocks.TestName() here, since that
+// resolves its immediate caller and would name every app registration after this helper.
+func acceptancePreamble(name, scopeConfig, scopeAttribute string) string {
 	return `
 		resource "azuread_application_registration" "test_app" {
-			display_name = "` + mocks.TestName() + `"
+			display_name = "` + name + `"
 		}
 
 		resource "azuread_service_principal" "test_sp" {
@@ -381,7 +382,7 @@ func TestAccRoleAssignmentResource_Validate_Create_Tenant_Scope(t *testing.T) {
 		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: acceptancePreamble("", `scope_type = "tenant"`),
+				Config: acceptancePreamble(mocks.TestName(), "", `scope_type = "tenant"`),
 				Check: resource.ComposeAggregateTestCheckFunc(append(commonAcceptanceChecks(),
 					resource.TestMatchResourceAttr("powerplatform_rbac_role_assignment.test", "scope", regexp.MustCompile(`^/tenants/`)),
 					resource.TestCheckNoResourceAttr("powerplatform_rbac_role_assignment.test", "environment_id"),
@@ -398,7 +399,7 @@ func TestAccRoleAssignmentResource_Validate_Create_Environment_Scope(t *testing.
 		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: acceptancePreamble(`
+				Config: acceptancePreamble(mocks.TestName(), `
 		resource "powerplatform_environment" "test_environment" {
 			display_name     = "`+mocks.TestName()+`"
 			location         = "unitedstates"
@@ -419,7 +420,7 @@ func TestAccRoleAssignmentResource_Validate_Create_EnvironmentGroup_Scope(t *tes
 		ExternalProviders:        acceptanceProviders(),
 		Steps: []resource.TestStep{
 			{
-				Config: acceptancePreamble(`
+				Config: acceptancePreamble(mocks.TestName(), `
 		resource "powerplatform_environment_group" "test_env_group" {
 			display_name = "`+mocks.TestName()+`"
 			description  = "Environment group for role assignment acceptance test"

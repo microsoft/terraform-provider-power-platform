@@ -10,6 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
@@ -160,4 +162,198 @@ func TestUnitRoleAssignmentsDataSource_Validate_Read_Error(t *testing.T) {
 			})
 		})
 	}
+}
+
+// A tenant scoped read lists the assignment just made at the tenant. The tenant also holds grants
+// this test did not create, so only the shape of the list is asserted here; the scoped tests below
+// read a freshly created scope and can pin the exact assignment.
+func TestAccRoleAssignmentsDataSource_Validate_Read_Tenant_Scope(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "time_sleep" "wait_for_service_principal" {
+					create_duration = "60s"
+
+					depends_on = [azuread_service_principal.test_sp]
+				}
+
+				resource "powerplatform_rbac_role_assignment" "test" {
+					scope_type         = "tenant"
+					principal_id       = azuread_service_principal.test_sp.object_id
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + roleBasedAccessAdministratorRoleId + `"
+
+					depends_on = [time_sleep.wait_for_service_principal]
+				}
+
+				data "powerplatform_rbac_role_assignments" "test" {
+					scope_type = "tenant"
+
+					depends_on = [powerplatform_rbac_role_assignment.test]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "scope_type", "tenant"),
+					resource.TestCheckNoResourceAttr("data.powerplatform_rbac_role_assignments.test", "environment_id"),
+					resource.TestCheckNoResourceAttr("data.powerplatform_rbac_role_assignments.test", "environment_group_id"),
+					resource.TestMatchResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.scope", regexp.MustCompile(`^/tenants/`)),
+				),
+			},
+		},
+	})
+}
+
+// The environment is created by this test, so the read returns exactly the one assignment made
+// against it and every element can be pinned by index.
+func TestAccRoleAssignmentsDataSource_Validate_Read_Environment_Scope(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "time_sleep" "wait_for_service_principal" {
+					create_duration = "60s"
+
+					depends_on = [azuread_service_principal.test_sp]
+				}
+
+				resource "powerplatform_environment" "test_environment" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+				}
+
+				resource "powerplatform_rbac_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = powerplatform_environment.test_environment.id
+					principal_id       = azuread_service_principal.test_sp.object_id
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + roleBasedAccessAdministratorRoleId + `"
+
+					depends_on = [time_sleep.wait_for_service_principal]
+				}
+
+				data "powerplatform_rbac_role_assignments" "test" {
+					scope_type     = "environment"
+					environment_id = powerplatform_environment.test_environment.id
+
+					depends_on = [powerplatform_rbac_role_assignment.test]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "environment_id", "powerplatform_environment.test_environment", "id"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "1"),
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", "powerplatform_rbac_role_assignment.test", "id"),
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.principal_id", "azuread_service_principal.test_sp", "object_id"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.principal_type", "ApplicationUser"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.role_definition_id", roleBasedAccessAdministratorRoleId),
+					resource.TestMatchResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.scope", regexp.MustCompile(`/environments/`)),
+					resource.TestCheckResourceAttrSet("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.created_on"),
+				),
+			},
+		},
+	})
+}
+
+// The environment group is created by this test, so the read returns exactly the one assignment made
+// against it and every element can be pinned by index.
+func TestAccRoleAssignmentsDataSource_Validate_Read_EnvironmentGroup_Scope(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "time_sleep" "wait_for_service_principal" {
+					create_duration = "60s"
+
+					depends_on = [azuread_service_principal.test_sp]
+				}
+
+				resource "powerplatform_environment_group" "test_env_group" {
+					display_name = "` + mocks.TestName() + `"
+					description  = "Environment group for the role assignments data source acceptance test"
+				}
+
+				resource "powerplatform_rbac_role_assignment" "test" {
+					scope_type           = "environment_group"
+					environment_group_id = powerplatform_environment_group.test_env_group.id
+					principal_id         = azuread_service_principal.test_sp.object_id
+					principal_type       = "ApplicationUser"
+					role_definition_id   = "` + roleBasedAccessAdministratorRoleId + `"
+
+					depends_on = [time_sleep.wait_for_service_principal]
+				}
+
+				data "powerplatform_rbac_role_assignments" "test" {
+					scope_type           = "environment_group"
+					environment_group_id = powerplatform_environment_group.test_env_group.id
+
+					depends_on = [powerplatform_rbac_role_assignment.test]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.#", "1"),
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.id", "powerplatform_rbac_role_assignment.test", "id"),
+					resource.TestCheckResourceAttrPair("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.principal_id", "azuread_service_principal.test_sp", "object_id"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.principal_type", "ApplicationUser"),
+					resource.TestCheckResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.role_definition_id", roleBasedAccessAdministratorRoleId),
+					resource.TestMatchResourceAttr("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.scope", regexp.MustCompile(`(?i)/environmentgroups/`)),
+					resource.TestCheckResourceAttrSet("data.powerplatform_rbac_role_assignments.test", "role_assignments.0.created_on"),
+				),
+			},
+		},
+	})
 }
