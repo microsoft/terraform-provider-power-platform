@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
@@ -1601,4 +1603,180 @@ func TestUnitSecurityRoleAssignmentResource_CBD_Taint_Same_Tuple_Fails_Safely(t 
 			}
 		})
 	}
+}
+
+// The name selector resolves "Basic User", a role every Dataverse environment ships with, inside the
+// holder's business unit and pins the id it found. The import step proves the composite id
+// round-trips: everything Read rebuilds from it matches what Create wrote.
+func TestAccSecurityRoleAssignmentResource_Validate_Create_By_Name(t *testing.T) {
+	config := `
+	resource "azuread_application_registration" "test_app" {
+		display_name = "` + mocks.TestName() + `"
+	}
+
+	resource "azuread_service_principal" "test_sp" {
+		client_id = azuread_application_registration.test_app.client_id
+	}
+
+	resource "powerplatform_environment" "test_env" {
+		display_name     = "` + mocks.TestName() + `"
+		location         = "europe"
+		environment_type = "Sandbox"
+		dataverse = {
+			language_code     = "1033"
+			currency_code     = "USD"
+			security_group_id = "00000000-0000-0000-0000-000000000000"
+		}
+	}
+
+	resource "powerplatform_application_user" "test_user" {
+		environment_id = powerplatform_environment.test_env.id
+		application_id = azuread_service_principal.test_sp.client_id
+	}
+
+	resource "powerplatform_security_role_assignment" "test" {
+		environment_id     = powerplatform_environment.test_env.id
+		system_user_id     = powerplatform_application_user.test_user.system_user_id
+		security_role_name = "Basic User"
+	}`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "environment_id", "powerplatform_environment.test_env", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "system_user_id", "powerplatform_application_user.test_user", "system_user_id"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "Basic User"),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "id", regexp.MustCompile(`(?i)^[0-9a-f-]{36}/systemusers/[0-9a-f-]{36}/[0-9a-f-]{36}$`)),
+					resource.TestCheckNoResourceAttr("powerplatform_security_role_assignment.test", "team_id"),
+				),
+			},
+			{
+				Config:            config,
+				ResourceName:      "powerplatform_security_role_assignment.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// The id selector pins the role directly, so the name and business unit are filled in from the role
+// row rather than resolved from a name.
+func TestAccSecurityRoleAssignmentResource_Validate_Create_By_Role_Id(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "powerplatform_environment" "test_env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "powerplatform_application_user" "test_user" {
+					environment_id = powerplatform_environment.test_env.id
+					application_id = azuread_service_principal.test_sp.client_id
+				}
+
+				data "powerplatform_security_roles" "all" {
+					environment_id   = powerplatform_environment.test_env.id
+					business_unit_id = powerplatform_application_user.test_user.business_unit_id
+				}
+
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id   = powerplatform_environment.test_env.id
+					system_user_id   = powerplatform_application_user.test_user.system_user_id
+					security_role_id = one([
+						for role in data.powerplatform_security_roles.all.security_roles :
+						role.role_id if role.name == "Basic User"
+					])
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "environment_id", "powerplatform_environment.test_env", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "business_unit_id", "powerplatform_application_user.test_user", "business_unit_id"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "Basic User"),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "id", regexp.MustCompile(`(?i)^[0-9a-f-]{36}/systemusers/[0-9a-f-]{36}/[0-9a-f-]{36}$`)),
+				),
+			},
+		},
+	})
+}
+
+// A team holds roles through its own association table, so the same configuration shape has to land
+// on `teams` rather than `systemusers`.
+func TestAccSecurityRoleAssignmentResource_Validate_Create_Team(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "test_env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "powerplatform_data_record" "test_team" {
+					environment_id     = powerplatform_environment.test_env.id
+					table_logical_name = "team"
+					columns = {
+						name        = "` + mocks.TestName() + `"
+						description = "Owner team for the security role assignment acceptance test"
+					}
+				}
+
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = powerplatform_environment.test_env.id
+					team_id            = powerplatform_data_record.test_team.id
+					security_role_name = "Basic User"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "environment_id", "powerplatform_environment.test_env", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_security_role_assignment.test", "team_id", "powerplatform_data_record.test_team", "id"),
+					resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_name", "Basic User"),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "business_unit_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_security_role_assignment.test", "id", regexp.MustCompile(`(?i)^[0-9a-f-]{36}/teams/[0-9a-f-]{36}/[0-9a-f-]{36}$`)),
+					resource.TestCheckNoResourceAttr("powerplatform_security_role_assignment.test", "system_user_id"),
+				),
+			},
+		},
+	})
 }
