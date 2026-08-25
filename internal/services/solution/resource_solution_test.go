@@ -533,6 +533,16 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 // (different unique names), so swapping between them mid-resource would import a second
 // solution rather than update the first, which is outside the scope of this checksum test.
 func TestAccSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
+	// The fixture writes below run before resource.Test gets a chance to skip, so a plain unit run
+	// would litter the package directory with generated files that end up committed by accident.
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC is not set; skipping before writing acceptance fixtures")
+	}
+	t.Cleanup(func() {
+		_ = os.Remove("test_acc_settings_before.json")
+		_ = os.Remove("test_acc_settings_after.json")
+	})
+
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %s", err.Error())
