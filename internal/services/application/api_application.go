@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -354,6 +355,57 @@ func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmen
 	return &response, nil
 }
 
+// GetRoleHolder reads a principal that holds security roles, resolving its business unit and its
+// currently assigned roles. Users and teams live in different tables, so the holder picks the shape.
+func (client *client) GetRoleHolder(ctx context.Context, environmentId string, holder roleHolder) (*roleHolderDto, error) {
+	if !holder.isTeam() {
+		user, err := client.GetPrincipalBySystemUserId(ctx, environmentId, holder.id())
+		if err != nil {
+			return nil, err
+		}
+		return &roleHolderDto{Id: user.SystemUserId, BusinessUnitId: user.BusinessUnitId, SecurityRoles: user.SecurityRoles}, nil
+	}
+
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   holder.path(constants.DATAVERSE_API_VERSION),
+	}
+	values := url.Values{}
+	values.Add("$select", holder.selectFields())
+	values.Add("$expand", fmt.Sprintf("%s($select=roleid,name,_businessunitid_value)", holder.association()))
+	apiUrl.RawQuery = values.Encode()
+
+	var response teamDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &response)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for %s", holder))
+	}
+
+	slices.SortFunc(response.SecurityRoles, func(a, b applicationSecurityRoleDto) int {
+		return strings.Compare(a.RoleId, b.RoleId)
+	})
+
+	// Dataverse only lets owner teams and Microsoft Entra group teams hold security roles; an
+	// access team (teamtype 1) cannot, so failing here beats a confusing association error later.
+	if response.TeamType == TEAM_TYPE_ACCESS {
+		return nil, fmt.Errorf("team %s (%s) is an access team, and access teams cannot hold security roles; use an owner team or a Microsoft Entra group team", response.TeamId, response.Name)
+	}
+
+	return &roleHolderDto{Id: response.TeamId, BusinessUnitId: response.BusinessUnitId, SecurityRoles: response.SecurityRoles}, nil
+}
+
 func (client *client) GetDataverseSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]applicationSecurityRoleDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
@@ -387,6 +439,39 @@ func (client *client) GetDataverseSecurityRoles(ctx context.Context, environment
 	return response.Value, nil
 }
 
+// GetSecurityRoleById fetches one security role row by its immutable id. A missing role returns
+// ErrObjectNotFound with the environment named, so a caller can distinguish a bad id from a
+// service fault.
+func (client *client) GetSecurityRoleById(ctx context.Context, environmentId, roleId string) (*applicationSecurityRoleDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/%s/roles(%s)", constants.DATAVERSE_API_VERSION, roleId),
+	}
+	values := url.Values{}
+	values.Add("$select", "roleid,name,_businessunitid_value")
+	apiUrl.RawQuery = values.Encode()
+
+	var role applicationSecurityRoleDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &role)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("security role '%s' not found in environment '%s'", roleId, environmentId))
+	}
+
+	return &role, nil
+}
+
 func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentId, businessUnitId string, roleNames []string) ([]applicationSecurityRoleDto, error) {
 	allRoles, err := client.GetDataverseSecurityRoles(ctx, environmentId, businessUnitId)
 	if err != nil {
@@ -417,48 +502,66 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 	return resolved, nil
 }
 
-func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+// associationPostError marks an error raised by the association POST itself or its response, as
+// opposed to the environment host resolution that precedes it. Only a marked error can mean the
+// association was attempted, so only marked errors may classify as ambiguous outcomes.
+type associationPostError struct {
+	err error
+}
+
+func (e associationPostError) Error() string {
+	return e.err.Error()
+}
+
+func (e associationPostError) Unwrap() error {
+	return e.err
+}
+
+func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		// The association was never attempted, so this must not read as an ambiguous outcome.
+		return fmt.Errorf("could not resolve the environment host before associating: %w", err)
 	}
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)/systemuserroles_association/$ref", constants.DATAVERSE_API_VERSION, systemUserId),
+		Path:   holder.associationPath(constants.DATAVERSE_API_VERSION),
 	}
 
 	for _, roleId := range roleIds {
 		roleToAssociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/%s/roles(%s)", environmentHost, constants.DATAVERSE_API_VERSION, roleId),
 		}
-		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
+		// Exactly one POST: replaying an association whose outcome is unknown could mask a
+		// concurrent caller's grant, so the caller classifies the failure instead of retrying.
+		resp, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", apiUrl.String(), nil, roleToAssociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
-			return nil, err
+			return associationPostError{err: err}
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-			return nil, err
+			return associationPostError{err: err}
 		}
 		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-			return nil, err
+			return associationPostError{err: err}
 		}
 	}
 
-	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
+	return nil
 }
 
-func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId string, holder roleHolder, roleIds []string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, roleId := range roleIds {
 		apiUrl := &url.URL{
 			Scheme: constants.HTTPS,
 			Host:   environmentHost,
-			Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)/systemuserroles_association/$ref", constants.DATAVERSE_API_VERSION, systemUserId),
+			Path:   holder.associationPath(constants.DATAVERSE_API_VERSION),
 		}
 		values := url.Values{}
 		values.Add("$id", fmt.Sprintf("https://%s/api/data/%s/roles(%s)", environmentHost, constants.DATAVERSE_API_VERSION, roleId))
@@ -466,17 +569,20 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 
 		resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-			return nil, err
+			return err
 		}
-		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-			return nil, err
+		// A 404 here means the association, the role or the principal is already gone, which is the
+		// outcome a removal wants; failing would make an out-of-band removal break destroy.
+		if resp.HttpResponse.StatusCode == http.StatusNotFound {
+			tflog.Debug(ctx, fmt.Sprintf("Security role %s was already dissociated from %s", roleId, holder))
+			continue
 		}
 	}
 
-	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
+	return nil
 }
 
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {

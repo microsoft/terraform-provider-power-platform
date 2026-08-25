@@ -188,7 +188,8 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			if responseObj != nil && len(resp.BodyAsBytes) > 0 {
 				err = resp.MarshallTo(responseObj)
 				if err != nil {
-					return resp, fmt.Errorf("Error marshalling response to json. %w", err)
+					// The status was accepted, so the operation happened; only its result was lost.
+					return resp, RequestSentError{Err: fmt.Errorf("Error marshalling response to json. %w", err)}
 				}
 			}
 
