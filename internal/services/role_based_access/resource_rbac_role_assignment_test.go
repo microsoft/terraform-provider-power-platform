@@ -483,9 +483,9 @@ func TestAccRoleAssignmentResource_Validate_All_Principal_Types_And_Scopes(t *te
 				}
 
 				resource "azuread_user" "test_user" {
-					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					user_principal_name = "` + mocks.TestNameForEntra() + `@${local.domain_name}"
 					display_name        = "` + mocks.TestName() + `"
-					mail_nickname       = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestNameForEntra() + `"
 					password            = random_password.user.result
 					usage_location      = "US"
 				}
