@@ -44,6 +44,31 @@ func TestUnitApiClient_ExecuteWithoutRetry_DoesNotReplayTransientMutation(t *tes
 	assert.Equal(t, 1, attempts, "an ambiguous non-idempotent mutation start must never be replayed")
 }
 
+func TestUnitApiClient_ExecuteWithoutRetry_ReplaysRefusedCredential(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.ExecuteWithoutRetry(
+		context.Background(),
+		[]string{"test"},
+		http.MethodPost,
+		server.URL,
+		http.Header{},
+		map[string]string{"operation": "start"},
+		[]int{http.StatusNoContent},
+		nil,
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, 3, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
+}
+
 func TestUnitApiClient_GetConfig(t *testing.T) {
 	t.Parallel()
 

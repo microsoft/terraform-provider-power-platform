@@ -735,6 +735,13 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 	}
 
+	// Only a runtime state the caller actually sent is waited for; an omitted one is left untouched
+	// by the API and has nothing to converge to.
+	requestedRuntimeStateId := ""
+	if environment.Properties != nil && environment.Properties.States != nil && environment.Properties.States.Runtime != nil {
+		requestedRuntimeStateId = environment.Properties.States.Runtime.Id
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -780,7 +787,7 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	// despite lifecycle operation success, the environment may not be ready yet.
-	for {
+	for attempt := 0; ; attempt++ {
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
@@ -790,12 +797,31 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 		tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
 		if env.Properties.States.Management.Id == "Ready" {
-			return env, nil
+			// The read endpoint is eventually consistent with the runtime state the update just
+			// applied, so a converged management state can still report the previous admin mode.
+			// Returning here would hand Terraform a value that contradicts the plan.
+			if requestedRuntimeStateId == "" || runtimeStateId(env) == requestedRuntimeStateId {
+				return env, nil
+			}
+			if attempt >= constants.MAX_RETRY_COUNT {
+				return nil, fmt.Errorf("environment '%s' still reports runtime state '%s' after the update requested '%s'", environmentId, runtimeStateId(env), requestedRuntimeStateId)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report runtime state '%s' yet, retrying read", environmentId, requestedRuntimeStateId))
+			continue
 		} else if env.Properties.States.Management.Id == "Running" {
 			continue
 		}
 		return nil, errors.New("environment update failed. unexpected management state: " + env.Properties.States.Management.Id)
 	}
+}
+
+// runtimeStateId returns the environment's runtime state id, or "Enabled" when the API omits the
+// runtime state, which is how it renders an environment that is not in administration mode.
+func runtimeStateId(env *EnvironmentDto) string {
+	if env == nil || env.Properties == nil || env.Properties.States == nil || env.Properties.States.Runtime == nil || env.Properties.States.Runtime.Id == "" {
+		return "Enabled"
+	}
+	return env.Properties.States.Runtime.Id
 }
 
 func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {

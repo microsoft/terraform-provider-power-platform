@@ -1,0 +1,5 @@
+kind: fixed
+body: Provider no longer fails on transient OIDC assertion errors, credential refusals on non-replayable requests, role assignments that are not yet listable after create, or environment administration mode that has not converged when apply returns
+time: 2026-08-26T09:24:59.044871464Z
+custom:
+    Issue: "1254"

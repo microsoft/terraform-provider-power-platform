@@ -174,6 +174,24 @@ const (
 	DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT  = 10 * time.Minute
 )
 
+// The RBAC role assignment collection is eventually consistent with the create that committed an
+// assignment, so a create has to wait for its own assignment to become listable.
+const (
+	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 2 * time.Minute
+)
+
+// The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
+// and a lost assertion fails a whole provider operation rather than a single request.
+const (
+	OIDC_ASSERTION_MAX_ATTEMPTS = 5
+	OIDC_ASSERTION_RETRY_DELAY  = 3 * time.Second
+)
+
+// MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
+// refused for a reason other than expiry would be minted identically on every attempt.
+const MAX_UNAUTHORIZED_RETRIES = 2
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"

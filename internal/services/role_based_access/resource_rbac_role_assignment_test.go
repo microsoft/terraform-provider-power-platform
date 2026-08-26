@@ -907,12 +907,12 @@ func TestUnitRoleAssignmentResource_Validate_Read_404_Tenant_Errors_Environment_
 	httpmock.RegisterResponder("GET", tenantCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			tenantGets++
-			// the preflight sees an empty collection, the post-apply refresh sees the created
-			// assignment, and the 404 starts afterwards
+			// the preflight sees an empty collection, the create waits for its assignment to
+			// become listable, the post-apply refresh sees it too, and the 404 starts afterwards
 			if tenantGets == 1 {
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 			}
-			if tenantGets == 2 {
+			if tenantGets <= 3 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Tenant/get_role_assignments.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
@@ -956,12 +956,13 @@ func TestUnitRoleAssignmentResource_Validate_Read_Removes_State_When_Environment
 	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
 		func(_ *http.Request) (*http.Response, error) {
 			envGets++
-			// the preflight sees an empty collection, the post-apply refresh sees the created
-			// assignment, and then the environment is deleted out of band
+			// the preflight sees an empty collection, the create waits for its assignment to
+			// become listable, the post-apply refresh sees it too, and then the environment is
+			// deleted out of band
 			if envGets == 1 {
 				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 			}
-			if envGets == 2 {
+			if envGets <= 3 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Environment/get_role_assignments.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
