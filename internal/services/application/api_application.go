@@ -226,13 +226,13 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 		"businessunitid@odata.bind": fmt.Sprintf("/businessunits(%s)", businessUnitId),
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+	response, err := client.createSystemUser(ctx, apiUrl.String(), requestBody)
 	if err != nil {
 		if purgeErr := client.purgeDeletedApplicationUsersByApplicationId(ctx, environmentId, applicationId, err); purgeErr != nil {
 			return nil, purgeErr
 		}
 
-		response, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+		response, err = client.createSystemUser(ctx, apiUrl.String(), requestBody)
 		if err != nil {
 			return nil, err
 		}
@@ -253,6 +253,33 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 	}
 
 	return client.GetApplicationUserBySystemUserId(ctx, environmentId, match[len(match)-1][0])
+}
+
+// createSystemUser posts the application user, replaying the request while Dataverse cannot resolve
+// the application id in Entra. A service principal created moments earlier has not necessarily
+// replicated yet, and that rejection is a definitive 400, so nothing was committed by the attempt.
+func (client *client) createSystemUser(ctx context.Context, apiUrl string, requestBody map[string]any) (*api.Response, error) {
+	maxRetries := int(constants.ENTRA_APPLICATION_PROPAGATION_POLL_TIMEOUT / constants.ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL)
+
+	for retry := 0; ; retry++ {
+		response, err := client.Api.Execute(ctx, nil, "POST", apiUrl, nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+		if err == nil || !isApplicationNotYetPropagated(err) || retry >= maxRetries {
+			return response, err
+		}
+
+		tflog.Debug(ctx, "Dataverse cannot see the application in Entra yet, retrying the application user create")
+		if sleepErr := client.Api.SleepWithContext(ctx, constants.ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL); sleepErr != nil {
+			return response, sleepErr
+		}
+	}
+}
+
+func isApplicationNotYetPropagated(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if !errors.As(err, &httpErr) || httpErr.StatusCode != http.StatusBadRequest {
+		return false
+	}
+	return strings.Contains(string(httpErr.Body), constants.DATAVERSE_APPLICATION_NOT_IN_ENTRA_ERROR_CODE)
 }
 
 func (client *client) purgeDeletedApplicationUsersByApplicationId(ctx context.Context, environmentId, applicationId string, createErr error) error {

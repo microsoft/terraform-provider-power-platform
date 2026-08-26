@@ -192,6 +192,16 @@ const (
 // refused for a reason other than expiry would be minted identically on every attempt.
 const MAX_UNAUTHORIZED_RETRIES = 2
 
+// Dataverse resolves an application user's application id against Entra, and a service principal
+// created moments earlier has not necessarily replicated there yet.
+const (
+	ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL = 15 * time.Second
+	ENTRA_APPLICATION_PROPAGATION_POLL_TIMEOUT  = 10 * time.Minute
+
+	// The Dataverse error code for "we didn't find that application ID in your Azure Active Directory".
+	DATAVERSE_APPLICATION_NOT_IN_ENTRA_ERROR_CODE = "0x8004f510"
+)
+
 const (
 	ENV_VAR_POWER_PLATFORM_CLOUD                        = "POWER_PLATFORM_CLOUD"
 	ENV_VAR_POWER_PLATFORM_TENANT_ID                    = "POWER_PLATFORM_TENANT_ID"
