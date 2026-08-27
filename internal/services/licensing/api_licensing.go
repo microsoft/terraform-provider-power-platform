@@ -34,7 +34,7 @@ func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDt
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policies := BillingPolicyArrayDto{}
@@ -51,7 +51,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
@@ -103,7 +103,7 @@ func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string,
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
@@ -129,7 +129,7 @@ func (client *Client) DeleteBillingPolicy(ctx context.Context, billingId string)
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -145,7 +145,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
@@ -175,7 +175,7 @@ func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billin
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	normalizedIds := make([]string, len(environmentIds))
@@ -202,7 +202,7 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2022-03-01-preview")
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 
 	normalizedIds := make([]string, len(environmentIds))
 	for i, id := range environmentIds {
