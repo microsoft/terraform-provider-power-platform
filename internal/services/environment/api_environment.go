@@ -594,6 +594,51 @@ func (client *Client) waitForDataverseMetadata(ctx context.Context, environmentI
 	}
 }
 
+// waitForDataverseRuntimeState re-reads the environment until its administration mode and background
+// operations state match what was just requested. UpdateEnvironment already waits for the runtime
+// state it changes, but a later, independent GetEnvironment call (e.g. for AI features) is not
+// guaranteed to observe that same change, which otherwise surfaces as "provider produced inconsistent
+// result after apply" for attributes the caller never intended to touch on this apply.
+func (client *Client) waitForDataverseRuntimeState(ctx context.Context, environmentId string, env *EnvironmentDto, expectedAdminMode, expectedBackgroundOperation *bool) (*EnvironmentDto, error) {
+	if expectedAdminMode == nil && expectedBackgroundOperation == nil {
+		return env, nil
+	}
+
+	matchesExpectedState := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil || e.Properties.LinkedEnvironmentMetadata == nil {
+			return false
+		}
+		if expectedAdminMode != nil && (runtimeStateId(e) == "AdminMode") != *expectedAdminMode {
+			return false
+		}
+		if expectedBackgroundOperation != nil && (e.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState == "Enabled") != *expectedBackgroundOperation {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesExpectedState(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not converge to the requested administration mode/background operations state", environmentId)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' runtime state has not converged yet. Retrying", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) (*EnvironmentDto, error) {
 	if err := client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0); err != nil {
 		return nil, err
