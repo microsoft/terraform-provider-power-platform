@@ -70,7 +70,7 @@ func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate bi
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
-		Path:   "/licensing/BillingPolicies",
+		Path:   "/licensing/billingPolicies",
 	}
 
 	values := url.Values{}
@@ -125,7 +125,7 @@ func (client *Client) DeleteBillingPolicy(ctx context.Context, billingId string)
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
-		Path:   fmt.Sprintf("/licensing/BillingPolicies/%s", billingId),
+		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", billingId),
 	}
 
 	values := url.Values{}
