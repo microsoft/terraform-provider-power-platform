@@ -12,6 +12,18 @@ Data Record is a special type of a resources, that allows creation of any type D
 
 - [WebAPI overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview)
 
+## Lookup (relationship) columns
+
+A lookup column is set by nesting a `table_logical_name` / `data_record_id` object under the column name. The provider turns that into an OData `@odata.bind` binding, using **the attribute name exactly as you wrote it**.
+
+That name must be the relationship's `ReferencingEntityNavigationPropertyName`, which is not always the lowercase lookup column name. Most system relationships do match (`primarycontactid`, `businessunitid`), but some expose a PascalCase navigation property instead — for example `environmentvariablevalue` -> `environmentvariabledefinition` binds as `EnvironmentVariableDefinitionId`, not `environmentvariabledefinitionid`. Using the column name where the navigation property differs fails with `0x80048d19` ("undeclared property").
+
+Look the correct name up against your own environment:
+
+```text
+GET https://<environment>.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='<table>')/ManyToOneRelationships?$select=ReferencingEntityNavigationPropertyName,ReferencedEntity,ReferencingAttribute
+```
+
 ## Example Usage
 
 The following examples show how to use the `data_record` resource to configure some of the most common Dataverse settings.  These are minimal examples just to show the syntax, and do not include all possible configuration options.  Use these as a starting point if you need to set additional fields.

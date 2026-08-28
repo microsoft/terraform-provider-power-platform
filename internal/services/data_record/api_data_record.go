@@ -450,6 +450,20 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 					return nil, err
 				}
 
+				// key is passed through verbatim from the practitioner's
+				// configuration and must already be the relationship's
+				// ReferencingEntityNavigationPropertyName. That is usually the
+				// lowercase lookup column name (e.g. "primarycontactid"), but
+				// not always: some relationships expose a PascalCase navigation
+				// property, and binding to the column name instead fails with
+				// 0x80048d19 ("undeclared property"). Mapping column ->
+				// navigation property here would change the meaning of
+				// configurations that already pass the correct name, so the
+				// caveat is documented on the resource instead. Look the name
+				// up with:
+				//
+				//	GET EntityDefinitions(LogicalName='<table>')/ManyToOneRelationships
+				//	    ?$select=ReferencingEntityNavigationPropertyName,ReferencedEntity,ReferencingAttribute
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", entityDefinition.LogicalCollectionName, dataRecordId)
 			}
 		} else if nestedMapList, ok := value.([]any); ok {
