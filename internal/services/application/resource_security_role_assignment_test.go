@@ -742,6 +742,69 @@ func TestUnitSecurityRoleAssignmentResource_Delete_404_Is_Success(t *testing.T) 
 	})
 }
 
+// An application user whose Entra registration has been deleted cannot have its grants dissociated:
+// Dataverse answers the DELETE with 0x8004f510. The grant cannot outlive that identity, so destroy
+// must succeed rather than leave the resource dangling in state.
+func TestUnitSecurityRoleAssignmentResource_Delete_Application_Gone_From_Entra_Is_Success(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		principalID    = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+		roleName       = "MetaForm Global Admin"
+	)
+
+	assigned := false
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/`+environmentID,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			roles := ""
+			if assigned {
+				roles = `{"roleid":"` + roleAdminID + `","name":"` + roleName + `","_businessunitid_value":"` + rootBusinessID + `"}`
+			}
+			return httpmock.NewStringResponse(http.StatusOK,
+				`{"systemuserid":"`+principalID+`","applicationid":"`+applicationID+`","fullname":"Example","_businessunitid_value":"`+rootBusinessID+`","isdisabled":false,"systemuserroles_association":[`+roles+`]}`), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK,
+				`{"value":[{"roleid":"`+roleAdminID+`","name":"`+roleName+`","_businessunitid_value":"`+rootBusinessID+`"}]}`), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			assigned = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()`+principalID+`(%29|\))/systemuserroles_association/\$ref.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusBadRequest,
+				`{"error":{"code":"0x8004f510","message":"We didn't find that application ID `+applicationID+` in your Azure Active Directory (Azure AD)."}}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_security_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					system_user_id     = "` + principalID + `"
+					security_role_name = "` + roleName + `"
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_security_role_assignment.test", "security_role_id", roleAdminID),
+			},
+		},
+	})
+}
+
 // A failed association POST never becomes successful state, even when the association was truly
 // committed: the responder inserts the role into the harness's remote map exactly as a committed
 // POST would, so any reintroduced read-back adoption would find it and this test would fail. The

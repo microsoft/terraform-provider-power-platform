@@ -263,7 +263,7 @@ func (client *client) createSystemUser(ctx context.Context, apiUrl string, reque
 
 	for retry := 0; ; retry++ {
 		response, err := client.Api.Execute(ctx, nil, "POST", apiUrl, nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
-		if err == nil || !isApplicationNotYetPropagated(err) || retry >= maxRetries {
+		if err == nil || !isApplicationNotFoundInEntra(err) || retry >= maxRetries {
 			return response, err
 		}
 
@@ -274,7 +274,10 @@ func (client *client) createSystemUser(ctx context.Context, apiUrl string, reque
 	}
 }
 
-func isApplicationNotYetPropagated(err error) bool {
+// isApplicationNotFoundInEntra reports the definitive 400 Dataverse returns when it cannot resolve
+// an application user's application id in Entra, either because it has not replicated yet or
+// because the registration is gone.
+func isApplicationNotFoundInEntra(err error) bool {
 	var httpErr customerrors.UnexpectedHttpStatusCodeError
 	if !errors.As(err, &httpErr) || httpErr.StatusCode != http.StatusBadRequest {
 		return false
@@ -596,6 +599,13 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 
 		resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
+			// Dataverse rejects the dissociation when the principal's application registration no
+			// longer exists in Entra. The grant cannot outlive the identity it was made to, so this
+			// is the outcome a removal wants rather than a failure to report.
+			if isApplicationNotFoundInEntra(err) {
+				tflog.Debug(ctx, fmt.Sprintf("Security role %s cannot be dissociated from %s because its application is no longer in Entra; treating it as removed", roleId, holder))
+				continue
+			}
 			return err
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
