@@ -47,27 +47,6 @@ func (client *client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *client) GetDataverseUsers(ctx context.Context, environmentId string) ([]userDto, error) {
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", nil)
-	userArray := userArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &userArray)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
-	}
-	return userArray.Value, nil
-}
-
 func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
@@ -352,32 +331,6 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 		return nil, err
 	}
 
-	return user, nil
-}
-
-func (client *client) UpdateDataverseUser(ctx context.Context, environmentId, systemUserId string, userUpdate *userDto) (*userDto, error) {
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", nil)
-
-	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl, nil, userUpdate, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
-	}
-
-	user, err := client.GetDataverseUserBySystemUserId(ctx, environmentId, systemUserId)
-	if err != nil {
-		return nil, err
-	}
 	return user, nil
 }
 
