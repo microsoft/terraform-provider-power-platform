@@ -1,0 +1,5 @@
+kind: fixed
+body: Managed environment disable and enterprise policy operations now verify the requested state before treating a 409 response as success.
+time: 2026-08-26T02:54:49.000000+09:00
+custom:
+    Issue: "1240"

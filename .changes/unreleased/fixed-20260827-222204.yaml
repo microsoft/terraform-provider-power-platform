@@ -1,0 +1,5 @@
+kind: fixed
+body: Removed three internal API client methods that no resource or data source called
+time: 2026-08-27T22:22:04.000000000Z
+custom:
+    Issue: "1258"
