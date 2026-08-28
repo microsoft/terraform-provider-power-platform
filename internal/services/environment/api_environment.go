@@ -560,12 +560,61 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		}
 	}
 
+	env, err = client.waitForRequestedEnvironmentProperties(ctx, createdEnvironmentId, env, environmentToCreate.Properties.DisplayName, environmentToCreate.Properties.EnvironmentSku)
+	if err != nil {
+		return &EnvironmentDto{Name: createdEnvironmentId}, err
+	}
+
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
 	return env, err
+}
+
+// waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and
+// sku that were requested. Shortly after provisioning BAPI can still return the Dataverse organization's
+// placeholder friendly name and the default "Production" sku, which Terraform rejects as an inconsistent
+// result after apply.
+func (client *Client) waitForRequestedEnvironmentProperties(ctx context.Context, environmentId string, env *EnvironmentDto, expectedDisplayName, expectedSku string) (*EnvironmentDto, error) {
+	if expectedDisplayName == "" && expectedSku == "" {
+		return env, nil
+	}
+
+	matchesRequest := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil {
+			return false
+		}
+		if expectedDisplayName != "" && e.Properties.DisplayName != expectedDisplayName {
+			return false
+		}
+		if expectedSku != "" && e.Properties.EnvironmentSku != expectedSku {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesRequest(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not report the requested display name '%s' and sku '%s'", environmentId, expectedDisplayName, expectedSku)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report the requested display name and sku yet, retrying read", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
 }
 
 // waitForDataverseMetadata polls the environment until its Dataverse metadata is readable. BAPI
