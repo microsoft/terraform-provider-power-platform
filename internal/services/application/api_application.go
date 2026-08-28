@@ -231,13 +231,13 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 		"businessunitid@odata.bind": fmt.Sprintf("/businessunits(%s)", businessUnitId),
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+	response, err := client.createSystemUser(ctx, apiUrl.String(), requestBody)
 	if err != nil {
 		if purgeErr := client.purgeDeletedApplicationUsersByApplicationId(ctx, environmentId, applicationId, err); purgeErr != nil {
 			return nil, purgeErr
 		}
 
-		response, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+		response, err = client.createSystemUser(ctx, apiUrl.String(), requestBody)
 		if err != nil {
 			return nil, err
 		}
@@ -258,6 +258,36 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 	}
 
 	return client.GetApplicationUserBySystemUserId(ctx, environmentId, match[len(match)-1][0])
+}
+
+// createSystemUser posts the application user, replaying the request while Dataverse cannot resolve
+// the application id in Entra. A service principal created moments earlier has not necessarily
+// replicated yet, and that rejection is a definitive 400, so nothing was committed by the attempt.
+func (client *client) createSystemUser(ctx context.Context, apiUrl string, requestBody map[string]any) (*api.Response, error) {
+	maxRetries := int(constants.ENTRA_APPLICATION_PROPAGATION_POLL_TIMEOUT / constants.ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL)
+
+	for retry := 0; ; retry++ {
+		response, err := client.Api.Execute(ctx, nil, "POST", apiUrl, nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+		if err == nil || !isApplicationNotFoundInEntra(err) || retry >= maxRetries {
+			return response, err
+		}
+
+		tflog.Debug(ctx, "Dataverse cannot see the application in Entra yet, retrying the application user create")
+		if sleepErr := client.Api.SleepWithContext(ctx, constants.ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL); sleepErr != nil {
+			return response, sleepErr
+		}
+	}
+}
+
+// isApplicationNotFoundInEntra reports the definitive 400 Dataverse returns when it cannot resolve
+// an application user's application id in Entra, either because it has not replicated yet or
+// because the registration is gone.
+func isApplicationNotFoundInEntra(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if !errors.As(err, &httpErr) || httpErr.StatusCode != http.StatusBadRequest {
+		return false
+	}
+	return strings.Contains(string(httpErr.Body), constants.DATAVERSE_APPLICATION_NOT_IN_ENTRA_ERROR_CODE)
 }
 
 func (client *client) purgeDeletedApplicationUsersByApplicationId(ctx context.Context, environmentId, applicationId string, createErr error) error {
@@ -574,6 +604,13 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 
 		resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
+			// Dataverse rejects the dissociation when the principal's application registration no
+			// longer exists in Entra. The grant cannot outlive the identity it was made to, so this
+			// is the outcome a removal wants rather than a failure to report.
+			if isApplicationNotFoundInEntra(err) {
+				tflog.Debug(ctx, fmt.Sprintf("Security role %s cannot be dissociated from %s because its application is no longer in Entra; treating it as removed", roleId, holder))
+				continue
+			}
 			return err
 		}
 		if err := client.Api.HandleForbiddenResponse(resp); err != nil {

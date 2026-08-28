@@ -114,6 +114,9 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 	for {
 		_, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", apiUrl, nil, request, []int{http.StatusOK, http.StatusCreated}, &response)
 		if err == nil {
+			if waitErr := client.waitForRoleAssignmentVisible(ctx, scope, response.RoleAssignmentId); waitErr != nil {
+				return nil, waitErr
+			}
 			return &response, nil
 		}
 		if isScopeNotYetPropagated(err) {
@@ -136,6 +139,32 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 // unknownOutcomeError wraps a create failure whose outcome the API gives no way to resolve.
 func unknownOutcomeError(err error) error {
 	return fmt.Errorf("the create outcome is unknown. The API may have committed the assignment, but it provides no idempotency key or correlation identifier that would let the provider identify it safely. Inspect the role assignments at this scope: if one was created, import it using the scope-shaped import id, and if duplicates exist, deduplicate them first. Terraform has not recorded an assignment in state. Original failure: %w", err)
+}
+
+// waitForRoleAssignmentVisible blocks until the assignment the POST just created is returned by the
+// listing that Read uses. The collection is eventually consistent with the create, and Read treats
+// an absent assignment as deleted, so returning before it converges makes the refresh that follows
+// the apply drop the resource from state and plan a second create.
+func (client *client) waitForRoleAssignmentVisible(ctx context.Context, scope assignmentScope, roleAssignmentId string) error {
+	maxRetries := int(constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT / constants.RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL)
+
+	for retry := 0; ; retry++ {
+		assignments, err := client.ListRoleAssignments(ctx, scope)
+		// A list failure is not evidence that the assignment is missing, so it is retried too
+		// rather than failing a create that already succeeded.
+		if err == nil && findRoleAssignment(assignments, roleAssignmentId) != nil {
+			return nil
+		}
+
+		if retry >= maxRetries {
+			return fmt.Errorf("role assignment %s was created at scope %s but did not become visible in the role assignment listing within %s, so Terraform would immediately see it as deleted. Import it once it appears: terraform import <address> %q", roleAssignmentId, scope, constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT, scope.importId(roleAssignmentId))
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Role assignment %s is not visible in the listing at scope %s yet, retrying", roleAssignmentId, scope))
+		if sleepErr := client.Api.SleepWithContext(ctx, constants.RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL); sleepErr != nil {
+			return sleepErr
+		}
+	}
 }
 
 // isAmbiguousCreateFailure reports whether the request might have committed despite the error.

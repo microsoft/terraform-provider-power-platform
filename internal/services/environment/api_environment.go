@@ -560,12 +560,61 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		}
 	}
 
+	env, err = client.waitForRequestedEnvironmentProperties(ctx, createdEnvironmentId, env, environmentToCreate.Properties.DisplayName, environmentToCreate.Properties.EnvironmentSku)
+	if err != nil {
+		return &EnvironmentDto{Name: createdEnvironmentId}, err
+	}
+
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
 	return env, err
+}
+
+// waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and
+// sku that were requested. Shortly after provisioning BAPI can still return the Dataverse organization's
+// placeholder friendly name and the default "Production" sku, which Terraform rejects as an inconsistent
+// result after apply.
+func (client *Client) waitForRequestedEnvironmentProperties(ctx context.Context, environmentId string, env *EnvironmentDto, expectedDisplayName, expectedSku string) (*EnvironmentDto, error) {
+	if expectedDisplayName == "" && expectedSku == "" {
+		return env, nil
+	}
+
+	matchesRequest := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil {
+			return false
+		}
+		if expectedDisplayName != "" && e.Properties.DisplayName != expectedDisplayName {
+			return false
+		}
+		if expectedSku != "" && e.Properties.EnvironmentSku != expectedSku {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesRequest(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not report the requested display name '%s' and sku '%s'", environmentId, expectedDisplayName, expectedSku)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report the requested display name and sku yet, retrying read", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
 }
 
 // waitForDataverseMetadata polls the environment until its Dataverse metadata is readable. BAPI
@@ -582,6 +631,51 @@ func (client *Client) waitForDataverseMetadata(ctx context.Context, environmentI
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Dataverse metadata for environment '%s' is not available yet. Retrying", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
+// waitForDataverseRuntimeState re-reads the environment until its administration mode and background
+// operations state match what was just requested. UpdateEnvironment already waits for the runtime
+// state it changes, but a later, independent GetEnvironment call (e.g. for AI features) is not
+// guaranteed to observe that same change, which otherwise surfaces as "provider produced inconsistent
+// result after apply" for attributes the caller never intended to touch on this apply.
+func (client *Client) waitForDataverseRuntimeState(ctx context.Context, environmentId string, env *EnvironmentDto, expectedAdminMode, expectedBackgroundOperation *bool) (*EnvironmentDto, error) {
+	if expectedAdminMode == nil && expectedBackgroundOperation == nil {
+		return env, nil
+	}
+
+	matchesExpectedState := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil || e.Properties.LinkedEnvironmentMetadata == nil {
+			return false
+		}
+		if expectedAdminMode != nil && (runtimeStateId(e) == "AdminMode") != *expectedAdminMode {
+			return false
+		}
+		if expectedBackgroundOperation != nil && (e.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState == "Enabled") != *expectedBackgroundOperation {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesExpectedState(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not converge to the requested administration mode/background operations state", environmentId)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' runtime state has not converged yet. Retrying", environmentId))
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
@@ -735,6 +829,13 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 	}
 
+	// Only a runtime state the caller actually sent is waited for; an omitted one is left untouched
+	// by the API and has nothing to converge to.
+	requestedRuntimeStateId := ""
+	if environment.Properties != nil && environment.Properties.States != nil && environment.Properties.States.Runtime != nil {
+		requestedRuntimeStateId = environment.Properties.States.Runtime.Id
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -780,7 +881,7 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	// despite lifecycle operation success, the environment may not be ready yet.
-	for {
+	for attempt := 0; ; attempt++ {
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
@@ -790,12 +891,31 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 		tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
 		if env.Properties.States.Management.Id == "Ready" {
-			return env, nil
+			// The read endpoint is eventually consistent with the runtime state the update just
+			// applied, so a converged management state can still report the previous admin mode.
+			// Returning here would hand Terraform a value that contradicts the plan.
+			if requestedRuntimeStateId == "" || runtimeStateId(env) == requestedRuntimeStateId {
+				return env, nil
+			}
+			if attempt >= constants.MAX_RETRY_COUNT {
+				return nil, fmt.Errorf("environment '%s' still reports runtime state '%s' after the update requested '%s'", environmentId, runtimeStateId(env), requestedRuntimeStateId)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report runtime state '%s' yet, retrying read", environmentId, requestedRuntimeStateId))
+			continue
 		} else if env.Properties.States.Management.Id == "Running" {
 			continue
 		}
 		return nil, errors.New("environment update failed. unexpected management state: " + env.Properties.States.Management.Id)
 	}
+}
+
+// runtimeStateId returns the environment's runtime state id, or "Enabled" when the API omits the
+// runtime state, which is how it renders an environment that is not in administration mode.
+func runtimeStateId(env *EnvironmentDto) string {
+	if env == nil || env.Properties == nil || env.Properties.States == nil || env.Properties.States.Runtime == nil || env.Properties.States.Runtime.Id == "" {
+		return "Enabled"
+	}
+	return env.Properties.States.Runtime.Id
 }
 
 func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {
