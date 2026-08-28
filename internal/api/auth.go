@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -426,6 +427,10 @@ func (client *Auth) createTokenRequestOptions(ctx context.Context, scopes []stri
 	return tokenOptions
 }
 
+// The workload identity token endpoint of a CI provider is an external dependency that answers
+// transiently with 5xx or drops the connection under load, and a lost assertion fails the whole
+// provider operation rather than a single request. The exchange is an idempotent GET that mints a
+// fresh token, so it is replayed a bounded number of times before giving up.
 func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	if w.token != "" {
 		return w.token, nil
@@ -440,14 +445,35 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		return string(idTokenData), nil
 	}
 
+	for attempt := 1; ; attempt++ {
+		assertion, retryable, err := w.requestAssertion(ctx)
+		if err == nil {
+			return assertion, nil
+		}
+		if !retryable || attempt >= constants.OIDC_ASSERTION_MAX_ATTEMPTS {
+			return "", err
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("getAssertion: transient failure from the OIDC provider on attempt %d of %d, retrying: %s", attempt, constants.OIDC_ASSERTION_MAX_ATTEMPTS, err))
+		select {
+		case <-time.After(constants.OIDC_ASSERTION_RETRY_DELAY):
+		case <-ctx.Done():
+			return "", fmt.Errorf("getAssertion: interrupted while waiting to retry: %w (last failure: %v)", ctx.Err(), err)
+		}
+	}
+}
+
+// requestAssertion performs one token exchange. The second return value reports whether the
+// failure is transient and therefore worth replaying.
+func (w *OidcCredential) requestAssertion(ctx context.Context) (string, bool, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", w.requestUrl, http.NoBody)
 	if err != nil {
-		return "", errors.New("getAssertion: failed to build request")
+		return "", false, errors.New("getAssertion: failed to build request")
 	}
 
 	query, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
-		return "", errors.New("getAssertion: cannot parse URL query")
+		return "", false, errors.New("getAssertion: cannot parse URL query")
 	}
 
 	if query.Get("audience") == "" {
@@ -461,17 +487,19 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: cannot request token: %w", err)
+		// A transport failure never yielded an assertion, so replaying it is safe unless the
+		// caller's own context is what ended the request.
+		return "", ctx.Err() == nil, fmt.Errorf("getAssertion: cannot request token: %w", err)
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: cannot parse response: %w", err)
+		return "", false, fmt.Errorf("getAssertion: cannot parse response: %w", err)
 	}
 
 	if statusCode := resp.StatusCode; statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices {
-		return "", fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
+		return "", isTransientOidcStatus(resp.StatusCode), fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
 	}
 
 	var tokenRes struct {
@@ -479,14 +507,22 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		Value *string `json:"value"`
 	}
 	if err := json.Unmarshal(body, &tokenRes); err != nil {
-		return "", fmt.Errorf("getAssertion: cannot unmarshal response: %w", err)
+		return "", false, fmt.Errorf("getAssertion: cannot unmarshal response: %w", err)
 	}
 
 	if tokenRes.Value == nil {
-		return "", errors.New("getAssertion: nil JWT assertion received from OIDC provider")
+		return "", false, errors.New("getAssertion: nil JWT assertion received from OIDC provider")
 	}
 
-	return *tokenRes.Value, nil
+	return *tokenRes.Value, false, nil
+}
+
+// isTransientOidcStatus reports whether the token endpoint refused the exchange for a reason that
+// may not hold on the next attempt. A rejected or malformed request would only be rejected again.
+func isTransientOidcStatus(status int) bool {
+	return status == http.StatusRequestTimeout ||
+		status == http.StatusTooManyRequests ||
+		status >= http.StatusInternalServerError
 }
 
 func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*string, error) {

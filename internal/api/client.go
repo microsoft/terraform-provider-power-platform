@@ -150,6 +150,7 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 	}
 
 	var lastRetryableResponse *Response
+	unauthorizedRetries := 0
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
 
@@ -197,7 +198,11 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		}
 
 		isRetryable := helpers.ArrayContains(retryableStatusCodes, resp.HttpResponse.StatusCode)
-		if retry == retryNever || !isRetryable {
+		if retry == retryNever && resp.HttpResponse.StatusCode == http.StatusUnauthorized && unauthorizedRetries < constants.MAX_UNAUTHORIZED_RETRIES {
+			// The credential was refused, so the request never reached the operation and replaying
+			// it with a freshly acquired token cannot duplicate a non-idempotent mutation.
+			unauthorizedRetries++
+		} else if retry == retryNever || !isRetryable {
 			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
 		lastRetryableResponse = resp

@@ -705,6 +705,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
+
+		// The AI features call above (or the fallback GetEnvironment) may have read the environment
+		// before the administration mode/background operations change from updateDataverse converged,
+		// even though that change was already confirmed once inside UpdateEnvironment.
+		envDto, err = r.EnvironmentClient.waitForDataverseRuntimeState(ctx, plan.Id.ValueString(), envDto, expectedAdministrationMode(ctx, plan), expectedBackgroundOperation(ctx, plan))
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			return
+		}
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -757,6 +766,28 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 	}
 
 	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
+}
+
+// expectedAdministrationMode returns the planned administration_mode_enabled value, or nil when the
+// practitioner did not configure it and there is nothing to converge to.
+func expectedAdministrationMode(ctx context.Context, plan *SourceModel) *bool {
+	var dataverseSourcePlanModel DataverseSourceModel
+	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+	if dataverseSourcePlanModel.AdministrationMode.IsNull() || dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
+		return nil
+	}
+	return dataverseSourcePlanModel.AdministrationMode.ValueBoolPointer()
+}
+
+// expectedBackgroundOperation returns the planned background_operation_enabled value, or nil when the
+// practitioner did not configure it and there is nothing to converge to.
+func expectedBackgroundOperation(ctx context.Context, plan *SourceModel) *bool {
+	var dataverseSourcePlanModel DataverseSourceModel
+	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+	if dataverseSourcePlanModel.BackgroundOperation.IsNull() || dataverseSourcePlanModel.BackgroundOperation.IsUnknown() {
+		return nil
+	}
+	return dataverseSourcePlanModel.BackgroundOperation.ValueBoolPointer()
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {

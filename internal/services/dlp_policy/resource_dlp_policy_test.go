@@ -971,6 +971,20 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 						default_action_rule_behavior = ""
 						endpoint_rules               = []
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+					  },
+					  {
+						# shared_mailgun and shared_polydoc are pinned here because their live "unblockable"
+						# governance metadata flaps between apply and refresh, causing plan drift.
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_mailgun"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_polydoc"
 					  }
 					])
 				  
@@ -1028,12 +1042,18 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "1"),
 
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id": "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_mailgun",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_polydoc",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id":                           "/providers/Microsoft.PowerApps/apis/shared_sql",
