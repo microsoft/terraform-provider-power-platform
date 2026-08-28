@@ -119,6 +119,26 @@ func (client *client) disableManagedEnvironmentWithRetry(ctx context.Context, en
 	}
 
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
+
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		env, envErr := client.environmentClient.GetEnvironment(ctx, environmentId)
+		if envErr != nil {
+			return envErr
+		}
+		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == managedEnv.ProtectionLevel {
+			tflog.Debug(ctx, "Managed Environment is already disabled, nothing to do")
+			return nil
+		}
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DisableManagedEnvironment: the environment kept rejecting the request with 409 and the requested Basic protection level was not established", constants.MAX_RETRY_COUNT)
+		}
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Disablement was rejected with 409 and the requested Basic protection level is not established. Retrying...")
+		return client.disableManagedEnvironmentWithRetry(ctx, environmentId, retryCount+1)
+	}
+
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
