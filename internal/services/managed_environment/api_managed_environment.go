@@ -92,7 +92,7 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
 		return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, retryCount+1)
 	}
-	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, retryCount)
+	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, 0)
 }
 
 func (client *client) waitForManagedEnvironmentEnablement(ctx context.Context, environmentId string, retryCount int) error {
