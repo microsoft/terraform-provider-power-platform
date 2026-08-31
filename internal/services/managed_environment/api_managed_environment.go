@@ -92,7 +92,25 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
 		return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, retryCount+1)
 	}
-	return nil
+	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, retryCount)
+}
+
+func (client *client) waitForManagedEnvironmentEnablement(ctx context.Context, environmentId string, retryCount int) error {
+	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+	if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == constants.PROTECTION_LEVEL_STANDARD {
+		return nil
+	}
+	if retryCount >= constants.MAX_RETRY_COUNT {
+		return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment: the lifecycle operation completed but the environment is still not managed", constants.MAX_RETRY_COUNT)
+	}
+	if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+		return err
+	}
+	tflog.Info(ctx, "Managed Environment Enablement lifecycle operation completed but the environment is not managed yet. Retrying state read...")
+	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, retryCount+1)
 }
 
 func (client *client) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
