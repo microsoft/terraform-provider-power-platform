@@ -23,6 +23,38 @@ func TestUnitTestName(t *testing.T) {
 	}
 }
 
+//go:noinline
+func aTestNameComfortablyLongerThanTheSixtyFourCharacterEntraNicknameLimit() string {
+	return mocks.TestNameForEntra()
+}
+
+//go:noinline
+func aTestNameComfortablyLongerThanTheSixtyFourCharacterEntraNicknameLimitToo() string {
+	return mocks.TestNameForEntra()
+}
+
+func TestUnitTestNameForEntra(t *testing.T) {
+	short := testNameForEntraCaller()
+	if short != "testNameForEntraCaller" {
+		t.Fatalf("a name within the limit must be returned unchanged, got %q", short)
+	}
+
+	long := aTestNameComfortablyLongerThanTheSixtyFourCharacterEntraNicknameLimit()
+	if len(long) > mocks.ENTRA_MAIL_NICKNAME_MAX_LENGTH {
+		t.Fatalf("expected at most %d characters, got %d (%q)", mocks.ENTRA_MAIL_NICKNAME_MAX_LENGTH, len(long), long)
+	}
+
+	// Names sharing the first 64 characters must not collapse onto the same nickname.
+	if other := aTestNameComfortablyLongerThanTheSixtyFourCharacterEntraNicknameLimitToo(); other == long {
+		t.Fatalf("two distinct test names produced the same nickname %q", long)
+	}
+}
+
+//go:noinline
+func testNameForEntraCaller() string {
+	return mocks.TestNameForEntra()
+}
+
 func TestUnitTestsEntraLicesingGroupName(t *testing.T) {
 	if got := mocks.TestsEntraLicesingGroupName(); got == "" {
 		t.Fatal("expected group name to be non-empty")

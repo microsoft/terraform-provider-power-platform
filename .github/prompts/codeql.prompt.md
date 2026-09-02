@@ -1,5 +1,13 @@
 # CodeQL Query Guidelines for Go (GitHub Copilot Agent Mode)
 
+## Repository Conventions
+
+Project rules that queries may be written to enforce, and that any code the agent writes must follow.
+
+* **Constants are always `UPPER_CASE`:** Every `const` uses `SCREAMING_SNAKE_CASE` (for example `MAX_RETRY_COUNT`, `BAP_API_VERSION`), whether exported or not. Go's usual `mixedCaps` naming does **not** apply to constants in this repository, so a lowercase or camelCase constant name such as `apiVersion` or `maxUnauthorizedRetries` is a violation.
+
+* **Constants belong in a separate file:** Declare them in `internal/constants/constants.go`, or, when a constant is genuinely local to one service, in that service's own constants file. Do not inline a `const` block next to the code that happens to use it — every constant should have one predictable home.
+
 ## Authoring Best Practices
 
 * **Understand the root cause:** Always begin by clarifying the bug or vulnerability at a fundamental level. Identify the **root cause pattern** in code (for example, a missing check, an API misuse, a dangerous data flow) rather than focusing on superficial symptoms. This ensures your query finds the real issue, not just one instance of it.

@@ -265,60 +265,6 @@ func (client *client) GetRelationData(ctx context.Context, environmentId, tableN
 	return value, nil
 }
 
-func (client *client) GetTableSingularNameFromPlural(ctx context.Context, environmentId, logicalCollectionName string) (*string, error) {
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/%s/EntityDefinitions", constants.DATAVERSE_API_VERSION),
-	}
-	q := apiUrl.Query()
-	q.Add("$filter", fmt.Sprintf("LogicalCollectionName eq '%s'", logicalCollectionName))
-	q.Add("$select", "PrimaryIdAttribute,LogicalCollectionName,LogicalName")
-	apiUrl.RawQuery = q.Encode()
-
-	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(response); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(response); err != nil {
-		return nil, err
-	}
-
-	var mapResponse map[string]any
-	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response for table singular name: %w", err)
-	}
-
-	var result string
-	if rawVal, exists := mapResponse["value"]; exists && rawVal != nil {
-		valueSlice, ok := rawVal.([]any)
-		if !ok {
-			return nil, errors.New("value field is not of type []any")
-		}
-		if len(valueSlice) > 0 {
-			if value, ok := valueSlice[0].(map[string]any); ok {
-				if logicalName, ok := value["LogicalName"].(string); ok {
-					result = logicalName
-				}
-			}
-		}
-	} else if logicalName, ok := mapResponse["LogicalName"].(string); ok {
-		result = logicalName
-	} else {
-		return nil, errors.New("logicalName field not found in result when retrieving table singular name")
-	}
-	return &result, nil
-}
-
 func getEntityRelationDefinitionOneToMany(mapResponse map[string]any, entityLogicalName, relationLogicalName string) (string, error) {
 	var tableName string
 	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
@@ -504,6 +450,20 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 					return nil, err
 				}
 
+				// key is passed through verbatim from the practitioner's
+				// configuration and must already be the relationship's
+				// ReferencingEntityNavigationPropertyName. That is usually the
+				// lowercase lookup column name (e.g. "primarycontactid"), but
+				// not always: some relationships expose a PascalCase navigation
+				// property, and binding to the column name instead fails with
+				// 0x80048d19 ("undeclared property"). Mapping column ->
+				// navigation property here would change the meaning of
+				// configurations that already pass the correct name, so the
+				// caveat is documented on the resource instead. Look the name
+				// up with:
+				//
+				//	GET EntityDefinitions(LogicalName='<table>')/ManyToOneRelationships
+				//	    ?$select=ReferencingEntityNavigationPropertyName,ReferencedEntity,ReferencingAttribute
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", entityDefinition.LogicalCollectionName, dataRecordId)
 			}
 		} else if nestedMapList, ok := value.([]any); ok {

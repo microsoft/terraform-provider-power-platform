@@ -5,6 +5,7 @@ package mocks
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"os"
@@ -26,6 +27,29 @@ func TestName() string {
 	nameEnd := filepath.Ext(nameFull)
 	name := strings.TrimPrefix(nameEnd, ".")
 	return name
+}
+
+// ENTRA_MAIL_NICKNAME_MAX_LENGTH is the limit Entra enforces on a user's mailNickname, and on the
+// local part of its userPrincipalName. A longer value is rejected with Request_BadRequest.
+const ENTRA_MAIL_NICKNAME_MAX_LENGTH = 64
+
+// TestNameForEntra returns the calling test's name shortened to what Entra accepts as a mail
+// nickname. Test names are long enough to exceed the limit, and truncating alone would collide
+// between tests sharing a prefix, so the tail is replaced by a hash of the full name.
+func TestNameForEntra() string {
+	pc, _, _, _ := runtime.Caller(1)
+	name := strings.TrimPrefix(filepath.Ext(runtime.FuncForPC(pc).Name()), ".")
+	return shortenForEntra(name)
+}
+
+func shortenForEntra(name string) string {
+	if len(name) <= ENTRA_MAIL_NICKNAME_MAX_LENGTH {
+		return name
+	}
+
+	digest := sha256.Sum256([]byte(name))
+	suffix := fmt.Sprintf("_%x", digest[:4])
+	return name[:ENTRA_MAIL_NICKNAME_MAX_LENGTH-len(suffix)] + suffix
 }
 
 func TestsEntraLicesingGroupName() string {
