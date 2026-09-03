@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_managed_solution now retries Dataverse reads that a freshly provisioned environment rejects with 403, and access denied errors report the service response body
+time: 2026-08-20T07:45:37.952542355Z
+custom:
+    Issue: "1236"

@@ -143,6 +143,10 @@ const (
 const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 	MAX_RETRY_COUNT                               = 10
+
+	// BAPI can report an environment lifecycle operation as succeeded before the Dataverse
+	// metadata of that environment becomes readable, so it has to be polled for separately.
+	MAX_DATAVERSE_METADATA_RETRY_COUNT = 30
 )
 
 // PROTECTION_LEVEL_STANDARD is the governance configuration protection level of a
@@ -154,6 +158,48 @@ const PROTECTION_LEVEL_STANDARD = "Standard"
 const (
 	ENVIRONMENT_AI_FEATURES_POLL_INTERVAL = 3 * time.Second
 	ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT  = 20 * time.Second
+)
+
+// The connectivity endpoint is eventually consistent with environment provisioning, so a freshly
+// created environment is not immediately addressable there.
+const (
+	CONNECTIVITY_ENVIRONMENT_POLL_INTERVAL = 15 * time.Second
+	CONNECTIVITY_ENVIRONMENT_POLL_TIMEOUT  = 10 * time.Minute
+)
+
+// A freshly provisioned Dataverse organization answers Web API calls with 403 until it has
+// provisioned the caller as an application user.
+const (
+	DATAVERSE_CALLER_PROVISIONING_POLL_INTERVAL = 15 * time.Second
+	DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT  = 10 * time.Minute
+)
+
+// The RBAC role assignment collection is eventually consistent with the create that committed an
+// assignment, so a create has to wait for its own assignment to become listable.
+const (
+	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 2 * time.Minute
+)
+
+// The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
+// and a lost assertion fails a whole provider operation rather than a single request.
+const (
+	OIDC_ASSERTION_MAX_ATTEMPTS = 5
+	OIDC_ASSERTION_RETRY_DELAY  = 3 * time.Second
+)
+
+// MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
+// refused for a reason other than expiry would be minted identically on every attempt.
+const MAX_UNAUTHORIZED_RETRIES = 2
+
+// Dataverse resolves an application user's application id against Entra, and a service principal
+// created moments earlier has not necessarily replicated there yet.
+const (
+	ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL = 15 * time.Second
+	ENTRA_APPLICATION_PROPAGATION_POLL_TIMEOUT  = 10 * time.Minute
+
+	// The Dataverse error code for "we didn't find that application ID in your Azure Active Directory".
+	DATAVERSE_APPLICATION_NOT_IN_ENTRA_ERROR_CODE = "0x8004f510"
 )
 
 const (
@@ -226,4 +272,5 @@ const (
 	ERROR_POLICY_ASSIGNED_TO_ENV_GROUP = "POLICY_ASSIGNED_TO_ENV_GROUP"
 	ERROR_ENVIRONMENT_SETTINGS_FAILED  = "ENVIRONMENT_SETTINGS_FAILED"
 	ERROR_ENVIRONMENT_CREATION         = "ENVIRONMENT_CREATION"
+	ERROR_ENVIRONMENT_DELETION         = "ENVIRONMENT_DELETION"
 )

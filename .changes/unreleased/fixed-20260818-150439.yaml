@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_environment now rejects allow_flex_routing outside of the EU Data Boundary with a clear error instead of an opaque API 400
+time: 2026-08-18T15:04:39.079667486Z
+custom:
+    Issue: "1236"

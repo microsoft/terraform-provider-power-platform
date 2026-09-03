@@ -4,6 +4,8 @@
 package environmentvariable_test
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -69,14 +71,30 @@ resource "powerplatform_environment_variable_value" "text" {
   schema_name    = "cra6e_SolutionVariableText"
   value          = "https://prod.contoso.example"
 }
+
+# cra6e_SolutionVariableText ships an environmentvariablevalues.json inside the
+# test solution, so a value record already exists after import and the resource
+# above only ever takes the update path. cra6e_SolutionVariableJson ships no
+# value, so this is the one resource here that exercises the create path and the
+# POST to environmentvariablevalues.
+resource "powerplatform_environment_variable_value" "json" {
+  depends_on     = [powerplatform_solution.solution]
+  environment_id = powerplatform_environment.environment.id
+  schema_name    = "cra6e_SolutionVariableJson"
+  value          = "{\"aaa\": 456}"
+}
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "cra6e_SolutionVariableText"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "display_name", "SolutionVariableText"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "type", "String"),
-					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Microsoft Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "secret_store", "Azure Key Vault"),
 					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_definition_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
 					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.text", "environment_variable_value_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.json", "schema_name", "cra6e_SolutionVariableJson"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.json", "type", "JSON"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.json", "value", "{\"aaa\": 456}"),
+					resource.TestMatchResourceAttr("powerplatform_environment_variable_value.json", "environment_variable_value_id", regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)),
 				),
 			},
 			{
@@ -109,9 +127,17 @@ resource "powerplatform_environment_variable_value" "text" {
   schema_name    = "cra6e_SolutionVariableText"
   value          = "https://test.contoso.example"
 }
+
+resource "powerplatform_environment_variable_value" "json" {
+  depends_on     = [powerplatform_solution.solution]
+  environment_id = powerplatform_environment.environment.id
+  schema_name    = "cra6e_SolutionVariableJson"
+  value          = "{\"aaa\": 789}"
+}
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.text", "schema_name", "cra6e_SolutionVariableText"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable_value.json", "value", "{\"aaa\": 789}"),
 				),
 			},
 		},
@@ -122,7 +148,7 @@ func TestUnitEnvironmentVariableResource_Validate_Create_HappyPath(t *testing.T)
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	registerEnvironmentVariableHappyPathResponders()
+	createRequestBody := registerEnvironmentVariableHappyPathResponders()
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -150,6 +176,23 @@ resource "powerplatform_environment_variable_value" "text" {
 			},
 		},
 	})
+
+	// The create payload binds the definition through the relationship's
+	// ReferencingEntityNavigationPropertyName. Dataverse rejects the lookup
+	// column name "environmentvariabledefinitionid" with 0x80048d19
+	// ("undeclared property"), and the resource state above is identical either
+	// way, so the payload itself has to be asserted.
+	decoded := map[string]any{}
+	if err := json.Unmarshal([]byte(*createRequestBody), &decoded); err != nil {
+		t.Fatalf("create request body is not valid JSON: %s", err)
+	}
+
+	if got := decoded["EnvironmentVariableDefinitionId@odata.bind"]; got != "/environmentvariabledefinitions(11111111-1111-1111-1111-111111111111)" {
+		t.Errorf("unexpected EnvironmentVariableDefinitionId@odata.bind: got %v, body %s", got, *createRequestBody)
+	}
+	if _, ok := decoded["environmentvariabledefinitionid@odata.bind"]; ok {
+		t.Errorf("@odata.bind must use the navigation property name, not the lookup column name: %s", *createRequestBody)
+	}
 }
 
 func TestUnitEnvironmentVariableResource_Validate_Update_HappyPath(t *testing.T) {
@@ -404,9 +447,14 @@ resource "powerplatform_environment_variable_value" "boolean" {
 	})
 }
 
-func registerEnvironmentVariableHappyPathResponders() {
+// registerEnvironmentVariableHappyPathResponders returns a pointer to the body
+// of the environmentvariablevalues POST, so a test can assert the payload the
+// provider actually sends and not just the state it ends up with.
+func registerEnvironmentVariableHappyPathResponders() *string {
 	registerEnvironmentResponder()
 	registerDefinitionResponder()
+
+	createRequestBody := new(string)
 
 	getValuesCallCount := 0
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues?%24filter=_environmentvariabledefinitionid_value+eq+11111111-1111-1111-1111-111111111111&%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
@@ -420,6 +468,12 @@ func registerEnvironmentVariableHappyPathResponders() {
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues",
 		func(req *http.Request) (*http.Response, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return nil, err
+			}
+			*createRequestBody = string(body)
+
 			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
 			resp.Header.Set("Odata-Entityid", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues(22222222-2222-2222-2222-222222222222)")
 			return resp, nil
@@ -430,6 +484,8 @@ func registerEnvironmentVariableHappyPathResponders() {
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/environmentvariablevalues%2822222222-2222-2222-2222-222222222222%29?%24select=environmentvariablevalueid%2Cschemaname%2Cvalue",
 		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resource/Validate_Create_HappyPath/get_environment_variable_value.json").String()))
+
+	return createRequestBody
 }
 
 func registerEnvironmentVariableUpdateResponders() {

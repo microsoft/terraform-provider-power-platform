@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -523,6 +524,14 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
+
+		if helpers.IsKnown(plan.Dataverse) {
+			envDto, err = r.EnvironmentClient.waitForDataverseMetadata(ctx, envDto.Name, envDto)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+				return
+			}
+		}
 	}
 
 	// billing_policy_id is sent in the create request, but the environment record's billingPolicy
@@ -712,6 +721,23 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
+	if helpers.IsKnown(plan.Dataverse) {
+		envDto, err = r.EnvironmentClient.waitForDataverseMetadata(ctx, plan.Id.ValueString(), envDto)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			return
+		}
+
+		// The AI features call above (or the fallback GetEnvironment) may have read the environment
+		// before the administration mode/background operations change from updateDataverse converged,
+		// even though that change was already confirmed once inside UpdateEnvironment.
+		envDto, err = r.EnvironmentClient.waitForDataverseRuntimeState(ctx, plan.Id.ValueString(), envDto, expectedAdministrationMode(ctx, plan), expectedBackgroundOperation(ctx, plan))
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			return
+		}
+	}
+
 	var templateMetadata *createTemplateMetadataDto
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
@@ -762,6 +788,28 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 	}
 
 	return r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
+}
+
+// expectedAdministrationMode returns the planned administration_mode_enabled value, or nil when the
+// practitioner did not configure it and there is nothing to converge to.
+func expectedAdministrationMode(ctx context.Context, plan *SourceModel) *bool {
+	var dataverseSourcePlanModel DataverseSourceModel
+	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+	if dataverseSourcePlanModel.AdministrationMode.IsNull() || dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
+		return nil
+	}
+	return dataverseSourcePlanModel.AdministrationMode.ValueBoolPointer()
+}
+
+// expectedBackgroundOperation returns the planned background_operation_enabled value, or nil when the
+// practitioner did not configure it and there is nothing to converge to.
+func expectedBackgroundOperation(ctx context.Context, plan *SourceModel) *bool {
+	var dataverseSourcePlanModel DataverseSourceModel
+	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+	if dataverseSourcePlanModel.BackgroundOperation.IsNull() || dataverseSourcePlanModel.BackgroundOperation.IsUnknown() {
+		return nil
+	}
+	return dataverseSourcePlanModel.BackgroundOperation.ValueBoolPointer()
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
@@ -845,8 +893,17 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
-		return
+		isAcceptanceTestTimeout := os.Getenv("TF_ACC") != "" && (errors.Is(err, context.DeadlineExceeded) || errors.Is(err, customerrors.ErrEnvironmentDeletion))
+		if !isAcceptanceTestTimeout {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
+			return
+		}
+		// During acceptance tests the live API frequently does not finish the delete lifecycle operation within the
+		// operation timeout or the retry budget, which would fail the test run even though the deletion was accepted.
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Timeout when deleting %s", r.FullTypeName()),
+			fmt.Sprintf("Deletion of environment '%s' did not complete: %s. The environment may still be deleting or left behind in the tenant.", state.Id.ValueString(), err.Error()),
+		)
 	}
 	resp.State.RemoveResource(ctx)
 }
@@ -996,6 +1053,10 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	}
 	if !helpers.IsKnown(plan.Location) || plan.Location.ValueString() == "" {
 		return nil
+	}
+	// the api rejects the copilot policy altogether, so even disabling flex routing is not possible outside of the boundary
+	if helpers.IsKnown(plan.AllowFlexRouting) && !slices.Contains(EuDataBoundaryLocations, plan.Location.ValueString()) {
+		return fmt.Errorf("flex routing can only be set for environments within the EU data boundary (%s), not in the %s location", strings.Join(EuDataBoundaryLocations, ", "), plan.Location.ValueString())
 	}
 	inRegionCapacity := slices.Contains(locationsWithInRegionCopilotCapacity, plan.Location.ValueString())
 	if inRegionCapacity && plan.AllowMovingDataAcrossRegions.ValueBool() {

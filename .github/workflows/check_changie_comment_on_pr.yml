@@ -24,7 +24,7 @@ jobs:
       pull-requests: read  # Only need to read PR info, not write
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 
@@ -41,19 +41,6 @@ jobs:
           filters: |
             exists:
               - added|modified: '.changes/unreleased/**.yaml'
-
-      - name: Setup Go
-        if: steps.changelog_check.outputs.exists == 'true'
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-            
-      - name: Install Changie
-        if: steps.changelog_check.outputs.exists == 'true'
-        run: |
-            go install github.com/miniscruff/changie@latest
-            go mod download
 
       - name: Pass if changelog entry exists
         if: steps.changelog_check.outputs.exists == 'true'
@@ -76,7 +63,7 @@ jobs:
       pull-requests: write # Required for comment deletion
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
 

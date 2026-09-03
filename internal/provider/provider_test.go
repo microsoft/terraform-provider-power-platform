@@ -80,10 +80,8 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		capacity.NewTenantCapcityDataSource(),
 		tenant.NewTenantDataSource(),
 		solution_checker_rules.NewSolutionCheckerRulesDataSource(),
+		role_based_access.NewRbacRoleAssignmentsDataSource(),
 		role_based_access.NewRoleDefinitionsDataSource(),
-		role_based_access.NewRoleBasedAccessAssignmentsDataSource(),
-		role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource(),
-		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource(),
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
@@ -121,11 +119,9 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		environment_wave.NewEnvironmentWaveResource(),
 		application.NewEnvironmentApplicationAdminResource(),
 		application.NewApplicationUserResource(),
-		application.NewRoleAssignmentResource(),
+		application.NewSecurityRoleAssignmentResource(),
+		role_based_access.NewRbacRoleAssignmentResource(),
 		disaster_recovery.NewDisasterRecoveryResource(),
-		role_based_access.NewRoleBasedAccessAssignmentResource(),
-		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource(),
-		role_based_access.NewEnvironmentRoleBasedAccessAssignmentResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

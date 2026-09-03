@@ -149,6 +149,8 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		return nil, customerrors.NewUrlFormatError(url, e)
 	}
 
+	var lastRetryableResponse *Response
+	unauthorizedRetries := 0
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
 
@@ -168,6 +170,12 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
+			// If the operation deadline/cancellation stops a retry loop, retain the last real HTTP
+			// failure. doRequest synthesizes an empty 503 for a transport cancellation, which would
+			// otherwise erase the service status/body that caused the retries.
+			if lastRetryableResponse != nil && (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) {
+				return lastRetryableResponse, err
+			}
 			return resp, err
 		}
 
@@ -181,7 +189,8 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			if responseObj != nil && len(resp.BodyAsBytes) > 0 {
 				err = resp.MarshallTo(responseObj)
 				if err != nil {
-					return resp, fmt.Errorf("Error marshalling response to json. %w", err)
+					// The status was accepted, so the operation happened; only its result was lost.
+					return resp, RequestSentError{Err: fmt.Errorf("Error marshalling response to json. %w", err)}
 				}
 			}
 
@@ -189,9 +198,14 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		}
 
 		isRetryable := helpers.ArrayContains(retryableStatusCodes, resp.HttpResponse.StatusCode)
-		if retry == retryNever || !isRetryable {
+		if retry == retryNever && resp.HttpResponse.StatusCode == http.StatusUnauthorized && unauthorizedRetries < constants.MAX_UNAUTHORIZED_RETRIES {
+			// The credential was refused, so the request never reached the operation and replaying
+			// it with a freshly acquired token cannot duplicate a non-idempotent mutation.
+			unauthorizedRetries++
+		} else if retry == retryNever || !isRetryable {
 			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
+		lastRetryableResponse = resp
 
 		waitFor := retryAfter(ctx, resp.HttpResponse)
 
@@ -213,9 +227,16 @@ func (client *Client) HandleNotFoundResponse(resp *Response) error {
 
 func (client *Client) HandleForbiddenResponse(resp *Response) error {
 	if resp.HttpResponse.StatusCode == http.StatusForbidden {
-		return fmt.Errorf("access denied to resource at '%s'. Please validate your permissions", resp.HttpResponse.Request.URL)
+		return customerrors.NewAccessDeniedError(requestUrl(resp), resp.BodyAsBytes)
 	}
 	return nil
+}
+
+func requestUrl(resp *Response) string {
+	if resp.HttpResponse.Request == nil || resp.HttpResponse.Request.URL == nil {
+		return ""
+	}
+	return resp.HttpResponse.Request.URL.String()
 }
 
 func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {
@@ -232,6 +253,11 @@ func DefaultRetryAfter() time.Duration {
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.
 func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
+	// Cancellation is part of the API contract even in test mode. Check it before bypassing the
+	// physical sleep so retry-loop tests cannot spin forever after their deadline has elapsed.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if helpers.IsTestContext(ctx) {
 		return nil
 	}

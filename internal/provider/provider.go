@@ -428,16 +428,10 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		},
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
 		func() resource.Resource { return application.NewApplicationUserResource() },
-		func() resource.Resource { return application.NewRoleAssignmentResource() },
+		func() resource.Resource { return application.NewSecurityRoleAssignmentResource() },
+		func() resource.Resource { return role_based_access.NewRbacRoleAssignmentResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
-		func() resource.Resource { return role_based_access.NewRoleBasedAccessAssignmentResource() },
-		func() resource.Resource {
-			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource()
-		},
-		func() resource.Resource {
-			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentResource()
-		},
 	}
 }
 
@@ -469,14 +463,8 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRbacRoleAssignmentsDataSource() },
 		func() datasource.DataSource { return role_based_access.NewRoleDefinitionsDataSource() },
-		func() datasource.DataSource { return role_based_access.NewRoleBasedAccessAssignmentsDataSource() },
-		func() datasource.DataSource {
-			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource()
-		},
-		func() datasource.DataSource {
-			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource()
-		},
 	}
 }
 

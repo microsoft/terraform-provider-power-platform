@@ -791,7 +791,10 @@ func TestUnitManagedEnvironmentsResource_Validate_Create_Conflict_When_Already_M
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
 			enableAttempts++
-			return httpmock.NewStringResponse(http.StatusConflict, ""), nil
+			if enableAttempts == 1 {
+				return httpmock.NewStringResponse(http.StatusConflict, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
 		})
 
 	// The environment is already managed, so the 409 is a no-op rather than a rejection.
@@ -1083,7 +1086,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 					suppress_validation_emails = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
 				}`,
-				ExpectError: regexp.MustCompile(".*EnableGovernanceConfiguration.*"),
+				ExpectError: regexp.MustCompile("(?s).*requires Dataverse.*"),
 			},
 		},
 	})

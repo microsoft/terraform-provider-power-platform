@@ -44,6 +44,31 @@ func TestUnitApiClient_ExecuteWithoutRetry_DoesNotReplayTransientMutation(t *tes
 	assert.Equal(t, 1, attempts, "an ambiguous non-idempotent mutation start must never be replayed")
 }
 
+func TestUnitApiClient_ExecuteWithoutRetry_ReplaysRefusedCredential(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.ExecuteWithoutRetry(
+		context.Background(),
+		[]string{"test"},
+		http.MethodPost,
+		server.URL,
+		http.Header{},
+		map[string]string{"operation": "start"},
+		[]int{http.StatusNoContent},
+		nil,
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, 3, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
+}
+
 func TestUnitApiClient_GetConfig(t *testing.T) {
 	t.Parallel()
 
@@ -331,5 +356,39 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			// Assert
 			assert.Equal(t, tc.expectedResult, result, "IsCaeChallengeResponse returned unexpected result")
 		})
+	}
+}
+
+func TestUnitApiClient_Execute_CancelledRetry_ReturnsLastRealFailure(t *testing.T) {
+	const failureBody = "athena is unavailable right now"
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts == 1 {
+			// A real, retryable failure carrying a body worth keeping.
+			http.Error(w, failureBody, http.StatusServiceUnavailable)
+			return
+		}
+		// Stall the second attempt so the caller's deadline expires mid-request. doRequest then
+		// synthesizes an empty 503, which must not replace the failure above.
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+
+	resp, err := client.Execute(ctx, []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Error(t, err, "the cancelled retry loop must still report an error")
+	assert.GreaterOrEqual(t, attempts, 2, "the request should have been retried at least once")
+	if assert.NotNil(t, resp, "the last real response must be returned, not dropped") {
+		assert.Equal(t, http.StatusServiceUnavailable, resp.HttpResponse.StatusCode)
+		assert.Contains(t, string(resp.BodyAsBytes), failureBody,
+			"the body of the failure that caused the retries must survive the cancellation")
 	}
 }

@@ -1,5 +1,5 @@
 kind: added
-body: Add `powerplatform_environment_variable_value` resource to manage current environment-scoped values for existing environment variable definitions; the resource manages only the value, definitions ship in solutions
+body: Add `powerplatform_environment_variable_value` resource to manage current environment-scoped values for existing environment variable definitions; the resource manages only the value, definitions ship in solutions. It creates the value record for a definition that has none and updates the existing one otherwise
 time: 2026-04-09T23:05:00.000000+11:00
 custom:
     Issue: "1225"

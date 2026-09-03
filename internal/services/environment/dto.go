@@ -38,6 +38,10 @@ var (
 	// https://learn.microsoft.com/power-platform/admin/geographical-availability-copilot
 	// Government clouds are also excluded, but are rejected earlier by the cloud type check.
 	locationsWithInRegionCopilotCapacity = []string{"unitedstates"}
+
+	// EuDataBoundaryLocations are the environment locations that sit inside the EU Data Boundary,
+	// which covers the European Union and the EFTA states.
+	EuDataBoundaryLocations = []string{"europe", "france", "germany", "italy", "norway", "poland", "sweden", "switzerland"}
 )
 
 type EnvironmentDto struct {
