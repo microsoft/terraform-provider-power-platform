@@ -101,10 +101,15 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	}
 
 	// The API rejects a payload carrying both keys with AmbiguousLocationSpecification.
-	if helpers.IsKnown(environmentSource.MacroRegion) && environmentSource.MacroRegion.ValueString() != "" {
+	switch {
+	case helpers.IsKnown(environmentSource.MacroRegion) && environmentSource.MacroRegion.ValueString() != "":
 		environmentDto.MacroRegion = environmentSource.MacroRegion.ValueString()
-	} else {
+	case helpers.IsKnown(environmentSource.Location) && environmentSource.Location.ValueString() != "":
 		environmentDto.Location = environmentSource.Location.ValueString()
+	default:
+		// Both keys carry omitempty, so without this the request would omit the placement entirely
+		// and the service would answer with an error that does not name the missing attribute.
+		return nil, errors.New("either 'location' or 'macro_region' must be set to a known, non-empty value")
 	}
 
 	if !environmentSource.Description.IsNull() && environmentSource.Description.ValueString() != "" {
