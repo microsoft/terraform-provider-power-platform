@@ -71,6 +71,14 @@ Helpers live in `internal/mocks/mocks.go` alongside `TestsEntraLicesingGroupName
 
 The CI workflow runs `go test ... -failfast`, so a test that cannot pass on the CI tenant would abort the entire suite rather than fail on its own. Setting the variable explicitly to empty in the workflow records that the skip is intentional.
 
+To run a gated test locally, set its variable for the command and authenticate against a tenant with the capability:
+
+```bash
+ACCEPTANCE_TESTS_MACRO_REGION=eu-efta make acctest TEST=EnvironmentsResource_Validate_Create_Macro_Region
+```
+
+A gated test reports `--- SKIP:` rather than failing when its variable is unset, so check the run output to confirm the test actually executed.
+
 #### Running Acceptance Tests
 
 To run all acceptance tests:

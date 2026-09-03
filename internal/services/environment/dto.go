@@ -32,6 +32,12 @@ var (
 	CadenceTypes                         = []string{CadenceTypesFrequent, CadenceTypesModerate}
 	ReleaseCycleTypes                    = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
 	ReleaseCycleFirstReleaseOnlyRegex    = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
+
+	// Locations with full in-region generative AI capacity do not offer the "move data across regions"
+	// setting at all. Capacity driven, so this list changes as Microsoft adds in-region capacity:
+	// https://learn.microsoft.com/power-platform/admin/geographical-availability-copilot
+	// Government clouds are also excluded, but are rejected earlier by the cloud type check.
+	locationsWithInRegionCopilotCapacity = []string{"unitedstates"}
 )
 
 type EnvironmentDto struct {

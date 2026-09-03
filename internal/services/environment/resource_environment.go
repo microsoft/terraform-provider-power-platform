@@ -997,10 +997,11 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if !helpers.IsKnown(plan.Location) || plan.Location.ValueString() == "" {
 		return nil
 	}
-	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("moving data across regions is not supported in the unitedstates location")
+	inRegionCapacity := slices.Contains(locationsWithInRegionCopilotCapacity, plan.Location.ValueString())
+	if inRegionCapacity && plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("moving data across regions is not supported in the %s location", plan.Location.ValueString())
 	}
-	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+	if !inRegionCapacity && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil
