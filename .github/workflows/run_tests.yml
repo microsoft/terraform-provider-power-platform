@@ -173,6 +173,12 @@ jobs:
         ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
         ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
+        # Deliberately empty. The macro region acceptance tests need a tenant that provisions by
+        # macro region geography, and this tenant provisions by datacenter location, so
+        # mocks.SkipIfNotMacroRegionTenant skips them. Set this to a macro region id such as
+        # eu-efta to run them against a macro region tenant. Leaving it unset would skip them
+        # just the same, but then the omission would look like an oversight rather than a choice.
+        ACCEPTANCE_TESTS_MACRO_REGION: ""
       run: |
         go clean -testcache
         # Test Execution Command

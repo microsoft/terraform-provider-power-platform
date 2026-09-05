@@ -1,0 +1,33 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000002",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "europe",
+    "name": "00000000-0000-0000-0000-000000000002",
+    "properties": {
+        "tenantId": "00000000-0000-0000-0000-000000000002",
+        "azureRegion": "westeurope",
+        "displayName": "classic environment",
+        "description": "provisioned by location",
+        "provisioningState": "Succeeded",
+        "creationType": "User",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "databaseType": "None",
+        "linkedEnvironmentMetadata": null,
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "runtimeReasonCode": "NotSpecified",
+                "id": "Enabled"
+            }
+        },
+        "updateCadence": {
+            "id": "Frequent"
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Basic"
+        }
+    }
+}
