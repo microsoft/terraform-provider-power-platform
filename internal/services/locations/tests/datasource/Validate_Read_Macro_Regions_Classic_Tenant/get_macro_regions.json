@@ -1,0 +1,40 @@
+{
+    "value": [
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates",
+            "type": "Microsoft.BusinessAppPlatform/locations",
+            "name": "unitedstates",
+            "properties": {
+                "displayName": "United States",
+                "code": "NA",
+                "isDefault": true,
+                "isDisabled": false,
+                "canProvisionDatabase": true,
+                "canProvisionCustomerEngagementDatabase": true,
+                "azureRegions": [
+                    "eastus",
+                    "westus"
+                ]
+            }
+        },
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/locations/europe",
+            "type": "Microsoft.BusinessAppPlatform/locations",
+            "name": "europe",
+            "properties": {
+                "displayName": "Europe",
+                "code": "EMEA",
+                "isDefault": false,
+                "isDisabled": false,
+                "canProvisionDatabase": true,
+                "canProvisionCustomerEngagementDatabase": true,
+                "azureRegions": [
+                    "westeurope",
+                    "northeurope"
+                ]
+            }
+        }
+    ],
+    "tenantProvisioningMode": "region",
+    "macroRegions": []
+}

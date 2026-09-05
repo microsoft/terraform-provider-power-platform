@@ -1,0 +1,5 @@
+kind: fixed
+body: Billing policy create and delete now use the same `/licensing/billingPolicies` path spelling as the other billing policy calls and as the published API
+time: 2026-08-27T22:18:17.000000000Z
+custom:
+    Issue: "1257"

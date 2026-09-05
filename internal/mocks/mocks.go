@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -57,6 +58,17 @@ func TestsEntraLicesingGroupName() string {
 		return name
 	}
 	return "pptestusers"
+}
+
+// SkipIfNotMacroRegionTenant gates tests that can only run on a tenant which provisions environments
+// by macro region. It returns the macro region id to create the environment in.
+func SkipIfNotMacroRegionTenant(t *testing.T) string {
+	t.Helper()
+	macroRegion := os.Getenv("ACCEPTANCE_TESTS_MACRO_REGION")
+	if macroRegion == "" {
+		t.Skip("Skipping: requires a macroRegion-mode tenant. Set ACCEPTANCE_TESTS_MACRO_REGION to run.")
+	}
+	return macroRegion
 }
 
 var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
