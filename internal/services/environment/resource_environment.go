@@ -165,10 +165,21 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"location": schema.StringAttribute{
-				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
-				Required:            true,
+				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Mutually exclusive with `macro_region` - set exactly one. Tenants without tenant-wide Advanced Data Residency provision by macro region instead; use the `powerplatform_macro_regions` data source to discover the available values. When `macro_region` is used the service selects a datacenter location and this attribute reports it. Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metadata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
+				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"macro_region": schema.StringAttribute{
+				MarkdownDescription: "Macro region geography the environment is provisioned into (`eu-efta`, `north-america` etc.). Can be queried using the `powerplatform_macro_regions` data source. Mutually exclusive with `location`, and cannot be combined with `azure_region` - the service selects the datacenter region within the macro region and reports it back in `location` and `azure_region`. Because the datacenter is not known until the environment is created, the location specific constraints on `allow_moving_data_across_regions` are enforced by the service rather than by this provider. See [macro region geography](https://learn.microsoft.com/power-platform/admin/macro-regions). Changing this property after environment creation will result in a destroy and recreation of the environment.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"azure_region": schema.StringAttribute{
@@ -213,7 +224,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Computed:            true,
 			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
-				MarkdownDescription: "Allow moving data across regions",
+				MarkdownDescription: "Allow moving data across regions. When `macro_region` is used, the location specific constraints on this setting are enforced by the service rather than by this provider, because the datacenter location is not known until the environment is created.",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -385,6 +396,14 @@ func (d *Resource) ConfigValidators(ctx context.Context) []resource.ConfigValida
 			path.Root("dataverse").AtName("administration_mode_enabled").Expression(),
 			path.Root("dataverse").AtName("background_operation_enabled").Expression(),
 		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("location"),
+			path.MatchRoot("macro_region"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("macro_region"),
+			path.MatchRoot("azure_region"),
+		),
 	}
 }
 
@@ -429,27 +448,30 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
+	err = r.EnvironmentClient.ValidateEnvironmentPlacement(ctx, envToCreate.Location, envToCreate.MacroRegion, envToCreate.Properties.AzureRegion)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Environment placement validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	err = r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Generative AI features validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
-		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+		// On a macro region tenant BAPI reinterprets the locations/{segment} path as a macro region id.
+		geo := envToCreate.geoSegment()
+
+		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, geo, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s", r.FullTypeName()), err.Error())
 			return
 		}
 
-		err = currencyCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+		err = currencyCodeValidator(ctx, r.EnvironmentClient.Api, geo, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s", r.FullTypeName()), err.Error())
 			return
@@ -482,7 +504,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	createdState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	createdState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), plan.MacroRegion.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -522,7 +544,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), plan.MacroRegion.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -595,7 +617,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			templates = dv.Templates
 		}
 	}
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, state.Timeouts, *r.EnvironmentClient.Api.Config)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), state.MacroRegion.ValueStringPointer(), templateMetadata, templates, state.Timeouts, *r.EnvironmentClient.Api.Config)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
@@ -623,7 +645,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	err := r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Generative AI features validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -730,7 +752,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), plan.MacroRegion.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -1023,14 +1045,24 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
 		return errors.New("moving data across regions is not supported in non public clouds")
 	}
-	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("moving data across regions is not supported in the unitedstates location")
+	// The service picks the datacenter for a macro region environment, and on create it is not
+	// known at all, so the location specific rules below cannot be attributed to what the
+	// practitioner configured. The service enforces them instead.
+	if helpers.IsKnown(plan.MacroRegion) && plan.MacroRegion.ValueString() != "" {
+		return nil
+	}
+	if !helpers.IsKnown(plan.Location) || plan.Location.ValueString() == "" {
+		return nil
 	}
 	// the api rejects the copilot policy altogether, so even disabling flex routing is not possible outside of the boundary
 	if helpers.IsKnown(plan.AllowFlexRouting) && !slices.Contains(EuDataBoundaryLocations, plan.Location.ValueString()) {
 		return fmt.Errorf("flex routing can only be set for environments within the EU data boundary (%s), not in the %s location", strings.Join(EuDataBoundaryLocations, ", "), plan.Location.ValueString())
 	}
-	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+	inRegionCapacity := slices.Contains(locationsWithInRegionCopilotCapacity, plan.Location.ValueString())
+	if inRegionCapacity && plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("moving data across regions is not supported in the %s location", plan.Location.ValueString())
+	}
+	if !inRegionCapacity && (plan.AllowBingSearch.ValueBool() || plan.AllowMicrosoft365Services.ValueBool() || plan.AllowFlexRouting.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil

@@ -66,6 +66,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
 		locations.NewLocationsDataSource(),
+		locations.NewMacroRegionsDataSource(),
 		languages.NewLanguagesDataSource(),
 		currencies.NewCurrenciesDataSource(),
 		authorization.NewSecurityRolesDataSource(),

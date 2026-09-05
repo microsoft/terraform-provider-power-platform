@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"io"
 	"math/rand"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -4199,6 +4200,652 @@ func TestUnitEnvironmentsResource_Validate_Delete_With_Lifecycle_404(t *testing.
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+		},
+	})
+}
+
+// The shared mocks describe a tenant that provisions by location. httpmock keeps the responder that
+// was registered last for an identical URL, so layering the macroRegion locations payload on top
+// turns the same mock set into a macroRegion tenant.
+func activateMacroRegionEnvironmentHttpMocks() {
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_locations.json").String()), nil
+		})
+
+	// The shared language and currency responders only match classic locations, and an unmatched
+	// request is a hard error, so these two responders are what proves the macro region id was used
+	// as the geo segment of the pre-create validation.
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/eu-efta/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/languages/tests/datasource/Validate_Read/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/eu-efta/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/currencies/tests/datasource/Validate_Read/get_currencies.json").String()), nil
+		})
+}
+
+func registerMacroRegionEnvironmentLifecycleMocks() {
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Create_Macro_Region/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle_delete.json").String()), nil
+		})
+}
+
+// On a macroRegion tenant the create body must carry macroRegion and no location at all, otherwise
+// the service answers 400 AmbiguousLocationSpecification. The datacenter is chosen by the service
+// and reported back in location and azure_region.
+func TestUnitEnvironmentsResource_Validate_Create_Macro_Region(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+	registerMacroRegionEnvironmentLifecycleMocks()
+
+	var createBody string
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			createBody = string(body)
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "eu-efta"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "macro_region", "eu-efta"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "switzerlandwest"),
+					func(_ *terraform.State) error {
+						if !strings.Contains(createBody, `"macroRegion":"eu-efta"`) {
+							return fmt.Errorf("create body must send macroRegion, got: %s", createBody)
+						}
+						if strings.Contains(createBody, `"location"`) {
+							return fmt.Errorf("create body must not send location alongside macroRegion, got: %s", createBody)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// A response that omits macroRegion must not null the attribute: RequiresReplaceIfConfigured would
+// then plan a destroy and recreate of a live environment on the next run.
+func TestUnitEnvironmentsResource_Validate_Macro_Region_Retained_When_Api_Omits_It(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_environment_macro_region_omitted.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "eu-efta"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				// resource.Test fails on a non-empty plan after apply, so passing this step also
+				// proves the omitted macroRegion does not schedule a replacement.
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "macro_region", "eu-efta"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
+				),
+			},
+		},
+	})
+}
+
+// Import must round trip a macro region environment, because ImportState populates only the id and
+// everything else is rebuilt from the API response.
+func TestUnitEnvironmentsResource_Validate_Import_Macro_Region(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+	registerMacroRegionEnvironmentLifecycleMocks()
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "eu-efta"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+			{
+				ResourceName:      "powerplatform_environment.development",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"timeouts",
+					"dataverse.currency_code",
+					"dataverse.language_code",
+					"dataverse.security_group_id",
+					"dataverse.templates",
+					"dataverse.template_metadata",
+				},
+			},
+		},
+	})
+}
+
+// The inverse of the macro region create: a tenant that provisions by location must never receive a
+// macroRegion key, because sending both is rejected with 400 AmbiguousLocationSpecification.
+func TestUnitEnvironmentsResource_Validate_Create_Location_Omits_Macro_Region(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	var createBody string
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			createBody = string(body)
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Create/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "macro_region"),
+					func(_ *terraform.State) error {
+						if !strings.Contains(createBody, `"location":"europe"`) {
+							return fmt.Errorf("create body must send location, got: %s", createBody)
+						}
+						if strings.Contains(createBody, "macroRegion") {
+							return fmt.Errorf("create body must not send macroRegion for a location based create, got: %s", createBody)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// location and macro_region are mutually exclusive with exactly one required, and azure_region is
+// meaningless with macro_region because the service picks the datacenter.
+func TestUnitEnvironmentsResource_Validate_Macro_Region_Config_Validators(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					macro_region     = "eu-efta"
+					environment_type = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s).*Invalid Attribute Combination.*location.*macro_region.*`),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					environment_type = "Sandbox"
+				}`,
+				// ExactlyOneOf reports a different summary when none of the attributes are set.
+				ExpectError: regexp.MustCompile(`(?s).*Missing Attribute Configuration.*location.*macro_region.*`),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "eu-efta"
+					azure_region     = "switzerlandwest"
+					environment_type = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s).*Invalid Attribute Combination.*macro_region.*azure_region.*`),
+			},
+		},
+	})
+}
+
+// A macroRegion tenant answers a location based create with 400 MacroRegionRequired, so the create
+// is refused up front with the macro region ids the tenant actually offers.
+func TestUnitEnvironmentsResource_Validate_Location_On_Macro_Region_Tenant(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+				}`,
+				// Terraform wraps diagnostic text, so the ids cannot be matched as one contiguous list.
+				// Two non-adjacent ids are asserted so a truncated list would still fail.
+				ExpectError: regexp.MustCompile(`(?s).*this tenant provisions environments by macro region.*eu-efta.*the-americas.*`),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "atlantis"
+					environment_type = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s).*macro region 'atlantis' is not valid.*eu-efta.*the-americas.*`),
+			},
+		},
+	})
+}
+
+// A tenant that provisions by location answers a macroRegion body with 201 and silently places the
+// environment in its default geography, so the provider refuses rather than misplace the data.
+func TestUnitEnvironmentsResource_Validate_Macro_Region_On_Classic_Tenant(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					macro_region     = "eu-efta"
+					environment_type = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(`(?s).*this tenant provisions environments by location.*'macro_region'.*`),
+			},
+		},
+	})
+}
+
+// The unitedstates guard on allow_moving_data_across_regions cannot be evaluated when the datacenter
+// is picked by the service, so the combination is accepted and left to the service to enforce.
+func TestUnitEnvironmentsResource_Validate_Create_Macro_Region_Allows_Moving_Data_Across_Regions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+
+	aiFeatures := environmentAiFeaturesState{}
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return environmentAiFeaturesResponse("tests/resource/Validate_Create_Macro_Region/get_environment_no_dataverse.json", aiFeatures)
+		})
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			// Only allow_moving_data_across_regions is configured here, so the payload carries a
+			// single copilot policy and omits the bing/m365 flags that
+			// decodeEnvironmentAiFeaturesRequest requires.
+			var body generativeAiFeaturesRequestBody
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				t.Error(err)
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			if body.Properties.CopilotPolicies == nil || body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled == nil {
+				t.Error("expected 'crossGeoCopilotDataMovementEnabled' to be present in the generative ai features request body")
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			aiFeatures.crossGeo = *body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                     = "displayname"
+					macro_region                     = "eu-efta"
+					environment_type                 = "Sandbox"
+					allow_moving_data_across_regions = true
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "macro_region", "eu-efta"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+		},
+	})
+}
+
+// A macro region can resolve to unitedstates, where allow_moving_data_across_regions is otherwise
+// refused. The guard cannot be attributed to what the practitioner configured, so it must stay
+// skipped on update too - reading the resolved location from state and erroring there would leave
+// the environment permanently unupdatable.
+func TestUnitEnvironmentsResource_Validate_Update_Macro_Region_Resolved_To_Unitedstates(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	activateMacroRegionEnvironmentHttpMocks()
+
+	// The geo segment for a north-america create, proving the pre-create validation used the macro
+	// region id rather than the resolved unitedstates location.
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/north-america/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/languages/tests/datasource/Validate_Read/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/north-america/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/currencies/tests/datasource/Validate_Read/get_currencies.json").String()), nil
+		})
+
+	displayName := "displayname"
+	aiFeatures := environmentAiFeaturesState{}
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			var env map[string]any
+			if err := json.Unmarshal([]byte(httpmock.File("tests/resource/Validate_Create_Macro_Region/get_environment_north_america.json").String()), &env); err != nil {
+				return nil, err
+			}
+			props, ok := env["properties"].(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("expected environment properties to be a JSON object, got %T", env["properties"])
+			}
+			props["displayName"] = displayName
+			props["bingChatEnabled"] = aiFeatures.bingChatEnabled
+			props["m365Enabled"] = aiFeatures.m365Enabled
+			props["copilotPolicies"] = map[string]any{
+				"crossGeoCopilotDataMovementEnabled":      aiFeatures.crossGeo,
+				"crossBoundaryCopilotDataMovementEnabled": aiFeatures.crossBoundary,
+			}
+			body, err := json.Marshal(env)
+			if err != nil {
+				return nil, err
+			}
+			return httpmock.NewStringResponse(http.StatusOK, string(body)), nil
+		})
+
+	// Both the generative AI features call and the general update PATCH the same path. Only the
+	// general update carries displayName, and the two expect different success codes.
+	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)`,
+		func(req *http.Request) (*http.Response, error) {
+			var body map[string]any
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return nil, err
+			}
+			props, ok := body["properties"].(map[string]any)
+			if !ok {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+
+			if name, ok := props["displayName"].(string); ok && name != "" {
+				displayName = name
+				resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+				resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+				return resp, nil
+			}
+
+			if policies, ok := props["copilotPolicies"].(map[string]any); ok {
+				if v, ok := policies["crossGeoCopilotDataMovementEnabled"].(bool); ok {
+					aiFeatures.crossGeo = v
+				}
+				if v, ok := policies["crossBoundaryCopilotDataMovementEnabled"].(bool); ok {
+					aiFeatures.crossBoundary = v
+				}
+			}
+			if v, ok := props["bingChatEnabled"].(bool); ok {
+				aiFeatures.bingChatEnabled = v
+			}
+			if v, ok := props["m365Enabled"].(bool); ok {
+				aiFeatures.m365Enabled = v
+			}
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Macro_Region/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                     = "displayname"
+					macro_region                     = "north-america"
+					environment_type                 = "Sandbox"
+					allow_moving_data_across_regions = true
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+				),
+			},
+			{
+				// The update path reads the resolved location from state, so this step is what would
+				// fail if the macro region short circuit were create only.
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                     = "renamed"
+					macro_region                     = "north-america"
+					environment_type                 = "Sandbox"
+					allow_moving_data_across_regions = true
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "renamed"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "macro_region", "north-america"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_Create_Macro_Region(t *testing.T) {
+	macroRegion := mocks.SkipIfNotMacroRegionTenant(t)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "` + mocks.TestName() + `"
+					macro_region     = "` + macroRegion + `"
+					environment_type = "Sandbox"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "macro_region", macroRegion),
+					resource.TestCheckResourceAttrSet("powerplatform_environment.development", "location"),
+					resource.TestCheckResourceAttrSet("powerplatform_environment.development", "azure_region"),
 				),
 			},
 		},

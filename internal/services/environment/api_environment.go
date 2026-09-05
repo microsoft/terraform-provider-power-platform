@@ -42,11 +42,15 @@ func findLocation(locations LocationArrayDto, locationToFind string) (*LocationD
 		}
 	}
 
-	locationNames := make([]string, len(locations.Value))
+	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames(locations), ", "))
+}
+
+func locationNames(locations LocationArrayDto) []string {
+	names := make([]string, len(locations.Value))
 	for i, loc := range locations.Value {
-		locationNames[i] = loc.Name
+		names[i] = loc.Name
 	}
-	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames, ", "))
+	return names
 }
 
 func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
@@ -76,10 +80,44 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 	return &locationsArray, nil
 }
 
-func (client *Client) LocationValidator(ctx context.Context, location, azureRegion string) error {
+func macroRegionIds(locations LocationArrayDto) []string {
+	ids := make([]string, len(locations.MacroRegions))
+	for i, macroRegion := range locations.MacroRegions {
+		ids[i] = macroRegion.MacroRegionId
+	}
+	return ids
+}
+
+func findMacroRegion(locations LocationArrayDto, macroRegionToFind string) error {
+	for _, macroRegion := range locations.MacroRegions {
+		if macroRegion.MacroRegionId == macroRegionToFind {
+			return nil
+		}
+	}
+	return fmt.Errorf("macro region '%s' is not valid. valid macro regions are: %s", macroRegionToFind, strings.Join(macroRegionIds(locations), ", "))
+}
+
+// ValidateEnvironmentPlacement rejects placement attributes that do not match the tenant's
+// provisioning mode, which is auto-detected from the same locations response used for validation.
+func (client *Client) ValidateEnvironmentPlacement(ctx context.Context, location, macroRegion, azureRegion string) error {
 	locationsArray, err := client.GetLocations(ctx)
 	if err != nil {
 		return err
+	}
+
+	if locationsArray.TenantProvisioningMode == tenantProvisioningModeMacroRegion {
+		if macroRegion == "" {
+			// The locations list stays fully populated on a macro region tenant, so findLocation
+			// would succeed here and the create would only fail later with MacroRegionRequired.
+			return fmt.Errorf("this tenant provisions environments by macro region, so 'location' cannot be used. set 'macro_region' to one of: %s", strings.Join(macroRegionIds(*locationsArray), ", "))
+		}
+		return findMacroRegion(*locationsArray, macroRegion)
+	}
+
+	if macroRegion != "" {
+		// A tenant that provisions by location returns 201 and silently ignores macroRegion, placing
+		// the environment in the tenant default location. Refuse rather than misplace the data.
+		return fmt.Errorf("this tenant provisions environments by location, so 'macro_region' cannot be used. set 'location' to one of: %s", strings.Join(locationNames(*locationsArray), ", "))
 	}
 
 	foundLocation, err := findLocation(*locationsArray, location)
@@ -91,12 +129,8 @@ func (client *Client) LocationValidator(ctx context.Context, location, azureRegi
 		return nil
 	}
 
-	isRegionFound, err := findAzureRegion(foundLocation, azureRegion)
-	if err != nil || !isRegionFound {
-		return err
-	}
-
-	return nil
+	_, err = findAzureRegion(foundLocation, azureRegion)
+	return err
 }
 
 type currencyCodeValidatorDto struct {
