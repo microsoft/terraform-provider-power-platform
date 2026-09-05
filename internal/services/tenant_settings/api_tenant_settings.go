@@ -102,6 +102,13 @@ func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual ten
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = &zu
 		}
 	}
+	if planned.PowerPlatform != nil && planned.PowerPlatform.Intelligence != nil && corrected.PowerPlatform != nil && corrected.PowerPlatform.Intelligence != nil {
+		if planned.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId != nil && *planned.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId == nil {
+			zu := constants.ZERO_UUID
+			corrected.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId = &zu
+		}
+	}
+
 	return corrected, nil
 }
 

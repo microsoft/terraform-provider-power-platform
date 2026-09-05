@@ -1,0 +1,5 @@
+kind: deprecated
+body: Deprecated `disable_create_from_image` and `disable_create_from_figma` attributes in powerplatform_tenant_settings data source and resource.
+time: 2026-01-06T08:55:56.717254585Z
+custom:
+    Issue: "959"

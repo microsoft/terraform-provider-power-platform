@@ -40,11 +40,10 @@ data "powerplatform_tenant_settings" "settings" {}
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean, Deprecated) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean, Deprecated) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users
+- `enable_support_use_bing_search_solutions` (Boolean) When enabled, Bing search is going to be used when providing self-help solutions.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
 
@@ -67,6 +66,7 @@ Read-Only:
 - `power_apps` (Attributes) Power Apps (see [below for nested schema](#nestedatt--power_platform--power_apps))
 - `power_automate` (Attributes) Power Automate (see [below for nested schema](#nestedatt--power_platform--power_automate))
 - `power_pages` (Attributes) Power Pages (see [below for nested schema](#nestedatt--power_platform--power_pages))
+- `product_feedback` (Attributes) Product Feedback (see [below for nested schema](#nestedatt--power_platform--product_feedback))
 - `search` (Attributes) Search (see [below for nested schema](#nestedatt--power_platform--search))
 - `teams_integration` (Attributes) Teams Integration (see [below for nested schema](#nestedatt--power_platform--teams_integration))
 - `user_management_settings` (Attributes) User Management Settings (see [below for nested schema](#nestedatt--power_platform--user_management_settings))
@@ -108,6 +108,7 @@ Read-Only:
 - `environment_routing_target_environment_group_id` (String) Assign newly created personal developer environments to a specific environment group
 - `environment_routing_target_security_group_id` (String) Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)
 - `policy` (Attributes) Policy (see [below for nested schema](#nestedatt--power_platform--governance--policy))
+- `weekly_digest_email_recipients` (Set of String) Weekly Digest Email Recipients
 
 <a id="nestedatt--power_platform--governance--policy"></a>
 ### Nested Schema for `power_platform.governance.policy`
@@ -123,8 +124,11 @@ Read-Only:
 
 Read-Only:
 
+- `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Allow Copilot authors to publish from Copilot Studio when AI features are enabled
+- `copilot_studio_authors_security_group_id` (String) Copilot Studio Authors Security Group ID
+- `disable_additional_copilot_feedback` (Boolean) Additional Copilot Feedback
+- `disable_basic_copilot_feedback` (Boolean) Basic Copilot Feedback
 - `disable_copilot` (Boolean) Disable Copilot
-- `enable_open_ai_bot_publishing` (Boolean, Deprecated) Enable Open AI Bot Publishing
 
 
 <a id="nestedatt--power_platform--licensing"></a>
@@ -132,6 +136,8 @@ Read-Only:
 
 Read-Only:
 
+- `apply_auto_claim_power_apps_to_only_managed_environments` (Boolean) Apply Auto Claim Power Apps To Only Managed Environments
+- `apply_auto_claim_power_automate_to_only_managed_environments` (Boolean) Apply Auto Claim Power Automate To Only Managed Environments
 - `disable_billing_policy_creation_by_non_admin_users` (Boolean) Disable Billing Policy Creation By Non Admin Users
 - `disable_use_of_unassigned_ai_builder_credits` (Boolean) Disable Use Of Unassigned AI Builder Credits
 - `enable_tenant_capacity_report_for_environment_admins` (Boolean) Enable Tenant Capacity Report For Environment Admins
@@ -154,11 +160,13 @@ Read-Only:
 Read-Only:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
-- `disable_create_from_figma` (Boolean, Deprecated) Disable Create From Figma
-- `disable_create_from_image` (Boolean, Deprecated) Disable Create From Image
+- `disable_copilot` (Boolean) Disable Copilot
+- `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
+- `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
+- `enable_canvas_app_insights` (Boolean) Enable Canvas App Insights
 - `enable_guests_to_make` (Boolean) Enable Guests To Make
 
 
@@ -167,11 +175,25 @@ Read-Only:
 
 Read-Only:
 
+- `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
 - `disable_copilot` (Boolean) Disable Copilot
+- `disable_copilot_help_assistance` (Boolean) Disable Copilot With Bing
+- `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 
 <a id="nestedatt--power_platform--power_pages"></a>
 ### Nested Schema for `power_platform.power_pages`
+
+
+<a id="nestedatt--power_platform--product_feedback"></a>
+### Nested Schema for `power_platform.product_feedback`
+
+Read-Only:
+
+- `disable_attachments` (Boolean) Disable screenshots and attachments in feedback
+- `disable_microsoft_follow_up` (Boolean) Disable letting Microsoft follow up on feedback
+- `disable_microsoft_surveys_send` (Boolean) Disable letting Microsoft send surveys
+- `disable_user_survey_feedback` (Boolean) Disable users to choose to provide survey feedback
 
 
 <a id="nestedatt--power_platform--search"></a>
