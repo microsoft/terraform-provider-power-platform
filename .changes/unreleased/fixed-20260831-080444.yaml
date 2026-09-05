@@ -1,0 +1,5 @@
+kind: fixed
+body: Wait for managed environment enablement to propagate after lifecycle completion
+time: 2026-08-31T08:04:44.94779591Z
+custom:
+    Issue: "1259"
