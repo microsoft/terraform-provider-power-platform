@@ -1294,7 +1294,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Create_No_Managed_Env(t *testi
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(`doesn't have managed`),
+				ExpectError: regexp.MustCompile(`still not managed`),
 				Config: `
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = "00000000-0000-0000-0000-000000000001"

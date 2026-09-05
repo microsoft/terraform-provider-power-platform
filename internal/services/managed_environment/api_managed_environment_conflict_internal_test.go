@@ -13,6 +13,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,6 +44,43 @@ func TestUnitDisableManagedEnvironment_ConflictWhileStillManagedRetries(t *testi
 	require.NoError(t, err)
 	require.Equal(t, 2, disableAttempts, "a 409 while the environment is still managed must be retried")
 	require.Equal(t, 1, environmentReads, "the provider must read the environment before deciding that a 409 is success")
+}
+
+func TestUnitEnableManagedEnvironment_WaitsForEnabledStateAfterLifecycleCompletion(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	client := newManagedEnvironmentConflictTestClient()
+	environmentReads := 0
+
+	httpmock.RegisterResponder(
+		http.MethodPost,
+		"https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/"+managedEnvironmentConflictTestEnvironmentID+"/governanceConfiguration?api-version=2021-04-01",
+		func(_ *http.Request) (*http.Response, error) {
+			response := httpmock.NewStringResponse(http.StatusAccepted, "")
+			response.Header.Set("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/operation?api-version=2023-06-01")
+			return response, nil
+		},
+	)
+	httpmock.RegisterResponder(
+		http.MethodGet,
+		"https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/operation?api-version=2023-06-01",
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"state":{"id":"Succeeded"}}`), nil
+		},
+	)
+	registerManagedEnvironmentStateResponder(t, func(_ *http.Request) (*http.Response, error) {
+		environmentReads++
+		if environmentReads == 1 {
+			return managedEnvironmentStateResponse("Basic"), nil
+		}
+		return managedEnvironmentStateResponse(constants.PROTECTION_LEVEL_STANDARD), nil
+	})
+
+	err := client.EnableManagedEnvironment(context.Background(), environment.GovernanceConfigurationDto{}, managedEnvironmentConflictTestEnvironmentID)
+
+	require.NoError(t, err)
+	require.Equal(t, 2, environmentReads, "the provider must wait for the enabled state after lifecycle completion")
 }
 
 func TestUnitDisableManagedEnvironment_ConflictWhenAlreadyDisabledIsIdempotent(t *testing.T) {
