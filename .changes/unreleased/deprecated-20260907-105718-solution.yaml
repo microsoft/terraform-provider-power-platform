@@ -1,0 +1,7 @@
+kind: deprecated
+body: >-
+  docs: announce the v5.0.0 replacement of `powerplatform_solution` by `powerplatform_managed_solution` and `powerplatform_unmanaged_solution`.
+  Plan migration according to the solution type when upgrading. The existing resource remains supported until v5.0.0.
+time: 2026-09-07T10:57:18Z
+custom:
+    Issue: "1136"

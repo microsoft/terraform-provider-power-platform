@@ -48,8 +48,8 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
 				Optional:            true,
-				DeprecationMessage:  "[DEPRECATED] The tenant_id attribute is DEPRECATED and will be removed in a future version.",
-				MarkdownDescription: "[DEPRECATED] The tenant ID for which the capacity information is to be fetched.",
+				DeprecationMessage:  "The tenant_id attribute is deprecated and will be removed in v5.0.0. Remove this attribute from your configuration and use the provider's tenant configuration instead.",
+				MarkdownDescription: "Deprecated: this attribute will be removed in v5.0.0. Remove it from your configuration and use the provider's tenant configuration instead. Capacity information is fetched for the tenant configured in the provider.",
 			},
 			"license_model_type": schema.StringAttribute{
 				Computed:            true,
