@@ -7,4 +7,4 @@ body: >-
   will be removed with no replacement. Current attributes remain supported until v5.0.0.
 time: 2026-09-07T10:57:18Z
 custom:
-  Issue: "959"
+    Issue: "959"
