@@ -1,0 +1,10 @@
+kind: deprecated
+body: >-
+  docs: announce v5.0.0 deprecations for `powerplatform_tenant_settings` (resource and data source).
+  `disable_survey_feedback`, `disable_nps_comments_reachout`, and `power_platform.intelligence.enable_open_ai_bot_publishing`
+  will be renamed or moved within tenant settings. Update configurations and references to match the v5.0.0 schema when upgrading.
+  `power_platform.power_apps.disable_create_from_image` and `power_platform.power_apps.disable_create_from_figma`
+  will be removed with no replacement. Current attributes remain supported until v5.0.0.
+time: 2026-09-07T10:57:18Z
+custom:
+  Issue: "959"

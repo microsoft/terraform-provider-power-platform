@@ -3,17 +3,34 @@
 package authorization_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/authorization"
 )
+
+func TestUnitUserResource_V5ImportNotice(t *testing.T) {
+	var resp frameworkresource.SchemaResponse
+	authorization.NewUserResource().Schema(context.Background(), frameworkresource.SchemaRequest{}, &resp)
+	if resp.Schema.DeprecationMessage != "" {
+		t.Error("the user resource itself is not deprecated")
+	}
+	for _, expected := range []string{"Upcoming breaking change in v5.0.0", "environment_id/user_aad_id", "Microsoft Entra object ID", "Legacy single-ID imports", "unchanged until v5.0.0"} {
+		if !strings.Contains(resp.Schema.MarkdownDescription, expected) {
+			t.Errorf("expected %q in import migration notice, got %q", expected, resp.Schema.MarkdownDescription)
+		}
+	}
+}
 
 func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -3,10 +3,13 @@
 page_title: "powerplatform_solution Resource - Power Platform"
 subcategory: ""
 description: |-
+  Deprecated: powerplatform_solution will be replaced in v5.0.0 by powerplatform_managed_solution for managed solutions and powerplatform_unmanaged_solution for unmanaged solutions. When upgrading, migrate to the resource that matches your solution type.
   Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the pac solution import https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import command in the Power Platform CLI.
 ---
 
 # powerplatform_solution (Resource)
+
+Deprecated: `powerplatform_solution` will be replaced in v5.0.0 by `powerplatform_managed_solution` for managed solutions and `powerplatform_unmanaged_solution` for unmanaged solutions. When upgrading, migrate to the resource that matches your solution type.
 
 Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.
 

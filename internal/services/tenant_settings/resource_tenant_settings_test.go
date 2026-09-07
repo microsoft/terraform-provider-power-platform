@@ -4,14 +4,58 @@
 package tenant_settings_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_settings"
 )
+
+func TestUnitTenantSettings_V5Deprecations(t *testing.T) {
+	ctx := context.Background()
+	var resourceResp frameworkresource.SchemaResponse
+	tenant_settings.NewTenantSettingsResource().Schema(ctx, frameworkresource.SchemaRequest{}, &resourceResp)
+	var datasourceResp datasource.SchemaResponse
+	tenant_settings.NewTenantSettingsDataSource().Schema(ctx, datasource.SchemaRequest{}, &datasourceResp)
+
+	for _, testCase := range []struct {
+		attributePath path.Path
+		change        string
+	}{
+		{path.Root("disable_survey_feedback"), "renamed or moved"},
+		{path.Root("disable_nps_comments_reachout"), "renamed or moved"},
+		{path.Root("power_platform").AtName("intelligence").AtName("enable_open_ai_bot_publishing"), "renamed or moved"},
+		{path.Root("power_platform").AtName("power_apps").AtName("disable_create_from_image"), "with no replacement"},
+		{path.Root("power_platform").AtName("power_apps").AtName("disable_create_from_figma"), "with no replacement"},
+	} {
+		t.Run(testCase.attributePath.String(), func(t *testing.T) {
+			resourceAttr, resourceDiags := resourceResp.Schema.AttributeAtPath(ctx, testCase.attributePath)
+			datasourceAttr, datasourceDiags := datasourceResp.Schema.AttributeAtPath(ctx, testCase.attributePath)
+			if resourceDiags.HasError() || datasourceDiags.HasError() {
+				t.Fatalf("attribute lookup failed: %v %v", resourceDiags, datasourceDiags)
+			}
+			if resourceAttr.GetDeprecationMessage() != datasourceAttr.GetDeprecationMessage() {
+				t.Error("resource and data source deprecation messages must match")
+			}
+			for _, text := range []string{resourceAttr.GetDeprecationMessage(), resourceAttr.GetMarkdownDescription(), datasourceAttr.GetMarkdownDescription()} {
+				if !strings.Contains(text, "v5.0.0") || !strings.Contains(text, testCase.change) {
+					t.Errorf("expected v5 notice with %q, got %q", testCase.change, text)
+				}
+			}
+			if !resourceAttr.IsOptional() || !datasourceAttr.IsComputed() {
+				t.Error("deprecated attributes must retain their current schema behavior until v5.0.0")
+			}
+		})
+	}
+}
 
 func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{

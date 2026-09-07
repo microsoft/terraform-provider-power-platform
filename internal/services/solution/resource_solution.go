@@ -52,7 +52,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
+		DeprecationMessage: "The powerplatform_solution resource is deprecated and will be replaced in v5.0.0 by powerplatform_managed_solution and powerplatform_unmanaged_solution. When upgrading, migrate to the resource that matches your solution type.",
+		MarkdownDescription: "Deprecated: `powerplatform_solution` will be replaced in v5.0.0 by `powerplatform_managed_solution` for managed solutions and `powerplatform_unmanaged_solution` for unmanaged solutions. When upgrading, migrate to the resource that matches your solution type.\n\n" +
+			"Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

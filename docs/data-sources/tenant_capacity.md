@@ -37,7 +37,7 @@ data "powerplatform_tenant_capacity" "capacity" {
 
 ### Optional
 
-- `tenant_id` (String, Deprecated) [DEPRECATED] The tenant ID for which the capacity information is to be fetched.
+- `tenant_id` (String, Deprecated) Deprecated: this attribute will be removed in v5.0.0. Remove it from your configuration and use the provider's tenant configuration instead. Capacity information is fetched for the tenant configured in the provider.
 
 ### Read-Only
 

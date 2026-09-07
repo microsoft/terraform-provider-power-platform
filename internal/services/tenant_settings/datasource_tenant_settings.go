@@ -127,13 +127,13 @@ func powerAppsAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"disable_create_from_image": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Image",
-			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+			MarkdownDescription: "Disable Create From Image. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
+			DeprecationMessage:  "This attribute is deprecated and will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
 			Computed:            true,
 		},
 		"disable_create_from_figma": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Figma",
-			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+			MarkdownDescription: "Disable Create From Figma. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
+			DeprecationMessage:  "This attribute is deprecated and will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
 			Computed:            true,
 		},
 		"disable_connection_sharing_with_everyone": schema.BoolAttribute{
@@ -255,8 +255,8 @@ func intelligenceAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"enable_open_ai_bot_publishing": schema.BoolAttribute{
-			MarkdownDescription: "Enable Open AI Bot Publishing",
-			DeprecationMessage:  "This attribute is deprecated and will be replaced in next major release",
+			MarkdownDescription: "Enable Open AI Bot Publishing. Deprecated: this attribute will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
+			DeprecationMessage:  "This attribute is deprecated and will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
 			Computed:            true,
 		},
 	}
@@ -380,8 +380,8 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				Computed:            true,
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
-				MarkdownDescription: "Disable NPS Comments Reachout",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
+				MarkdownDescription: "Disable NPS Comments Reachout. Deprecated: this attribute will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
+				DeprecationMessage:  "This attribute is deprecated and will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
 				Computed:            true,
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
@@ -397,8 +397,8 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				Computed:            true,
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
-				MarkdownDescription: "Disable Survey Feedback",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
+				MarkdownDescription: "Disable Survey Feedback. Deprecated: this attribute will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
+				DeprecationMessage:  "This attribute is deprecated and will be renamed or moved within tenant settings in v5.0.0. Update configurations and references to use the v5.0.0 tenant settings schema when upgrading.",
 				Computed:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{

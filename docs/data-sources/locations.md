@@ -3,12 +3,15 @@
 page_title: "powerplatform_locations Data Source - Power Platform"
 subcategory: ""
 description: |-
-  Fetches the list of available Dynamics 365 locations. For more information see Power Platform Geos https://learn.microsoft.com/power-platform/admin/regions-overview
+  Fetches the list of available Dynamics 365 locations. For more information see Power Platform Geos https://learn.microsoft.com/power-platform/admin/regions-overview.
+  Upcoming breaking change in v5.0.0: This data source will additionally support macro regions, changing its response structure. When upgrading, update expressions and module outputs that consume its results to match the v5.0.0 schema. The data source itself is not deprecated; its current response structure remains unchanged until v5.0.0.
 ---
 
 # powerplatform_locations (Data Source)
 
-Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)
+Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview).
+
+**Upcoming breaking change in v5.0.0:** This data source will additionally support macro regions, changing its response structure. When upgrading, update expressions and module outputs that consume its results to match the v5.0.0 schema. The data source itself is not deprecated; its current response structure remains unchanged until v5.0.0.
 
 ## Example Usage
 

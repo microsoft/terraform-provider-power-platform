@@ -4,18 +4,22 @@
 package solution_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 )
 
 const (
@@ -25,6 +29,18 @@ const (
 	SOLUTION_2_NAME          = "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
 	SOLUTION_2_RELATIVE_PATH = "tests/resource/Test_Files/" + SOLUTION_2_NAME
 )
+
+func TestUnitSolutionResource_V5Deprecation(t *testing.T) {
+	var resp frameworkresource.SchemaResponse
+	solution.NewSolutionResource().Schema(context.Background(), frameworkresource.SchemaRequest{}, &resp)
+	for _, text := range []string{resp.Schema.DeprecationMessage, resp.Schema.MarkdownDescription} {
+		for _, expected := range []string{"replaced in v5.0.0", "powerplatform_managed_solution", "powerplatform_unmanaged_solution"} {
+			if !strings.Contains(text, expected) {
+				t.Errorf("expected %q in solution migration notice, got %q", expected, text)
+			}
+		}
+	}
+}
 
 func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 	solutionFileBytes1, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
