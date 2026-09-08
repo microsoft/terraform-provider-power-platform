@@ -1,9 +1,0 @@
-kind: documentation
-body: >-
-  docs: announce an upcoming breaking change to `powerplatform_user` imports in v5.0.0.
-  Import IDs will require the composite `environment_id/user_aad_id` format, where `user_aad_id` is the Microsoft Entra object ID (`aad_id`).
-  Legacy single-ID imports will no longer be supported; update import commands and import blocks when upgrading.
-  The resource itself is not deprecated, and current import behavior remains unchanged until v5.0.0.
-time: 2026-09-07T10:57:18Z
-custom:
-    Issue: "0"
