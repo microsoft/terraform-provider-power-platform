@@ -1,8 +1,0 @@
-kind: deprecated
-body: >-
-  docs: announce the v5.0.0 removal of `powerplatform_tenant_capacity.tenant_id`.
-  Remove configurations and references using this attribute; capacity is fetched for the tenant configured in the provider.
-  The attribute remains supported until v5.0.0.
-time: 2026-09-07T10:57:18Z
-custom:
-    Issue: "969"

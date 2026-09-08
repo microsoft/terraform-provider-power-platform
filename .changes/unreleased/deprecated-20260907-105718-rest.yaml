@@ -1,8 +1,0 @@
-kind: deprecated
-body: >-
-  docs: announce the v5.0.0 removal of the `powerplatform_rest` resource.
-  Migrate to purpose-built resources before upgrading. The `powerplatform_rest_query` data source is not affected.
-  The resource remains supported until v5.0.0.
-time: 2026-09-07T10:57:18Z
-custom:
-    Issue: "860"

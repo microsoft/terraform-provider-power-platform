@@ -1,9 +1,0 @@
-kind: documentation
-body: >-
-  docs: announce an upcoming breaking change to the `powerplatform_locations` response structure in v5.0.0.
-  The data source will additionally support macro regions, changing its response structure.
-  Update expressions and module outputs consuming its results to match the v5.0.0 schema when upgrading.
-  The data source itself is not deprecated, and its current response structure remains unchanged until v5.0.0.
-time: 2026-09-07T10:57:18Z
-custom:
-    Issue: "0"
