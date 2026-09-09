@@ -125,7 +125,7 @@ type SecuritySourceModel struct {
 	ReverseProxyIpAddresses              types.Set  `tfsdk:"reverse_proxy_ip_addresses"`
 }
 
-func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettingsModel EnvironmentSettingsResourceModel) (*environmentSettings, error) {
+func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettingsModel EnvironmentSettingsResourceModel, config EnvironmentSettingsResourceModel) (*environmentSettings, error) {
 	environmentSettings := &environmentSettings{
 		BackendSettings: &environmentBackendSettingsValueDto{},
 		OrgSettings:     &environmentOrgSettingsDto{},
@@ -189,8 +189,11 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettingsModel, environmentSettings); err != nil {
 		return nil, err
 	}
-	if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
-		return nil, err
+	security := config.Product.Attributes()["security"]
+	if security != nil && helpers.IsKnown(security) {
+		if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
+			return nil, err
+		}
 	}
 	return environmentSettings, nil
 }
