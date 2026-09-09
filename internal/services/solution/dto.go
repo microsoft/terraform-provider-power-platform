@@ -24,6 +24,8 @@ type SolutionDto struct {
 	EnvironmentId string `json:"environment_id"`
 	Name          string `json:"uniquename"`
 	DisplayName   string `json:"friendlyname"`
+	Description   string `json:"description"`
+	PublisherId   string `json:"_publisherid_value"`
 	IsManaged     bool   `json:"ismanaged"`
 	CreatedTime   string `json:"createdon"`
 	Version       string `json:"version"`
@@ -110,6 +112,19 @@ type importSolutionEnvironmentVariablesDto struct {
 	Type       string `json:"@odata.type"`
 	SchemaName string `json:"schemaname"`
 	Value      string `json:"value"`
+}
+
+type createUnmanagedSolutionDto struct {
+	Description   string `json:"description"`
+	DisplayName   string `json:"friendlyname"`
+	PublisherBind string `json:"publisherid@odata.bind"`
+	UniqueName    string `json:"uniquename"`
+	Version       string `json:"version"`
+}
+
+type updateUnmanagedSolutionDto struct {
+	Description string `json:"description"`
+	DisplayName string `json:"friendlyname"`
 }
 
 type asyncSolutionPullResponseDto struct {
