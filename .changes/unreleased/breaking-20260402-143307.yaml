@@ -1,0 +1,5 @@
+kind: breaking
+body: 'Fix powerplatform_user import: import ID now requires composite format environment_id/user_aad_id instead of just user_aad_id'
+time: 2026-04-02T14:33:07.1375459Z
+custom:
+    Issue: "1121"
