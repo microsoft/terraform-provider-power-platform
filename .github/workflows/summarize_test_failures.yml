@@ -53,8 +53,8 @@ jobs:
             exit 1
           fi
 
-          IFS=$'\t' read -r path branch event head_repo < <(gh api "repos/$GH_REPO/actions/runs/$RUN_ID" \
-            --jq '[.path, .head_branch, .event, .head_repository.full_name] | @tsv')
+          IFS=$'\t' read -r path branch event head_repo status conclusion < <(gh api "repos/$GH_REPO/actions/runs/$RUN_ID" \
+            --jq '[.path, .head_branch, .event, .head_repository.full_name, .status, .conclusion] | @tsv')
 
           if [[ "$path" != ".github/workflows/run_tests.yml" ]]; then
             echo "::error::Run $RUN_ID is not a 'Terraform Provider Tests' run."
@@ -66,6 +66,10 @@ jobs:
           fi
           if [[ "$event" != "schedule" && "$event" != "push" && "$event" != "workflow_dispatch" ]]; then
             echo "::error::Run $RUN_ID was triggered by '$event'; only schedule, push and workflow_dispatch runs are summarized."
+            exit 1
+          fi
+          if [[ "$status" != "completed" || "$conclusion" != "failure" ]]; then
+            echo "::error::Run $RUN_ID is not a completed failed run."
             exit 1
           fi
 
