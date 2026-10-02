@@ -1,0 +1,7 @@
+{
+  "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+  "name": "00000000-0000-0000-0000-000000000001",
+  "properties": {
+    "linkedEnvironmentMetadata": null
+  }
+}

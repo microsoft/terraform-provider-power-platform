@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "solutionid": "00000000-0000-0000-0000-000000000002",
+      "uniquename": "TerraformTestSolution",
+      "friendlyname": "Terraform Test Solution",
+      "description": "Created by Terraform",
+      "_publisherid_value": "00000000-0000-0000-0000-000000000003",
+      "ismanaged": false,
+      "createdon": "2023-10-17T11:03:41Z",
+      "version": "1.0.0.0",
+      "modifiedon": "2023-10-17T11:05:17Z",
+      "installedon": "2023-10-17T11:03:41Z"
+    }
+  ]
+}
