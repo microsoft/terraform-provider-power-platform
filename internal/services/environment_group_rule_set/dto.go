@@ -349,7 +349,7 @@ func convertEnvironmentGroupRuleSetDtoToModel(environmentGroupId string, ruleSet
 }
 
 func convertRulesDtoToModel(dto *EnvironmentGroupRuleSetValueSetDto, policy *ruleBasedPolicyDto) (basetypes.ObjectValue, error) {
-	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getParameterByType(dto, SHARING))
+	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getSharingParameter(dto))
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
 	}
@@ -606,11 +606,6 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	if canShareWithSecurityGroups == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", CAN_SHARE_WITH_SECURITY_GROUPS)
 	}
-	maximumShareLimit := tryGetRuleValueFromDto(dto.Value, MAXIMUM_SHARE_LIMIT)
-	if maximumShareLimit == nil {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAXIMUM_SHARE_LIMIT)
-	}
-	maxLimitValue, _ := strconv.ParseFloat(maximumShareLimit.Value, 64)
 
 	attrValue := map[string]attr.Value{}
 	if canShareWithSecurityGroups.Value == NO_LIMIT {
@@ -618,7 +613,12 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 		attrValue["share_max_limit"] = types.NumberNull() // -1 value is considered as null in terraform
 	} else {
 		attrValue["share_mode"] = types.StringValue("exclude sharing with security groups")
-		attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
+		// The limit may be absent when the rule was not written by this provider (e.g. edited in the admin center).
+		attrValue["share_max_limit"] = types.NumberNull()
+		if maximumShareLimit := tryGetRuleValueFromDto(dto.Value, MAXIMUM_SHARE_LIMIT); maximumShareLimit != nil {
+			maxLimitValue, _ := strconv.ParseFloat(maximumShareLimit.Value, 64)
+			attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
+		}
 	}
 
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
@@ -628,6 +628,21 @@ func tryGetRuleValueFromDto(values []environmentGroupRuleSetValueDto, valueId st
 	for _, value := range values {
 		if value.Id == valueId {
 			return &value
+		}
+	}
+	return nil
+}
+
+// getSharingParameter returns the "Sharing" parameter of the "App" resource type, which is the only sharing parameter
+// managed by sharing_controls. Rule sets edited in the admin center can carry further "Sharing" parameters (for example
+// AuthoringBot, UsersBot or Flow) that must not be mistaken for it.
+func getSharingParameter(params *EnvironmentGroupRuleSetValueSetDto) *environmentGroupRuleSetParameterDto {
+	if params == nil {
+		return nil
+	}
+	for paramInx := range params.Parameters {
+		if params.Parameters[paramInx].Type == SHARING && params.Parameters[paramInx].ResourceType == APP {
+			return params.Parameters[paramInx]
 		}
 	}
 	return nil
