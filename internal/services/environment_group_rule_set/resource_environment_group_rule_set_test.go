@@ -748,6 +748,54 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Multiple_Sharing_Pa
 	})
 }
 
+// TestUnitEnvironmentGroupRuleSetResource_Validate_Import_No_App_Sharing_Parameter covers a rule set whose only
+// "Sharing" parameters belong to other resource types (AuthoringBot, UsersBot, Flow), as created by the admin center.
+// sharing_controls must be null instead of failing the import because the first parameter has no MaximumShareLimit.
+func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_No_App_Sharing_Parameter(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	mockRuleBasedPolicy()
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_No_App_Sharing_Parameter/post_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_No_App_Sharing_Parameter/get_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls"),
+				),
+			},
+			{
+				ResourceName:      "powerplatform_environment_group_rule_set.example_group_rule_set",
+				ImportState:       true,
+				ImportStateVerify: false,
+				ImportStateId:     "00000000-0000-0000-0000-000000000000",
+			},
+		},
+	})
+}
+
 // TestAccEnvironmentGroupRuleSetResource_Validate_Policy_Rules covers the rules served by the
 // rule-based policies API alongside the legacy ones, so both backends are exercised in one resource.
 func TestAccEnvironmentGroupRuleSetResource_Validate_Policy_Rules(t *testing.T) {
