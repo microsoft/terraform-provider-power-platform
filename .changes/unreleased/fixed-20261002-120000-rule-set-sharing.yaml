@@ -1,0 +1,9 @@
+kind: fixed
+body: >-
+  Importing or refreshing `powerplatform_environment_group_rule_set` no longer fails with
+  `MaximumShareLimit value not found in response` for groups that have further `Sharing` parameters
+  (for example `AuthoringBot`, created by the "Sharing agents with Editor permissions" rule in the admin center).
+  `sharing_controls` is now read from the `App` sharing parameter only, and a missing `MaximumShareLimit` is read as null.
+time: 2026-10-02T12:00:00Z
+custom:
+    Issue: "1281"
