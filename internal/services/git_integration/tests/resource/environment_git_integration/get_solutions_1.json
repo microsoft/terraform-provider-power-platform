@@ -1,0 +1,36 @@
+{
+  "value": [
+    {
+      "solutionid": "00000001-0000-0000-0001-00000000009b",
+      "uniquename": "common-default",
+      "friendlyname": "Common Data Services Default Solution",
+      "ismanaged": false,
+      "isvisible": true,
+      "enabledforsourcecontrolintegration": false
+    },
+    {
+      "solutionid": "fd140aaf-4df4-11dd-bd17-0019b9312238",
+      "uniquename": "Default",
+      "friendlyname": "Default Solution",
+      "ismanaged": false,
+      "isvisible": true,
+      "enabledforsourcecontrolintegration": false
+    },
+    {
+      "solutionid": "33333333-3333-3333-3333-333333333333",
+      "uniquename": "solution-one",
+      "friendlyname": "solution-one",
+      "ismanaged": false,
+      "isvisible": true,
+      "enabledforsourcecontrolintegration": false
+    },
+    {
+      "solutionid": "44444444-4444-4444-4444-444444444444",
+      "uniquename": "solution-two",
+      "friendlyname": "solution-two",
+      "ismanaged": false,
+      "isvisible": true,
+      "enabledforsourcecontrolintegration": false
+    }
+  ]
+}
