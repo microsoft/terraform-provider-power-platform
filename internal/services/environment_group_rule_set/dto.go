@@ -349,7 +349,7 @@ func convertEnvironmentGroupRuleSetDtoToModel(environmentGroupId string, ruleSet
 }
 
 func convertRulesDtoToModel(dto *EnvironmentGroupRuleSetValueSetDto, policy *ruleBasedPolicyDto) (basetypes.ObjectValue, error) {
-	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getSharingParameter(dto))
+	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getParameterByType(dto, SHARING, APP))
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
 	}
@@ -616,7 +616,10 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 		// The limit may be absent when the rule was not written by this provider (e.g. edited in the admin center).
 		attrValue["share_max_limit"] = types.NumberNull()
 		if maximumShareLimit := tryGetRuleValueFromDto(dto.Value, MAXIMUM_SHARE_LIMIT); maximumShareLimit != nil {
-			maxLimitValue, _ := strconv.ParseFloat(maximumShareLimit.Value, 64)
+			maxLimitValue, err := strconv.ParseFloat(maximumShareLimit.Value, 64)
+			if err != nil {
+				return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value '%s' is not a number: %w", MAXIMUM_SHARE_LIMIT, maximumShareLimit.Value, err)
+			}
 			attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
 		}
 	}
@@ -633,29 +636,22 @@ func tryGetRuleValueFromDto(values []environmentGroupRuleSetValueDto, valueId st
 	return nil
 }
 
-// getSharingParameter returns the "Sharing" parameter of the "App" resource type, which is the only sharing parameter
-// managed by sharing_controls. Rule sets edited in the admin center can carry further "Sharing" parameters (for example
-// AuthoringBot, UsersBot or Flow) that must not be mistaken for it.
-func getSharingParameter(params *EnvironmentGroupRuleSetValueSetDto) *environmentGroupRuleSetParameterDto {
+// getParameterByType returns the first parameter of the given type. When resourceType is passed, the parameter must
+// also belong to that resource type. This matters for "Sharing", which can be present once per resource type
+// (App, Flow, AuthoringBot, UsersBot, ...) in rule sets edited in the admin center; sharing_controls only manages "App".
+func getParameterByType(params *EnvironmentGroupRuleSetValueSetDto, paramType string, resourceType ...string) *environmentGroupRuleSetParameterDto {
 	if params == nil {
 		return nil
 	}
 	for paramInx := range params.Parameters {
-		if params.Parameters[paramInx].Type == SHARING && params.Parameters[paramInx].ResourceType == APP {
-			return params.Parameters[paramInx]
+		param := params.Parameters[paramInx]
+		if param.Type != paramType {
+			continue
 		}
-	}
-	return nil
-}
-
-func getParameterByType(params *EnvironmentGroupRuleSetValueSetDto, paramType string) *environmentGroupRuleSetParameterDto {
-	if params == nil {
-		return nil
-	}
-	for paramInx := range params.Parameters {
-		if params.Parameters[paramInx].Type == paramType {
-			return params.Parameters[paramInx]
+		if len(resourceType) > 0 && param.ResourceType != resourceType[0] {
+			continue
 		}
+		return param
 	}
 	return nil
 }

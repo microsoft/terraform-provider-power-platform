@@ -684,7 +684,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Multiple_Sharing_Pa
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Create/post_rule_set.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_Multiple_Sharing_Parameters/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
@@ -692,7 +692,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Multiple_Sharing_Pa
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Multiple_Sharing_Parameters/get_rule_set.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/?api-version=2021-10-01-preview`,
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
@@ -791,6 +791,50 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_No_App_Sharing_Para
 				ImportState:       true,
 				ImportStateVerify: false,
 				ImportStateId:     "00000000-0000-0000-0000-000000000000",
+			},
+		},
+	})
+}
+
+// TestUnitEnvironmentGroupRuleSetResource_Validate_Invalid_Share_Limit makes sure a non-numeric MaximumShareLimit is
+// reported instead of being silently read as 0.
+func TestUnitEnvironmentGroupRuleSetResource_Validate_Invalid_Share_Limit(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	mockRuleBasedPolicy()
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_Invalid_Share_Limit/post_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Invalid_Share_Limit/get_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {
+						sharing_controls = {
+							share_mode      = "exclude sharing with security groups"
+							share_max_limit = 42
+						}
+					}
+				}`,
+				ExpectError: regexp.MustCompile(`MaximumShareLimit value 'not-a-number' is not a number`),
 			},
 		},
 	})
