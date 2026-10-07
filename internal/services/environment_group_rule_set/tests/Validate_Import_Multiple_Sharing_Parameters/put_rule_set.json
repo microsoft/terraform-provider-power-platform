@@ -1,0 +1,41 @@
+{
+  "parameters": [
+    {
+      "type": "Sharing",
+      "resourceType": "AuthoringBot",
+      "value": [
+        {
+          "id": "CanShareWithSecurityGroups",
+          "value": "disableSharing"
+        }
+      ],
+      "hasStagedChanges": true
+    },
+    {
+      "type": "Sharing",
+      "resourceType": "UsersBot",
+      "value": [
+        {
+          "id": "CanShareWithSecurityGroups",
+          "value": "disableSharing"
+        },
+        {
+          "id": "MaximumShareLimit",
+          "value": "-1"
+        }
+      ],
+      "hasStagedChanges": true
+    }
+  ],
+  "id": "00000000-0000-0000-0000-000000000001",
+  "lastModified": "2024-10-24T07:30:08.241893Z",
+  "environmentFilter": {
+    "type": "Include",
+    "values": [
+      {
+        "id": "00000000-0000-0000-0000-000000000000",
+        "type": "EnvironmentGroup"
+      }
+    ]
+  }
+}
