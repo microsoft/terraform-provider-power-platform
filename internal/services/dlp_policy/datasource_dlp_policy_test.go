@@ -235,15 +235,20 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					  if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
 					])
 
-					blocked_connectors = toset([for conn
-					  in data.powerplatform_connectors.all_connectors.connectors :
-					  {
-						id                           = conn.id
-						default_action_rule_behavior = ""
-						action_rules                 = [],
-						endpoint_rules               = []
-					  }
-					if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
+					# A static list rather than the whole live catalog: unlisted connectors fall into the
+					# Blocked default anyway, and the catalog drifts between apply and refresh.
+					blocked_connectors = toset([for id in [
+					  "/providers/Microsoft.PowerApps/apis/shared_10to8",
+					  "/providers/Microsoft.PowerApps/apis/shared_box",
+					  "/providers/Microsoft.PowerApps/apis/shared_dropbox",
+					  "/providers/Microsoft.PowerApps/apis/shared_rss",
+					  "/providers/Microsoft.PowerApps/apis/shared_slack",
+					] : {
+					  id                           = id
+					  default_action_rule_behavior = ""
+					  action_rules                 = []
+					  endpoint_rules               = []
+					}])
 				  }
 
 				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
@@ -279,6 +284,7 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "environment_type", "OnlyEnvironments"),
 					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "environments.#", "1"),
 					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors.#", "6"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "blocked_connectors.#", "5"),
 					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "custom_connectors_patterns.#", "2"),
 
 					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors", map[string]string{
