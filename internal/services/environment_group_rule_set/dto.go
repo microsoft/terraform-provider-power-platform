@@ -645,6 +645,37 @@ func getParameterByType(params *EnvironmentGroupRuleSetValueSetDto, paramType st
 	return nil
 }
 
+type legacyParameterKey struct {
+	Type         string
+	ResourceType string
+}
+
+// managedLegacyParameters are the rule set parameters owned by this resource. MakerOnboarding is included
+// because it moved to the rule-based policies API and is only read from the rule set as a fallback.
+var managedLegacyParameters = map[legacyParameterKey]bool{
+	{SHARING, APP}:                                true,
+	{USAGE_INSIGHTS, NOT_SPECIFIED}:               true,
+	{MAKER_WELCOME_CONTENT, NOT_SPECIFIED}:        true,
+	{SOLUTION_CHECKER_ENFORCEMENT, NOT_SPECIFIED}: true,
+	{BACKUP_RETENTION, NOT_SPECIFIED}:             true,
+	{AI_GENERATED_DESC, APP}:                      true,
+	{AI_GENERATIVE_SETTINGS, NOT_SPECIFIED}:       true,
+}
+
+// unmanagedLegacyParameters returns the rule set parameters set outside Terraform (e.g. Sharing for AuthoringBot).
+func unmanagedLegacyParameters(ruleSet *EnvironmentGroupRuleSetValueSetDto) []*environmentGroupRuleSetParameterDto {
+	kept := make([]*environmentGroupRuleSetParameterDto, 0)
+	if ruleSet == nil {
+		return kept
+	}
+	for _, param := range ruleSet.Parameters {
+		if param != nil && !managedLegacyParameters[legacyParameterKey{param.Type, param.ResourceType}] {
+			kept = append(kept, param)
+		}
+	}
+	return kept
+}
+
 // --- Rule-based policy DTOs. These rule sets are served by the rule-based policies API. ---
 
 type ruleBasedPolicyDto struct {

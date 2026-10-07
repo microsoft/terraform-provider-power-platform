@@ -1,0 +1,5 @@
+kind: fixed
+body: '`powerplatform_environment_group_rule_set` no longer removes rule set parameters not managed by Terraform (e.g. `Sharing` for `AuthoringBot` set in the admin center) on update or destroy'
+time: 2026-10-07T11:02:55.28598956Z
+custom:
+    Issue: "1285"

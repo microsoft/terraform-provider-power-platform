@@ -546,6 +546,25 @@ func (r *environmentGroupRuleSetResource) releasePolicy(ctx context.Context, pol
 	return nil
 }
 
+// releaseRuleSet deletes the legacy rule set, or only strips the parameters this resource manages
+// when the rule set also carries parameters set outside Terraform.
+func (r *environmentGroupRuleSetResource) releaseRuleSet(ctx context.Context, ruleSetId, environmentGroupId string) error {
+	existing, err := r.readRuleSet(ctx, environmentGroupId)
+	if err != nil {
+		return err
+	}
+
+	kept := unmanagedLegacyParameters(existing)
+	if len(kept) == 0 {
+		return r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, ruleSetId)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Keeping %d parameters not managed by Terraform on rule set %s", len(kept), ruleSetId))
+	existing.Parameters = kept
+	_, err = r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, ruleSetId, *existing)
+	return err
+}
+
 func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -660,14 +679,21 @@ func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resour
 			}
 			plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
 		} else {
+			existing, err := r.readRuleSet(ctx, plan.EnvironmentGroupId.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("Failed to get environment group ruleset", err.Error())
+				return
+			}
+			// PUT replaces all parameters, so carry over the ones set outside Terraform.
+			plannedRuleSetDto.Parameters = append(plannedRuleSetDto.Parameters, unmanagedLegacyParameters(existing)...)
 			if _, err := r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, state.Id.ValueString(), plannedRuleSetDto); err != nil {
 				resp.Diagnostics.AddError("Failed to update environment group ruleset", err.Error())
 				return
 			}
 		}
 	} else if !state.Id.IsNull() {
-		if err := r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, state.Id.ValueString()); err != nil {
-			resp.Diagnostics.AddError("Failed to delete environment group ruleset", err.Error())
+		if err := r.releaseRuleSet(ctx, state.Id.ValueString(), plan.EnvironmentGroupId.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Failed to remove rules from environment group ruleset", err.Error())
 			return
 		}
 	}
@@ -700,7 +726,7 @@ func (r *environmentGroupRuleSetResource) Delete(ctx context.Context, req resour
 	}
 
 	if !state.Id.IsNull() {
-		if err := r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, state.Id.ValueString()); err != nil {
+		if err := r.releaseRuleSet(ctx, state.Id.ValueString(), state.EnvironmentGroupId.ValueString()); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
