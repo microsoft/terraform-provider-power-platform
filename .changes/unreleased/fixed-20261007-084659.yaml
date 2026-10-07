@@ -1,0 +1,5 @@
+kind: fixed
+body: Return the HTTP client error when a redirect policy fails instead of masking it with a response body read error
+time: 2026-10-07T08:46:59.390339854Z
+custom:
+    Issue: "1248"

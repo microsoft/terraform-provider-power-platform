@@ -58,15 +58,19 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 
 	apiResponse, err := httpClient.Do(request)
 
-	if err != nil && apiResponse == nil {
-		resp := &Response{
-			HttpResponse: &http.Response{
+	if err != nil {
+		resp := &Response{HttpResponse: apiResponse}
+		if apiResponse == nil {
+			resp.HttpResponse = &http.Response{
 				StatusCode: http.StatusServiceUnavailable,
 				Status:     http.StatusText(http.StatusServiceUnavailable),
 				Header:     http.Header{},
 				Body:       io.NopCloser(bytes.NewReader([]byte{})),
 				Request:    request,
-			},
+			}
+		} else {
+			// Do returns a response with an error when the redirect policy fails; its body is already closed.
+			_ = apiResponse.Body.Close()
 		}
 		// The request may have reached the service even though the response was lost.
 		return resp, RequestSentError{Err: err}
