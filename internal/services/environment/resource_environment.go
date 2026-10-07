@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -284,9 +283,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Computed:            true,
 				PlanModifiers: []planmodifier.Object{
 					modifiers.RequireReplaceObjectToEmptyModifier(),
-					// Must run after RequireReplaceObjectToEmptyModifier, which relies on seeing the unknown plan value
-					// when dataverse is removed from the configuration.
-					objectplanmodifier.UseStateForUnknown(),
+					modifiers.UseStateForUnknownUnlessRemovedObjectModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"unique_name": schema.StringAttribute{
