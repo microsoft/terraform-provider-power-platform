@@ -175,10 +175,11 @@ const (
 )
 
 // The RBAC role assignment collection is eventually consistent with the create that committed an
-// assignment, so a create has to wait for its own assignment to become listable.
+// assignment, so a create has to wait for its own assignment to become listable. Environment scope
+// listings have been observed to lag by more than two minutes.
 const (
 	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
-	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 2 * time.Minute
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 10 * time.Minute
 )
 
 // The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
