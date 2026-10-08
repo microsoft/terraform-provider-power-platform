@@ -1,0 +1,5 @@
+kind: fixed
+body: Updating `powerplatform_environment` no longer shows untouched attributes (`allow_bing_search`, `allow_microsoft_365_services`, `allow_moving_data_across_regions`, `allow_flex_routing`, `dataverse.templates`, and `dataverse` for environments without Dataverse) as `(known after apply)`.
+time: 2026-10-07T12:12:52.469639727Z
+custom:
+    Issue: "1289"
