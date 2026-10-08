@@ -8,7 +8,7 @@
                     "value": [
                         {
                             "id": "CanShareWithSecurityGroups",
-                            "value": "noLimit"
+                            "value": "excludeSharingToSecurityGroups"
                         },
                         {
                             "id": "IsGroupSharingDisabled",
@@ -16,7 +16,17 @@
                         },
                         {
                             "id": "MaximumShareLimit",
-                            "value": "-1"
+                            "value": "20"
+                        }
+                    ]
+                },
+                {
+                    "type": "Sharing",
+                    "resourceType": "AuthoringBot",
+                    "value": [
+                        {
+                            "id": "CanShareWithSecurityGroups",
+                            "value": "disableSharing"
                         }
                     ]
                 }

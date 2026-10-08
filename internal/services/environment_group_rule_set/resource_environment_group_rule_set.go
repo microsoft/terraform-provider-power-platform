@@ -546,6 +546,60 @@ func (r *environmentGroupRuleSetResource) releasePolicy(ctx context.Context, pol
 	return nil
 }
 
+// applyRuleSet writes the legacy rules and returns the rule set id. The API allows a single rule set per
+// environment group, so an existing one (e.g. created in the admin center) is adopted instead of created.
+func (r *environmentGroupRuleSetResource) applyRuleSet(ctx context.Context, plan environmentGroupRuleSetResourceModel) (*string, error) {
+	environmentGroupId := plan.EnvironmentGroupId.ValueString()
+	existing, err := r.readRuleSet(ctx, environmentGroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	plan.Id = types.StringNull()
+	if existing != nil {
+		// The legacy API expects the existing rule set id in the payload when updating.
+		plan.Id = types.StringPointerValue(existing.Id)
+	}
+	ruleSetDto, err := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, plan)
+	if err != nil {
+		return nil, err
+	}
+
+	if existing == nil {
+		created, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, environmentGroupId, ruleSetDto)
+		if err != nil {
+			return nil, err
+		}
+		return created.Id, nil
+	}
+
+	// PUT replaces all parameters, so carry over the ones set outside Terraform.
+	ruleSetDto.Parameters = append(ruleSetDto.Parameters, unmanagedLegacyParameters(existing)...)
+	if _, err := r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, plan.Id.ValueString(), ruleSetDto); err != nil {
+		return nil, err
+	}
+	return existing.Id, nil
+}
+
+// releaseRuleSet deletes the legacy rule set, or only strips the parameters this resource manages
+// when the rule set also carries parameters set outside Terraform.
+func (r *environmentGroupRuleSetResource) releaseRuleSet(ctx context.Context, ruleSetId, environmentGroupId string) error {
+	existing, err := r.readRuleSet(ctx, environmentGroupId)
+	if err != nil {
+		return err
+	}
+
+	kept := unmanagedLegacyParameters(existing)
+	if len(kept) == 0 {
+		return r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, ruleSetId)
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Keeping %d parameters not managed by Terraform on rule set %s", len(kept), ruleSetId))
+	existing.Parameters = kept
+	_, err = r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, ruleSetId, *existing)
+	return err
+}
+
 func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -599,17 +653,12 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 	plan.PolicyId = types.StringNull()
 
 	if hasLegacyRules(plan.Rules) {
-		plannedRuleSetDto, err := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+		ruleSetId, err := r.applyRuleSet(ctx, *plan)
 		if err != nil {
-			resp.Diagnostics.AddError("Conversion Error", err.Error())
+			resp.Diagnostics.AddError("Failed to apply environment group ruleset", err.Error())
 			return
 		}
-		createdRuleSetDto, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, plan.EnvironmentGroupId.ValueString(), plannedRuleSetDto)
-		if err != nil {
-			resp.Diagnostics.AddError("Failed to create environment group ruleset", err.Error())
-			return
-		}
-		plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
+		plan.Id = types.StringPointerValue(ruleSetId)
 	}
 
 	if hasPolicyRules(plan.Rules) {
@@ -644,30 +693,15 @@ func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resour
 	plan.PolicyId = types.StringNull()
 
 	if hasLegacyRules(plan.Rules) {
-		// The legacy API expects the existing rule set id in the payload when updating.
-		plan.Id = state.Id
-		plannedRuleSetDto, err := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+		ruleSetId, err := r.applyRuleSet(ctx, *plan)
 		if err != nil {
-			resp.Diagnostics.AddError("Conversion Error", err.Error())
+			resp.Diagnostics.AddError("Failed to apply environment group ruleset", err.Error())
 			return
 		}
-
-		if state.Id.IsNull() {
-			createdRuleSetDto, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, plan.EnvironmentGroupId.ValueString(), plannedRuleSetDto)
-			if err != nil {
-				resp.Diagnostics.AddError("Failed to create environment group ruleset", err.Error())
-				return
-			}
-			plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
-		} else {
-			if _, err := r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, state.Id.ValueString(), plannedRuleSetDto); err != nil {
-				resp.Diagnostics.AddError("Failed to update environment group ruleset", err.Error())
-				return
-			}
-		}
+		plan.Id = types.StringPointerValue(ruleSetId)
 	} else if !state.Id.IsNull() {
-		if err := r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, state.Id.ValueString()); err != nil {
-			resp.Diagnostics.AddError("Failed to delete environment group ruleset", err.Error())
+		if err := r.releaseRuleSet(ctx, state.Id.ValueString(), plan.EnvironmentGroupId.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Failed to remove rules from environment group ruleset", err.Error())
 			return
 		}
 	}
@@ -700,7 +734,7 @@ func (r *environmentGroupRuleSetResource) Delete(ctx context.Context, req resour
 	}
 
 	if !state.Id.IsNull() {
-		if err := r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, state.Id.ValueString()); err != nil {
+		if err := r.releaseRuleSet(ctx, state.Id.ValueString(), state.EnvironmentGroupId.ValueString()); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
