@@ -111,6 +111,8 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 // If no scopes are provided, the method attempts to infer the scope from the URL. The URL is validated to ensure it is absolute and properly formatted.
 // The HTTP request is then prepared and executed. The response status code is checked against the list of acceptable status codes. If the status code
 // is not acceptable, an error is returned. If a responseObj is provided, the response body is unmarshaled into this object.
+// Transient statuses are retried at most constants.MAX_RETRY_COUNT times (401 at most constants.MAX_UNAUTHORIZED_RETRIES times),
+// after which the last response is returned together with an error wrapping UnexpectedHttpStatusCodeError.
 func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
 	return client.doExecute(ctx, scopes, method, url, headers, body, acceptableStatusCodes, responseObj, retryTransientStatuses)
 }
@@ -150,6 +152,7 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 	}
 
 	var lastRetryableResponse *Response
+	retries := 0
 	unauthorizedRetries := 0
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
@@ -197,14 +200,14 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			return resp, nil
 		}
 
-		isRetryable := helpers.ArrayContains(retryableStatusCodes, resp.HttpResponse.StatusCode)
-		if retry == retryNever && resp.HttpResponse.StatusCode == http.StatusUnauthorized && unauthorizedRetries < constants.MAX_UNAUTHORIZED_RETRIES {
-			// The credential was refused, so the request never reached the operation and replaying
-			// it with a freshly acquired token cannot duplicate a non-idempotent mutation.
-			unauthorizedRetries++
-		} else if retry == retryNever || !isRetryable {
-			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
+		statusCode := resp.HttpResponse.StatusCode
+		if err := checkRetryAllowed(retry, acceptableStatusCodes, resp, retries, unauthorizedRetries); err != nil {
+			return resp, err
 		}
+		if statusCode == http.StatusUnauthorized {
+			unauthorizedRetries++
+		}
+		retries++
 		lastRetryableResponse = resp
 
 		waitFor := retryAfter(ctx, resp.HttpResponse)
@@ -216,6 +219,29 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			return resp, err
 		}
 	}
+}
+
+// checkRetryAllowed returns nil when a response with an unacceptable status may be retried, or the
+// error to surface when the status is permanent or its retry budget is exhausted.
+func checkRetryAllowed(retry retryBehavior, acceptableStatusCodes []int, resp *Response, retries, unauthorizedRetries int) error {
+	statusCode := resp.HttpResponse.StatusCode
+	statusErr := customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, statusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
+
+	if statusCode == http.StatusUnauthorized {
+		// The credential was refused, so the request never reached the operation and replaying
+		// it with a freshly acquired token cannot duplicate a non-idempotent mutation. A 401 caused
+		// by missing permissions is permanent, so the replays are bounded in every retry mode.
+		if unauthorizedRetries >= constants.MAX_UNAUTHORIZED_RETRIES {
+			return fmt.Errorf("request was still unauthorized after %d retries with a fresh token: %w", unauthorizedRetries, statusErr)
+		}
+	} else if retry == retryNever || !helpers.ArrayContains(retryableStatusCodes, statusCode) {
+		return statusErr
+	}
+
+	if retries >= constants.MAX_RETRY_COUNT {
+		return fmt.Errorf("maximum retries (%d) reached: %w", constants.MAX_RETRY_COUNT, statusErr)
+	}
+	return nil
 }
 
 func (client *Client) HandleNotFoundResponse(resp *Response) error {
