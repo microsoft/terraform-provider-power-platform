@@ -173,7 +173,7 @@ Optional:
 
 - `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
 - `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
-- `security` (Attributes) Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
+- `security` (Attributes) Security. When omitted or set to null, existing security settings are read but are not sent in updates. Omit this block when configuring product features on a non-managed environment, as IP firewall settings require a Managed Environment. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
 
 <a id="nestedatt--product--behavior_settings"></a>
 ### Nested Schema for `product.behavior_settings`

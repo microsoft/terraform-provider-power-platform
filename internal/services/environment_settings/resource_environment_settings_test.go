@@ -4,6 +4,7 @@
 package environment_settings_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -14,6 +15,185 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func registerStandardEnvironmentSettingsResponders(t *testing.T) *int {
+	t.Helper()
+	var organizations struct {
+		Value []map[string]any `json:"value"`
+	}
+	if err := json.Unmarshal([]byte(httpmock.File("tests/resources/Validate_Create_Empty_Settings/get_organisations_1.json").String()), &organizations); err != nil {
+		t.Fatal(err)
+	}
+	if len(organizations.Value) != 1 {
+		t.Fatal("expected one organization in the fixture")
+	}
+	organization := organizations.Value[0]
+	organization["powerappsmakerbotenabled"] = false
+	organization["bounddashboarddefaultcardexpanded"] = false
+
+	type backendSetting struct {
+		Name     string
+		Value    string
+		DataType int
+	}
+	var backend struct {
+		SettingDetailCollection []backendSetting
+	}
+	if err := json.Unmarshal([]byte(httpmock.File("tests/resources/Validate_Create_Empty_Settings/get_retrievesettinglist.json").String()), &backend); err != nil {
+		t.Fatal(err)
+	}
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/resources/Validate_Create_Empty_Settings/get_environment_00000000-0000-0000-0000-000000000001.json").String()))
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewJsonResponse(http.StatusOK, organizations)
+		})
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList%28%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewJsonResponse(http.StatusOK, backend)
+		})
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/SaveSettingValue%28%29",
+		func(req *http.Request) (*http.Response, error) {
+			var setting struct {
+				SettingName string
+				Value       string
+			}
+			if err := json.NewDecoder(req.Body).Decode(&setting); err != nil {
+				return nil, err
+			}
+			for index := range backend.SettingDetailCollection {
+				detail := &backend.SettingDetailCollection[index]
+				if detail.Name == setting.SettingName {
+					detail.Value = setting.Value
+				}
+			}
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	patchCount := 0
+	httpmock.RegisterResponder("PATCH", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations%2843f51247-aee6-ee11-9048-000d3a688755%29",
+		func(req *http.Request) (*http.Response, error) {
+			var payload map[string]any
+			if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+				return nil, err
+			}
+			for _, field := range []string{
+				"enableipbasedcookiebinding", "enableipbasedfirewallrule", "allowediprangeforfirewall",
+				"allowedservicetagsforfirewall", "allowapplicationuseraccess", "allowmicrosofttrustedservicetags",
+				"enableipbasedfirewallruleinauditmode", "reverseproxyipaddresses",
+			} {
+				if _, exists := payload[field]; exists {
+					return nil, fmt.Errorf("unexpected security field %s in Standard Environment PATCH", field)
+				}
+			}
+			for field, value := range payload {
+				organization[field] = value
+			}
+			patchCount++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	return &patchCount
+}
+
+func TestUnitTestEnvironmentSettingsResource_StandardEnvironment_ProductUpdates(t *testing.T) {
+	for _, testCase := range []struct {
+		name      string
+		security  string
+		lifecycle string
+	}{
+		{name: "omitted"},
+		{name: "null", security: "security = null"},
+		{name: "ignored", security: "security = null", lifecycle: "lifecycle { ignore_changes = [product.security] }"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+			patchCount := registerStandardEnvironmentSettingsResponders(t)
+
+			steps := []resource.TestStep{}
+			for _, enabled := range []bool{false, true} {
+				steps = append(steps, resource.TestStep{
+					Config: fmt.Sprintf(`
+						resource "powerplatform_environment_settings" "settings" {
+							environment_id = "00000000-0000-0000-0000-000000000001"
+							product = {
+								features = { enable_powerapps_maker_bot = %t }
+								behavior_settings = { show_dashboard_cards_in_expanded_state = %t }
+								%s
+							}
+							%s
+						}`, enabled, enabled, testCase.security, testCase.lifecycle),
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", fmt.Sprint(enabled)),
+						resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", fmt.Sprint(enabled)),
+					),
+				})
+			}
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps:                    steps,
+			})
+			if *patchCount != 2 {
+				t.Errorf("expected create and update PATCH requests, got %d", *patchCount)
+			}
+		})
+	}
+}
+
+func TestAccTestEnvironmentSettingsResource_StandardEnvironment_ProductUpdates(t *testing.T) {
+	baseConfig := fmt.Sprintf(`
+		resource "powerplatform_environment" "example_environment_settings" {
+			display_name = "%s"
+			location = "unitedstates"
+			environment_type = "Sandbox"
+			dataverse = {
+				language_code = "1033"
+				currency_code = "USD"
+				security_group_id = "00000000-0000-0000-0000-000000000000"
+			}
+		}
+		resource "time_sleep" "wait_for_dataverse" {
+			create_duration = "120s"
+			depends_on = [powerplatform_environment.example_environment_settings]
+		}
+	`, mocks.TestName())
+	steps := []resource.TestStep{}
+	for _, testCase := range []struct {
+		enabled   bool
+		security  string
+		lifecycle string
+	}{
+		{enabled: false},
+		{enabled: true, security: "security = null"},
+		{enabled: false, security: "security = null", lifecycle: "lifecycle { ignore_changes = [product.security] }"},
+	} {
+		steps = append(steps, resource.TestStep{
+			Config: baseConfig + fmt.Sprintf(`
+				resource "powerplatform_environment_settings" "settings" {
+					environment_id = powerplatform_environment.example_environment_settings.id
+					depends_on = [time_sleep.wait_for_dataverse]
+					product = {
+						features = { enable_powerapps_maker_bot = %t }
+						behavior_settings = { show_dashboard_cards_in_expanded_state = %t }
+						%s
+					}
+					%s
+				}`, testCase.enabled, testCase.enabled, testCase.security, testCase.lifecycle),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", fmt.Sprint(testCase.enabled)),
+				resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", fmt.Sprint(testCase.enabled)),
+			),
+		})
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {Source: "hashicorp/time"},
+		},
+		Steps: steps,
+	})
+}
 
 func TestUnitTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *testing.T) {
 	httpmock.Activate()
