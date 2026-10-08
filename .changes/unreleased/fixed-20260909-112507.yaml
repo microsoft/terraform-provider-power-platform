@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix unintended IP firewall updates when configuring product features on non-managed environments
+time: 2026-09-09T11:25:07.199582724Z
+custom:
+    Issue: "1113"
