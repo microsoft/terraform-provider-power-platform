@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -217,21 +219,33 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				MarkdownDescription: "Allow Bing search in the environment",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"allow_microsoft_365_services": schema.BoolAttribute{
 				MarkdownDescription: "Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions. When `macro_region` is used, the location specific constraints on this setting are enforced by the service rather than by this provider, because the datacenter location is not known until the environment is created.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"allow_flex_routing": schema.BoolAttribute{
 				MarkdownDescription: "Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
@@ -269,6 +283,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Computed:            true,
 				PlanModifiers: []planmodifier.Object{
 					modifiers.RequireReplaceObjectToEmptyModifier(),
+					modifiers.UseStateForUnknownUnlessRemovedObjectModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"unique_name": schema.StringAttribute{
@@ -358,6 +373,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Optional:            true,
 						Computed:            true,
 						ElementType:         types.StringType,
+						PlanModifiers: []planmodifier.List{
+							modifiers.UseStateForUnknownWhenParentInStateListModifier(),
+						},
 					},
 					"template_metadata": schema.StringAttribute{
 						MarkdownDescription: "Additional D365 environment template metadata (if any)",
@@ -639,6 +657,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(useConfiguredGenerativeAiFeatures(ctx, req.Config, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -937,6 +960,19 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 			Id: plan.Cadence.ValueString(),
 		}
 	}
+}
+
+// useConfiguredGenerativeAiFeatures replaces the planned generative AI attributes with their configured values.
+// When not configured they are planned from state (UseStateForUnknown) to keep plans free of "known after apply"
+// noise, but only attributes the practitioner configured may be validated and sent to the service: for example,
+// sending flex routing at all is rejected outside the EU data boundary.
+func useConfiguredGenerativeAiFeatures(ctx context.Context, configuration tfsdk.Config, plan *SourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(configuration.GetAttribute(ctx, path.Root("allow_bing_search"), &plan.AllowBingSearch)...)
+	diags.Append(configuration.GetAttribute(ctx, path.Root("allow_microsoft_365_services"), &plan.AllowMicrosoft365Services)...)
+	diags.Append(configuration.GetAttribute(ctx, path.Root("allow_moving_data_across_regions"), &plan.AllowMovingDataAcrossRegions)...)
+	diags.Append(configuration.GetAttribute(ctx, path.Root("allow_flex_routing"), &plan.AllowFlexRouting)...)
+	return diags
 }
 
 // Returns nil when the environment does not manage any generative AI attribute, leaving the caller to read it.
