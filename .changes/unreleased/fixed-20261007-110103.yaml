@@ -1,0 +1,5 @@
+kind: fixed
+body: Data sources now enforce the configured `timeouts.read` value
+time: 2026-10-07T11:01:03.398244834Z
+custom:
+    Issue: "1247"

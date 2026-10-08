@@ -349,7 +349,7 @@ func convertEnvironmentGroupRuleSetDtoToModel(environmentGroupId string, ruleSet
 }
 
 func convertRulesDtoToModel(dto *EnvironmentGroupRuleSetValueSetDto, policy *ruleBasedPolicyDto) (basetypes.ObjectValue, error) {
-	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getParameterByType(dto, SHARING))
+	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getParameterByType(dto, SHARING, APP))
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
 	}
@@ -606,11 +606,6 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	if canShareWithSecurityGroups == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", CAN_SHARE_WITH_SECURITY_GROUPS)
 	}
-	maximumShareLimit := tryGetRuleValueFromDto(dto.Value, MAXIMUM_SHARE_LIMIT)
-	if maximumShareLimit == nil {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAXIMUM_SHARE_LIMIT)
-	}
-	maxLimitValue, _ := strconv.ParseFloat(maximumShareLimit.Value, 64)
 
 	attrValue := map[string]attr.Value{}
 	if canShareWithSecurityGroups.Value == NO_LIMIT {
@@ -618,7 +613,15 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 		attrValue["share_max_limit"] = types.NumberNull() // -1 value is considered as null in terraform
 	} else {
 		attrValue["share_mode"] = types.StringValue("exclude sharing with security groups")
-		attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
+		// The limit may be absent when the rule was not written by this provider (e.g. edited in the admin center).
+		attrValue["share_max_limit"] = types.NumberNull()
+		if maximumShareLimit := tryGetRuleValueFromDto(dto.Value, MAXIMUM_SHARE_LIMIT); maximumShareLimit != nil {
+			maxLimitValue, err := strconv.ParseFloat(maximumShareLimit.Value, 64)
+			if err != nil {
+				return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value '%s' is not a number: %w", MAXIMUM_SHARE_LIMIT, maximumShareLimit.Value, err)
+			}
+			attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
+		}
 	}
 
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
@@ -633,16 +636,55 @@ func tryGetRuleValueFromDto(values []environmentGroupRuleSetValueDto, valueId st
 	return nil
 }
 
-func getParameterByType(params *EnvironmentGroupRuleSetValueSetDto, paramType string) *environmentGroupRuleSetParameterDto {
+// getParameterByType returns the first parameter of the given type. When resourceType is passed, the parameter must
+// also belong to that resource type. This matters for "Sharing", which can be present once per resource type
+// (App, Flow, AuthoringBot, UsersBot, ...) in rule sets edited in the admin center; sharing_controls only manages "App".
+func getParameterByType(params *EnvironmentGroupRuleSetValueSetDto, paramType string, resourceType ...string) *environmentGroupRuleSetParameterDto {
 	if params == nil {
 		return nil
 	}
 	for paramInx := range params.Parameters {
-		if params.Parameters[paramInx].Type == paramType {
-			return params.Parameters[paramInx]
+		param := params.Parameters[paramInx]
+		if param.Type != paramType {
+			continue
 		}
+		if len(resourceType) > 0 && param.ResourceType != resourceType[0] {
+			continue
+		}
+		return param
 	}
 	return nil
+}
+
+type legacyParameterKey struct {
+	Type         string
+	ResourceType string
+}
+
+// managedLegacyParameters are the rule set parameters owned by this resource. MakerOnboarding is included
+// because it moved to the rule-based policies API and is only read from the rule set as a fallback.
+var managedLegacyParameters = map[legacyParameterKey]bool{
+	{SHARING, APP}:                                true,
+	{USAGE_INSIGHTS, NOT_SPECIFIED}:               true,
+	{MAKER_WELCOME_CONTENT, NOT_SPECIFIED}:        true,
+	{SOLUTION_CHECKER_ENFORCEMENT, NOT_SPECIFIED}: true,
+	{BACKUP_RETENTION, NOT_SPECIFIED}:             true,
+	{AI_GENERATED_DESC, APP}:                      true,
+	{AI_GENERATIVE_SETTINGS, NOT_SPECIFIED}:       true,
+}
+
+// unmanagedLegacyParameters returns the rule set parameters set outside Terraform (e.g. Sharing for AuthoringBot).
+func unmanagedLegacyParameters(ruleSet *EnvironmentGroupRuleSetValueSetDto) []*environmentGroupRuleSetParameterDto {
+	kept := make([]*environmentGroupRuleSetParameterDto, 0)
+	if ruleSet == nil {
+		return kept
+	}
+	for _, param := range ruleSet.Parameters {
+		if param != nil && !managedLegacyParameters[legacyParameterKey{param.Type, param.ResourceType}] {
+			kept = append(kept, param)
+		}
+	}
+	return kept
 }
 
 // --- Rule-based policy DTOs. These rule sets are served by the rule-based policies API. ---

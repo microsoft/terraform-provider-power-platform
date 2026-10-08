@@ -8,7 +8,7 @@
                     "value": [
                         {
                             "id": "CanShareWithSecurityGroups",
-                            "value": "noLimit"
+                            "value": "excludeSharingToSecurityGroups"
                         },
                         {
                             "id": "IsGroupSharingDisabled",
@@ -16,13 +16,23 @@
                         },
                         {
                             "id": "MaximumShareLimit",
-                            "value": "-1"
+                            "value": "30"
+                        }
+                    ]
+                },
+                {
+                    "type": "Sharing",
+                    "resourceType": "AuthoringBot",
+                    "value": [
+                        {
+                            "id": "CanShareWithSecurityGroups",
+                            "value": "disableSharing"
                         }
                     ]
                 }
             ],
             "id": "00000000-0000-0000-0000-000000000001",
-            "lastModified": "2024-10-24T07:30:08.241893Z",
+            "lastModified": "2024-10-24T07:35:08.241893Z",
             "environmentFilter": {
                 "type": "Include",
                 "values": [
