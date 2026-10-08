@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
@@ -67,6 +68,73 @@ func TestUnitApiClient_ExecuteWithoutRetry_ReplaysRefusedCredential(t *testing.T
 
 	assert.Error(t, err)
 	assert.Equal(t, 3, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
+}
+
+func TestUnitApiClient_Execute_PersistentTransientFailure_StopsAtRetryLimit(t *testing.T) {
+	const failureBody = "bad gateway"
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, failureBody, http.StatusBadGateway)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	resp, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Equal(t, constants.MAX_RETRY_COUNT+1, attempts, "a persistent transient failure must be retried a bounded number of times")
+	var statusErr customerrors.UnexpectedHttpStatusCodeError
+	if assert.ErrorAs(t, err, &statusErr) {
+		assert.Equal(t, http.StatusBadGateway, statusErr.StatusCode)
+		assert.Contains(t, string(statusErr.Body), failureBody)
+	}
+	if assert.NotNil(t, resp, "the last response must be returned") {
+		assert.Equal(t, http.StatusBadGateway, resp.HttpResponse.StatusCode)
+	}
+}
+
+func TestUnitApiClient_Execute_PersistentUnauthorized_StopsAtUnauthorizedRetryLimit(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Equal(t, constants.MAX_UNAUTHORIZED_RETRIES+1, attempts, "a 401 that a fresh token does not fix is permanent and must not be retried indefinitely")
+	var statusErr customerrors.UnexpectedHttpStatusCodeError
+	if assert.ErrorAs(t, err, &statusErr) {
+		assert.Equal(t, http.StatusUnauthorized, statusErr.StatusCode)
+	}
+}
+
+func TestUnitApiClient_Execute_TransientFailure_RecoversBeforeRetryLimit(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		if attempts <= constants.MAX_RETRY_COUNT {
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	resp, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.NoError(t, err, "a request that succeeds on the last allowed retry must succeed")
+	assert.Equal(t, constants.MAX_RETRY_COUNT+1, attempts)
+	if assert.NotNil(t, resp) {
+		assert.Equal(t, http.StatusOK, resp.HttpResponse.StatusCode)
+	}
 }
 
 func TestUnitApiClient_GetConfig(t *testing.T) {

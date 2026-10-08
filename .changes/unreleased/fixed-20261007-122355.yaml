@@ -1,0 +1,5 @@
+kind: fixed
+body: Cap retries of transient HTTP statuses in the shared API client at MAX_RETRY_COUNT and repeated 401 responses at MAX_UNAUTHORIZED_RETRIES so permanent failures surface instead of retrying until the operation timeout
+time: 2026-10-07T12:23:55.488316486Z
+custom:
+    Issue: "1246"
