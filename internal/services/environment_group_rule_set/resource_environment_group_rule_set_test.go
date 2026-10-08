@@ -179,19 +179,40 @@ func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 	})
 }
 
+// ruleSetParameterKeys returns the "type/resourceType" of each parameter in a rule set request body.
+func ruleSetParameterKeys(req *http.Request) []string {
+	body := struct {
+		Parameters []map[string]any `json:"parameters"`
+	}{}
+	if raw, err := io.ReadAll(req.Body); err == nil {
+		_ = json.Unmarshal(raw, &body)
+	}
+	keys := []string{}
+	for _, p := range body.Parameters {
+		keys = append(keys, fmt.Sprintf("%v/%v", p["type"], p["resourceType"]))
+	}
+	return keys
+}
+
 func TestUnitEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 	mockRuleBasedPolicy()
 
+	created := false
+
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Create/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Create/get_rule_set.json").String()), nil
 		})
 
@@ -402,7 +423,6 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
 	mockRuleBasedPolicy()
 
 	post_rule_set_inx := -1
-	get_rule_set_inx := -1
 	put_rule_set_inx := -1
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
@@ -417,10 +437,14 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Update/put_rule_set_%d.json", put_rule_set_inx)).String()), nil
 		})
 
+	// get_rule_set_N.json is the stored rule set after the N-th write (POST or PUT).
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
-			get_rule_set_inx++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Update/get_rule_set_%d.json", get_rule_set_inx)).String()), nil
+			writes := post_rule_set_inx + put_rule_set_inx + 1
+			if writes < 0 {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Update/get_rule_set_%d.json", writes)).String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/?api-version=2021-10-01-preview`,
@@ -545,19 +569,280 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
 	})
 }
 
+func TestUnitEnvironmentGroupRuleSetResource_Validate_Update_Keeps_Unmanaged_Parameters(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	mockRuleBasedPolicy()
+
+	post_rule_set_inx := -1
+	put_rule_set_inx := -1
+	putParameters := [][]string{}
+	deleteCalls := 0
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			post_rule_set_inx++
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Update_Keeps_Unmanaged_Parameters/post_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PUT", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			put_rule_set_inx++
+			putParameters = append(putParameters, ruleSetParameterKeys(req))
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Update_Keeps_Unmanaged_Parameters/put_rule_set_%d.json", put_rule_set_inx)).String()), nil
+		})
+
+	// get_rule_set_N.json is the stored rule set after the N-th write; get_rule_set_0.json includes a parameter added outside Terraform.
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			writes := post_rule_set_inx + put_rule_set_inx + 1
+			if writes < 0 {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Update_Keeps_Unmanaged_Parameters/get_rule_set_%d.json", writes)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			deleteCalls++
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {
+						sharing_controls = {
+							share_mode      = "exclude sharing with security groups"
+							share_max_limit = 20
+						}
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls.share_max_limit", "20"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {
+						sharing_controls = {
+							share_mode      = "exclude sharing with security groups"
+							share_max_limit = 30
+						}
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls.share_max_limit", "30"),
+				),
+			},
+		},
+	})
+
+	expectedPuts := [][]string{
+		{"Sharing/App", "Sharing/AuthoringBot"},
+		{"Sharing/AuthoringBot"},
+	}
+	if fmt.Sprint(putParameters) != fmt.Sprint(expectedPuts) {
+		t.Errorf("expected PUT parameters %v, got %v", expectedPuts, putParameters)
+	}
+	if deleteCalls != 0 {
+		t.Errorf("expected the rule set not to be deleted while it has parameters not managed by Terraform, got %d DELETE calls", deleteCalls)
+	}
+}
+
+func TestUnitEnvironmentGroupRuleSetResource_Validate_Create_Adopts_Existing_Rule_Set(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	mockRuleBasedPolicy()
+
+	put_rule_set_inx := -1
+	putParameters := [][]string{}
+	postCalls := 0
+	deleteCalls := 0
+
+	// The API allows a single rule set per environment group.
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			postCalls++
+			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"code":"RuleSetAlreadyExistsError"}}`), nil
+		})
+
+	httpmock.RegisterResponder("PUT", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			put_rule_set_inx++
+			putParameters = append(putParameters, ruleSetParameterKeys(req))
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Create_Adopts_Existing_Rule_Set/put_rule_set_%d.json", put_rule_set_inx)).String()), nil
+		})
+
+	// get_rule_set_0.json is the rule set created outside Terraform; get_rule_set_N.json is the state after the N-th PUT.
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Create_Adopts_Existing_Rule_Set/get_rule_set_%d.json", put_rule_set_inx+1)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			deleteCalls++
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {
+						sharing_controls = {
+							share_mode      = "exclude sharing with security groups"
+							share_max_limit = 20
+						}
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls.share_max_limit", "20"),
+				),
+			},
+		},
+	})
+
+	expectedPuts := [][]string{
+		{"Sharing/App", "Sharing/AuthoringBot"},
+		{"Sharing/AuthoringBot"},
+	}
+	if fmt.Sprint(putParameters) != fmt.Sprint(expectedPuts) {
+		t.Errorf("expected PUT parameters %v, got %v", expectedPuts, putParameters)
+	}
+	if postCalls != 0 {
+		t.Errorf("expected the existing rule set to be adopted, got %d POST calls", postCalls)
+	}
+	if deleteCalls != 0 {
+		t.Errorf("expected the rule set not to be deleted while it has parameters not managed by Terraform, got %d DELETE calls", deleteCalls)
+	}
+}
+
+func TestUnitEnvironmentGroupRuleSetResource_Validate_Remove_Legacy_Rules_Keeps_Unmanaged_Parameters(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	mockRuleBasedPolicy()
+
+	post_rule_set_inx := -1
+	put_rule_set_inx := -1
+	putParameters := [][]string{}
+	deleteCalls := 0
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			post_rule_set_inx++
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Remove_Legacy_Rules_Keeps_Unmanaged_Parameters/post_rule_set.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PUT", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			put_rule_set_inx++
+			putParameters = append(putParameters, ruleSetParameterKeys(req))
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Remove_Legacy_Rules_Keeps_Unmanaged_Parameters/put_rule_set_%d.json", put_rule_set_inx)).String()), nil
+		})
+
+	// get_rule_set_N.json is the stored rule set after the N-th write; get_rule_set_0.json lists a parameter added outside Terraform first.
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			writes := post_rule_set_inx + put_rule_set_inx + 1
+			if writes < 0 {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/Validate_Remove_Legacy_Rules_Keeps_Unmanaged_Parameters/get_rule_set_%d.json", writes)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			deleteCalls++
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {
+						sharing_controls = {
+							share_mode      = "exclude sharing with security groups"
+							share_max_limit = 20
+						}
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls.share_max_limit", "20"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = "00000000-0000-0000-0000-000000000000"
+					rules = {}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls"),
+				),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.sharing_controls"),
+				),
+			},
+		},
+	})
+
+	expectedPuts := [][]string{
+		{"Sharing/AuthoringBot"},
+		{"Sharing/AuthoringBot"},
+	}
+	if fmt.Sprint(putParameters) != fmt.Sprint(expectedPuts) {
+		t.Errorf("expected PUT parameters %v, got %v", expectedPuts, putParameters)
+	}
+	if deleteCalls != 0 {
+		t.Errorf("expected the rule set not to be deleted while it has parameters not managed by Terraform, got %d DELETE calls", deleteCalls)
+	}
+}
+
 func TestUnitEnvironmentGroupRuleSetResource_Validate_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
 	mockRuleBasedPolicy()
 
+	created := false
+
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Create/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Create/get_rule_set.json").String()), nil
 		})
 
@@ -622,13 +907,19 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Empty_Ruleset(t *te
 	mocks.ActivateEnvironmentHttpMocks()
 	mockRuleBasedPolicy()
 
+	created := false
+
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_Empty_Ruleset/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Empty_Ruleset/get_rule_set.json").String()), nil
 		})
 
@@ -682,14 +973,26 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Multiple_Sharing_Pa
 	mocks.ActivateEnvironmentHttpMocks()
 	mockRuleBasedPolicy()
 
+	created := false
+
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_Multiple_Sharing_Parameters/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Multiple_Sharing_Parameters/get_rule_set.json").String()), nil
+		})
+
+	// Destroy keeps the AuthoringBot and UsersBot parameters, which are not managed by Terraform.
+	httpmock.RegisterResponder("PUT", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Multiple_Sharing_Parameters/put_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/ruleSets/00000000-0000-0000-0000-000000000001?api-version=2021-10-01-preview`,
@@ -804,13 +1107,19 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Invalid_Share_Limit(t *tes
 	mocks.ActivateEnvironmentHttpMocks()
 	mockRuleBasedPolicy()
 
+	created := false
+
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			created = true
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/Validate_Import_Invalid_Share_Limit/post_rule_set.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Import_Invalid_Share_Limit/get_rule_set.json").String()), nil
 		})
 
