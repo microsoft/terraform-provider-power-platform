@@ -63,3 +63,33 @@ type ResourceModel struct {
 	IsManaged            types.Bool     `tfsdk:"is_managed"`
 	DisplayName          types.String   `tfsdk:"display_name"`
 }
+
+type UnmanagedSolutionResource struct {
+	helpers.TypeInfo
+	SolutionClient Client
+}
+
+type UnmanagedSolutionResourceModel struct {
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
+	Id            types.String   `tfsdk:"id"`
+	EnvironmentId types.String   `tfsdk:"environment_id"`
+	UniqueName    types.String   `tfsdk:"uniquename"`
+	DisplayName   types.String   `tfsdk:"display_name"`
+	PublisherId   types.String   `tfsdk:"publisher_id"`
+	Description   types.String   `tfsdk:"description"`
+}
+
+type UnmanagedSolutionDataSource struct {
+	helpers.TypeInfo
+	SolutionClient Client
+}
+
+type UnmanagedSolutionDataSourceModel struct {
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
+	Id            types.String   `tfsdk:"id"`
+	EnvironmentId types.String   `tfsdk:"environment_id"`
+	UniqueName    types.String   `tfsdk:"uniquename"`
+	DisplayName   types.String   `tfsdk:"display_name"`
+	PublisherId   types.String   `tfsdk:"publisher_id"`
+	Description   types.String   `tfsdk:"description"`
+}
