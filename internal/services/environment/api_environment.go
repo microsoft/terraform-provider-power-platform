@@ -617,11 +617,7 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 
 // isGraphServerError reports whether a BAP error body carries the transient GraphServerError code.
 func isGraphServerError(body []byte) bool {
-	var errBody struct {
-		Error struct {
-			Code string `json:"code"`
-		} `json:"error"`
-	}
+	var errBody graphServerErrorResponseDto
 	if err := json.Unmarshal(body, &errBody); err != nil {
 		return false
 	}
