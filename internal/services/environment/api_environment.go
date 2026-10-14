@@ -536,6 +536,14 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
+		// GraphServerError is a transient failure raised before provisioning starts, so the create can be retried safely.
+		if isGraphServerError(apiResponse.BodyAsBytes) && retryCount < constants.MAX_RETRY_COUNT {
+			tflog.Info(ctx, "Environment creation failed with a transient GraphServerError. Retrying")
+			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+				return nil, err
+			}
+			return client.createEnvironmentWithRetry(ctx, environmentToCreate, retryCount+1)
+		}
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
 	}
 
@@ -605,6 +613,19 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	return env, err
+}
+
+// isGraphServerError reports whether a BAP error body carries the transient GraphServerError code.
+func isGraphServerError(body []byte) bool {
+	var errBody struct {
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(body, &errBody); err != nil {
+		return false
+	}
+	return errBody.Error.Code == "GraphServerError"
 }
 
 // waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and
