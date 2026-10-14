@@ -2,4 +2,4 @@ kind: fixed
 body: Retry `powerplatform_environment` creation on transient `GraphServerError` (HTTP 500) responses from the environment create API
 time: 2026-10-14T08:21:28.322048667Z
 custom:
-    Issue: "1"
+    Issue: "1300"
