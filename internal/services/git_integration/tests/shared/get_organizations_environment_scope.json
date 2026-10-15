@@ -1,0 +1,8 @@
+{
+  "value": [
+    {
+      "organizationid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "orgdborgsettings": "<OrgSettings><SourceControlIntegrationScope>EnvironmentScope</SourceControlIntegrationScope></OrgSettings>"
+    }
+  ]
+}
