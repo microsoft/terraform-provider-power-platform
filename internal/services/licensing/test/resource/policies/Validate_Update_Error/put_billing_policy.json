@@ -1,0 +1,7 @@
+[
+  {
+    "code": "BillingPolicyInvalidEntitlementPayGoEntitlements",
+    "key": "BillingDocumentPayGoEntitlements",
+    "message": "Entitlement 'Bogus' is invalid."
+  }
+]

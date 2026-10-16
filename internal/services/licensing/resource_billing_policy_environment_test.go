@@ -488,3 +488,102 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Read_ParentDeleted(t *tes
 		},
 	})
 }
+
+func TestAccBillingPolicyResourceEnvironment_Validate_Meters(t *testing.T) {
+	rgName := "power-platform-billing-" + mocks.TestName() + strconv.Itoa(rand.IntN(9999))
+	billingPolicyName := strings.ReplaceAll(mocks.TestName(), "_", "") + strconv.Itoa(rand.IntN(9999))
+
+	config := func(name string, meters string, dataSource string) string {
+		return `
+		data "azapi_client_config" "current" {}
+
+		resource "azapi_resource" "rg_example" {
+			type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+			location  = "East US"
+			name      = "` + rgName + `"
+		}
+
+		resource "powerplatform_billing_policy" "pay_as_you_go" {
+			name     = "` + name + `"
+			location = "unitedstates"
+			status   = "Enabled"
+			billing_instrument = {
+				resource_group  = azapi_resource.rg_example.name
+				subscription_id = data.azapi_client_config.current.subscription_id
+			}
+			meters = {
+				` + meters + `
+			}
+		}
+
+		resource "powerplatform_environment" "env1" {
+			display_name     = "billing_policy_example_environment_1_` + mocks.TestName() + `"
+			location         = "unitedstates"
+			environment_type = "Sandbox"
+
+			lifecycle {
+				ignore_changes = [billing_policy_id]
+			}
+		}
+
+		resource "time_sleep" "wait_for_environments" {
+			create_duration = "120s"
+
+			depends_on = [powerplatform_environment.env1]
+		}
+
+		resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+			billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+			environments      = [powerplatform_environment.env1.id]
+
+			depends_on = [time_sleep.wait_for_environments]
+		}
+		` + dataSource
+	}
+
+	// Reads the linked environments from the API after the billing policy update has been applied.
+	linkedEnvironments := `
+		data "powerplatform_billing_policies_environments" "linked" {
+			billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+		}`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "azure/azapi",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config(billingPolicyName, "copilot_studio = true", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "meters.copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "meters.power_apps", "false"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
+				),
+			},
+			{
+				// Renaming the billing policy and changing its meters must keep the linked environment.
+				Config: config(billingPolicyName+"1", "copilot_studio = false\npower_apps = true", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", billingPolicyName+"1"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "meters.copilot_studio", "false"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "meters.power_apps", "true"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
+				),
+			},
+			{
+				Config: config(billingPolicyName+"1", "copilot_studio = false\npower_apps = true", linkedEnvironments),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_billing_policies_environments.linked", "environments.#", "1"),
+					resource.TestCheckResourceAttrPair("data.powerplatform_billing_policies_environments.linked", "environments.0", "powerplatform_environment.env1", "id"),
+				),
+			},
+		},
+	})
+}

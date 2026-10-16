@@ -47,4 +47,7 @@ resource "powerplatform_billing_policy" "pay_as_you_go" {
     resource_group  = azurerm_resource_group.rg_example.name
     subscription_id = data.azurerm_client_config.current.subscription_id
   }
+  meters = {
+    copilot_studio = true
+  }
 }

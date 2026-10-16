@@ -1,0 +1,91 @@
+{
+  "id": "00000000-0000-0000-0000-000000000001",
+  "name": "payAsYouGoBillingPolicyExample1",
+  "type": "TenantOwned",
+  "status": "Enabled",
+  "location": "europe",
+  "payGoEntitlements": [
+    {
+      "entitlementId": "CloudFlowRuns",
+      "productCategory": "PowerAutomate",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "PAUnattendedRPA",
+      "productCategory": "PowerAutomate",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "PAAttendedRPA",
+      "productCategory": "PowerAutomate",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "PowerPagesAuthenticated",
+      "productCategory": "PowerPages",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "PowerPagesAnonymous",
+      "productCategory": "PowerPages",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "File",
+      "productCategory": "Dataverse",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "Log",
+      "productCategory": "Dataverse",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "Database",
+      "productCategory": "Dataverse",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "MCSMessages",
+      "productCategory": "PowerVirtualAgent",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "AppPass",
+      "productCategory": "PowerApps",
+      "payAsYouGoState": true,
+      "value": 1.7976931348623157E+308
+    },
+    {
+      "entitlementId": "W365APAYGO",
+      "productCategory": "W365",
+      "payAsYouGoState": false,
+      "value": 1.7976931348623157E+308
+    }
+  ],
+  "billingInstrument": {
+    "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resource_group_name/providers/Microsoft.PowerPlatform/accounts/payAsYouGoBillingPolicyExample",
+    "subscriptionId": "00000000-0000-0000-0000-000000000000",
+    "resourceGroup": "resource_group_name",
+    "provisioningStatus": "Succeeded"
+  },
+  "createdOn": "2023-11-14T09:59:23.2028315Z",
+  "createdBy": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "type": "User"
+  },
+  "lastModifiedOn": "2023-11-14T09:59:23.2028315Z",
+  "lastModifiedBy": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "type": "User"
+  }
+}

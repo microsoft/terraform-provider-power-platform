@@ -72,6 +72,9 @@ resource "powerplatform_billing_policy" "pay_as_you_go" {
     resource_group  = azurerm_resource_group.rg_example.name
     subscription_id = data.azurerm_client_config.current.subscription_id
   }
+  meters = {
+    copilot_studio = true
+  }
 }
 ```
 
@@ -86,6 +89,7 @@ resource "powerplatform_billing_policy" "pay_as_you_go" {
 
 ### Optional
 
+- `meters` (Attributes) The pay-as-you-go meters of the billing policy. Each meter turns on pay-as-you-go billing for one product in the environments linked to the billing policy. Only the meters set in the configuration are managed: meters that aren't set keep their current value, and are turned off when the billing policy is created. For more information, see [Pay-as-you-go meters](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-meters). (see [below for nested schema](#nestedatt--meters))
 - `status` (String) The status of the billing policy (Enabled, Disabled)
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
@@ -104,6 +108,19 @@ Required:
 Read-Only:
 
 - `id` (String) The id of the billing instrument
+
+
+<a id="nestedatt--meters"></a>
+### Nested Schema for `meters`
+
+Optional:
+
+- `copilot_studio` (Boolean) Whether the Copilot Studio pay-as-you-go meter is turned on
+- `dataverse` (Boolean) Whether the Dataverse pay-as-you-go meter is turned on
+- `power_apps` (Boolean) Whether the Power Apps pay-as-you-go meter is turned on
+- `power_automate` (Boolean) Whether the Power Automate pay-as-you-go meter is turned on
+- `power_pages` (Boolean) Whether the Power Pages pay-as-you-go meter is turned on
+- `windows_365_for_agents` (Boolean) Whether the Windows 365 for Agents pay-as-you-go meter is turned on
 
 
 <a id="nestedatt--timeouts"></a>

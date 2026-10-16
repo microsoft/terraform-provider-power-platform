@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -123,6 +125,33 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
+			"meters": schema.SingleNestedAttribute{
+				MarkdownDescription: "The pay-as-you-go meters of the billing policy. Each meter turns on pay-as-you-go billing for one product in the environments linked to the billing policy. Only the meters set in the configuration are managed: meters that aren't set keep their current value, and are turned off when the billing policy is created. For more information, see [Pay-as-you-go meters](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-meters).",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"dataverse":              billingPolicyMeterAttribute("Dataverse"),
+					"power_apps":             billingPolicyMeterAttribute("Power Apps"),
+					"power_automate":         billingPolicyMeterAttribute("Power Automate"),
+					"power_pages":            billingPolicyMeterAttribute("Power Pages"),
+					"copilot_studio":         billingPolicyMeterAttribute("Copilot Studio"),
+					"windows_365_for_agents": billingPolicyMeterAttribute("Windows 365 for Agents"),
+				},
+			},
+		},
+	}
+}
+
+func billingPolicyMeterAttribute(product string) schema.BoolAttribute {
+	return schema.BoolAttribute{
+		MarkdownDescription: fmt.Sprintf("Whether the %s pay-as-you-go meter is turned on", product),
+		Optional:            true,
+		Computed:            true,
+		PlanModifiers: []planmodifier.Bool{
+			boolplanmodifier.UseStateForUnknown(),
 		},
 	}
 }
@@ -171,6 +200,14 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
 
+	meters, diags := metersFromObject(ctx, plan.Meters)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Nothing is sent when no meter is configured, which keeps the request identical to earlier provider versions.
+	billingPolicyToCreate.PayGoEntitlements = convertMetersModelToPayGoEntitlementsDto(meters, nil)
+
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
@@ -184,6 +221,11 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 	plan.BillingInstrument.Id = types.StringValue(policy.BillingInstrument.Id)
 	plan.BillingInstrument.ResourceGroup = types.StringValue(policy.BillingInstrument.ResourceGroup)
 	plan.BillingInstrument.SubscriptionId = types.StringValue(policy.BillingInstrument.SubscriptionId)
+	plan.Meters, diags = convertPayGoEntitlementsDtoToMetersModel(ctx, policy.PayGoEntitlements)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
@@ -217,6 +259,12 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	state.BillingInstrument.Id = types.StringValue(billing.BillingInstrument.Id)
 	state.BillingInstrument.ResourceGroup = types.StringValue(billing.BillingInstrument.ResourceGroup)
 	state.BillingInstrument.SubscriptionId = types.StringValue(billing.BillingInstrument.SubscriptionId)
+	meters, diags := convertPayGoEntitlementsDtoToMetersModel(ctx, billing.PayGoEntitlements)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.Meters = meters
 
 	tflog.Debug(ctx, fmt.Sprintf("READ %s with Id: %s", r.FullTypeName(), billing.Id))
 
@@ -240,10 +288,30 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	if plan.Name.ValueString() != state.Name.ValueString() ||
-		plan.Status.ValueString() != state.Status.ValueString() {
+		plan.Status.ValueString() != state.Status.ValueString() ||
+		!plan.Meters.Equal(state.Meters) {
+		// The current policy provides the full entitlement list: the API turns off every meter that an update omits.
+		current, err := r.LicensingClient.GetBillingPolicy(ctx, plan.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+			return
+		}
+
+		meters, diags := metersFromObject(ctx, plan.Meters)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		status := plan.Status.ValueString()
+		if plan.Status.IsUnknown() || plan.Status.IsNull() {
+			status = current.Status
+		}
+
 		policyToUpdate := BillingPolicyUpdateDto{
-			Name:   plan.Name.ValueString(),
-			Status: plan.Status.ValueString(),
+			Name:              plan.Name.ValueString(),
+			Status:            status,
+			PayGoEntitlements: convertMetersModelToPayGoEntitlementsDto(meters, current.PayGoEntitlements),
 		}
 
 		policy, err := r.LicensingClient.UpdateBillingPolicy(ctx, plan.Id.ValueString(), policyToUpdate)
@@ -259,6 +327,11 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		plan.BillingInstrument.Id = types.StringValue(policy.BillingInstrument.Id)
 		plan.BillingInstrument.ResourceGroup = types.StringValue(policy.BillingInstrument.ResourceGroup)
 		plan.BillingInstrument.SubscriptionId = types.StringValue(policy.BillingInstrument.SubscriptionId)
+		plan.Meters, diags = convertPayGoEntitlementsDtoToMetersModel(ctx, policy.PayGoEntitlements)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

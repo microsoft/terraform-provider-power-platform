@@ -108,6 +108,9 @@ func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string,
 
 	policy := &BillingPolicyDto{}
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, policy)
+	if err != nil {
+		return nil, err
+	}
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
 	if policy.Status != "Enabled" && policy.Status != "Disabled" {
