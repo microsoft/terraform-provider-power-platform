@@ -63,6 +63,7 @@ Optional:
 Read-Only:
 
 - `id` (String) The id of the billing policy
+- `meters` (Attributes) The pay-as-you-go meters of the billing policy. Each meter turns on pay-as-you-go billing for one product in the environments linked to the billing policy. For more information, see [Pay-as-you-go meters](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-meters). (see [below for nested schema](#nestedatt--billing_policies--meters))
 
 <a id="nestedatt--billing_policies--billing_instrument"></a>
 ### Nested Schema for `billing_policies.billing_instrument`
@@ -75,3 +76,16 @@ Required:
 Read-Only:
 
 - `id` (String) The id of the billing instrument
+
+
+<a id="nestedatt--billing_policies--meters"></a>
+### Nested Schema for `billing_policies.meters`
+
+Read-Only:
+
+- `copilot_studio` (Boolean) Whether the Copilot Studio pay-as-you-go meter is turned on
+- `dataverse` (Boolean) Whether the Dataverse pay-as-you-go meter is turned on
+- `power_apps` (Boolean) Whether the Power Apps pay-as-you-go meter is turned on
+- `power_automate` (Boolean) Whether the Power Automate pay-as-you-go meter is turned on
+- `power_pages` (Boolean) Whether the Power Pages pay-as-you-go meter is turned on
+- `windows_365_for_agents` (Boolean) Whether the Windows 365 for Agents pay-as-you-go meter is turned on

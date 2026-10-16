@@ -1,0 +1,5 @@
+kind: added
+body: Add `meters` to `powerplatform_billing_policy` and `powerplatform_billing_policies` to manage and read pay-as-you-go meters such as Copilot Studio; billing policy updates no longer turn off meters
+time: 2026-10-16T12:32:23.806021+02:00
+custom:
+    Issue: "1"

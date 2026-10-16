@@ -90,10 +90,29 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, req datasource.S
 								},
 							},
 						},
+						"meters": schema.SingleNestedAttribute{
+							MarkdownDescription: "The pay-as-you-go meters of the billing policy. Each meter turns on pay-as-you-go billing for one product in the environments linked to the billing policy. For more information, see [Pay-as-you-go meters](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-meters).",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"dataverse":              billingPolicyMeterDataSourceAttribute("Dataverse"),
+								"power_apps":             billingPolicyMeterDataSourceAttribute("Power Apps"),
+								"power_automate":         billingPolicyMeterDataSourceAttribute("Power Automate"),
+								"power_pages":            billingPolicyMeterDataSourceAttribute("Power Pages"),
+								"copilot_studio":         billingPolicyMeterDataSourceAttribute("Copilot Studio"),
+								"windows_365_for_agents": billingPolicyMeterDataSourceAttribute("Windows 365 for Agents"),
+							},
+						},
 					},
 				},
 			},
 		},
+	}
+}
+
+func billingPolicyMeterDataSourceAttribute(product string) schema.BoolAttribute {
+	return schema.BoolAttribute{
+		MarkdownDescription: fmt.Sprintf("Whether the %s pay-as-you-go meter is turned on", product),
+		Computed:            true,
 	}
 }
 
@@ -135,6 +154,12 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	for _, policy := range policies {
+		meters, diags := convertPayGoEntitlementsDtoToMetersModel(ctx, policy.PayGoEntitlements)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		state.BillingPolicies = append(state.BillingPolicies, BillingPolicyDataSourceModel{
 			Id:       types.StringValue(policy.Id),
 			Name:     types.StringValue(policy.Name),
@@ -145,6 +170,7 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.Rea
 				ResourceGroup:  types.StringValue(policy.BillingInstrument.ResourceGroup),
 				SubscriptionId: types.StringValue(policy.BillingInstrument.SubscriptionId),
 			},
+			Meters: meters,
 		})
 	}
 

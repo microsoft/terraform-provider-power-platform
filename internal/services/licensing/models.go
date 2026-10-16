@@ -41,6 +41,7 @@ type BillingPolicyDataSourceModel struct {
 	Location          types.String                     `tfsdk:"location"`
 	Status            types.String                     `tfsdk:"status"`
 	BillingInstrument BillingInstrumentDataSourceModel `tfsdk:"billing_instrument"`
+	Meters            types.Object                     `tfsdk:"meters"`
 }
 
 type BillingInstrumentDataSourceModel struct {

@@ -6,6 +6,19 @@
             "type": "TenantOwned",
             "status": "Enabled",
             "location": "europe",
+            "payGoEntitlements": [
+                { "entitlementId": "CloudFlowRuns", "productCategory": "PowerAutomate", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "PAUnattendedRPA", "productCategory": "PowerAutomate", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "PAAttendedRPA", "productCategory": "PowerAutomate", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "PowerPagesAuthenticated", "productCategory": "PowerPages", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "PowerPagesAnonymous", "productCategory": "PowerPages", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "File", "productCategory": "Dataverse", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "Log", "productCategory": "Dataverse", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "Database", "productCategory": "Dataverse", "payAsYouGoState": false, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "MCSMessages", "productCategory": "PowerVirtualAgent", "payAsYouGoState": true, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "AppPass", "productCategory": "PowerApps", "payAsYouGoState": true, "value": 1.7976931348623157E+308 },
+                { "entitlementId": "W365APAYGO", "productCategory": "W365", "payAsYouGoState": false, "value": 1.7976931348623157E+308 }
+            ],
             "billingInstrument": {
                 "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-group/providers/Microsoft.PowerPlatform/accounts/billingpolicy1",
                 "subscriptionId": "00000000-0000-0000-0000-000000000001",
