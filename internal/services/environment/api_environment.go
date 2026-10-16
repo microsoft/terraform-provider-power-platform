@@ -536,6 +536,25 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
+		domain := createEnvironmentDomain(environmentToCreate)
+		if isGraphServerError(apiResponse.BodyAsBytes) && domain != "" {
+			environmentId, err := client.findEnvironmentByDomain(ctx, domain)
+			if err != nil {
+				return nil, fmt.Errorf("failed to recover environment creation by domain '%s': %w", domain, err)
+			}
+			if environmentId != "" {
+				tflog.Info(ctx, "Recovered environment creation after GraphServerError", map[string]any{"environmentId": environmentId})
+				return client.getCreatedEnvironment(ctx, environmentToCreate, environmentId)
+			}
+			if retryCount >= constants.MAX_RETRY_COUNT {
+				return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
+			}
+			tflog.Info(ctx, "Environment creation failed with a transient GraphServerError and no environment exists for its domain. Retrying")
+			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+				return nil, err
+			}
+			return client.createEnvironmentWithRetry(ctx, environmentToCreate, retryCount+1)
+		}
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
 	}
 
@@ -579,6 +598,32 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		return nil, errors.New("environment creation failed. the API did not return an id for the created environment")
 	}
 
+	return client.getCreatedEnvironment(ctx, environmentToCreate, createdEnvironmentId)
+}
+
+func createEnvironmentDomain(environmentToCreate environmentCreateDto) string {
+	if environmentToCreate.Properties.LinkedEnvironmentMetadata == nil {
+		return ""
+	}
+	return environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName
+}
+
+func (client *Client) findEnvironmentByDomain(ctx context.Context, domain string) (string, error) {
+	environments, err := client.GetEnvironments(ctx)
+	if err != nil {
+		return "", err
+	}
+	for _, environment := range environments {
+		if environment.Properties != nil &&
+			environment.Properties.LinkedEnvironmentMetadata != nil &&
+			environment.Properties.LinkedEnvironmentMetadata.DomainName == domain {
+			return environment.Name, nil
+		}
+	}
+	return "", nil
+}
+
+func (client *Client) getCreatedEnvironment(ctx context.Context, environmentToCreate environmentCreateDto, createdEnvironmentId string) (*EnvironmentDto, error) {
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
 		// The environment was created, we just can't read it back. Return the id along with the error
@@ -605,6 +650,15 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	return env, err
+}
+
+// isGraphServerError reports whether a BAP error body carries the transient GraphServerError code.
+func isGraphServerError(body []byte) bool {
+	var errBody graphServerErrorResponseDto
+	if err := json.Unmarshal(body, &errBody); err != nil {
+		return false
+	}
+	return errBody.Error.Code == "GraphServerError"
 }
 
 // waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and

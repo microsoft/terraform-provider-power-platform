@@ -224,6 +224,225 @@ func TestUnitEnvironmentsResource_Validate_Do_Not_Retry_On_NoCapacity(t *testing
 	})
 }
 
+func TestUnitEnvironmentsResource_Validate_Retry_On_GraphServerError(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	graphServerErrorCount := 3
+	recoveryQueryCount := 0
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			recoveryQueryCount++
+			return httpmock.NewJsonResponse(http.StatusOK, map[string]any{"value": []any{}})
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			if graphServerErrorCount > 0 {
+				graphServerErrorCount--
+				return httpmock.NewStringResponse(http.StatusInternalServerError, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/post_environment_graph_server_error.json").String()), nil
+			}
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Retry_On_GraphServerError/get_environment_%s.json", id)).String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					func(_ *terraform.State) error {
+						if graphServerErrorCount != 0 {
+							return fmt.Errorf("expected all GraphServerError responses to be consumed by retries, %d left", graphServerErrorCount)
+						}
+						if recoveryQueryCount != 3 {
+							return fmt.Errorf("expected a recovery query before every retry, got %d", recoveryQueryCount)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Recover_On_GraphServerError(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	postCount := 0
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			postCount++
+			return httpmock.NewStringResponse(http.StatusInternalServerError, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/post_environment_graph_server_error.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			environment := strings.TrimSpace(httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/get_environment_00000000-0000-0000-0000-000000000001.json").String())
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+environment+`]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "00000000-0000-0000-0000-000000000001"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+		},
+	})
+
+	if postCount != 1 {
+		t.Fatalf("expected recovery without replaying environment creation, got %d create requests", postCount)
+	}
+}
+
+func TestUnitEnvironmentsResource_Validate_Do_Not_Retry_GraphServerError_Without_Domain(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	postCount := 0
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			postCount++
+			return httpmock.NewStringResponse(http.StatusInternalServerError, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/post_environment_graph_server_error.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*GraphServerError.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+				}`,
+			},
+		},
+	})
+
+	if postCount != 1 {
+		t.Fatalf("expected one environment create request, got %d", postCount)
+	}
+}
+
+func TestUnitEnvironmentsResource_Validate_Do_Not_Retry_On_Other_ServerError(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	postCount := 0
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			postCount++
+			return httpmock.NewStringResponse(http.StatusInternalServerError, httpmock.File("tests/resource/Validate_Retry_On_GraphServerError/post_environment_other_server_error.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*InternalServerError.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+		},
+	})
+
+	if postCount != 1 {
+		t.Fatalf("expected exactly 1 create request, got %d", postCount)
+	}
+}
+
 func TestUnitEnvironmentsResource_Validate_Retry_On_Running_LifecycleOperation(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
