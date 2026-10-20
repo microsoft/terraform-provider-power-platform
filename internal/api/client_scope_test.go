@@ -4,6 +4,7 @@
 package api
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
@@ -19,6 +20,9 @@ type scopeTestCloud struct {
 	name          string
 	urls          config.ProviderConfigUrls
 	dataverseHost string
+	// dataverseIsWholeNamespace is set for the clouds whose Dataverse domain is their whole cloud namespace, so that a
+	// look-alike of one of their API hosts falls back to a token for that look-alike host itself.
+	dataverseIsWholeNamespace bool
 }
 
 func scopeTestClouds() []scopeTestCloud {
@@ -117,7 +121,8 @@ func scopeTestClouds() []scopeTestCloud {
 				PowerAppsAdvisorScope: constants.EX_POWERAPPS_ADVISOR_API_SCOPE,
 				AnalyticsScope:        constants.EX_ANALYTICS_SCOPE,
 			},
-			dataverseHost: "org.crm.eaglex.ic.gov",
+			dataverseHost:             "org.crm.eaglex.ic.gov",
+			dataverseIsWholeNamespace: true,
 		},
 		{
 			name: "rx",
@@ -133,7 +138,8 @@ func scopeTestClouds() []scopeTestCloud {
 				PowerAppsAdvisorScope: constants.RX_POWERAPPS_ADVISOR_API_SCOPE,
 				AnalyticsScope:        constants.RX_ANALYTICS_SCOPE,
 			},
-			dataverseHost: "org.crm.microsoft.scloud",
+			dataverseHost:             "org.crm.microsoft.scloud",
+			dataverseIsWholeNamespace: true,
 		},
 	}
 }
@@ -180,16 +186,17 @@ func TestUnitTryGetScopeFromURL_KnownHosts(t *testing.T) {
 func TestUnitTryGetScopeFromURL_AnalyticsHosts(t *testing.T) {
 	t.Parallel()
 
-	urls := publicScopeTestUrls(t)
-	for _, url := range []string{
-		"https://na.csanalytics.powerplatform.microsoft.com/api/v2/connections",
-		"https://gcc.csanalytics.powerplatform.microsoft.us/api/v2/connections",
-		"https://high.csanalytics.powerplatform.microsoft.us/api/v2/connections",
-		"https://dod.csanalytics.csanalytics.appsplatform.us/api/v2/connections",
-	} {
-		scope, err := tryGetScopeFromURL(url, urls)
-		require.NoError(t, err, url)
-		require.Equal(t, constants.PUBLIC_ANALYTICS_SCOPE, scope, url)
+	for _, cloud := range scopeTestClouds() {
+		for _, rawUrl := range []string{
+			"https://na.csanalytics.powerplatform.microsoft.com/api/v2/connections",
+			"https://gcc.csanalytics.powerplatform.microsoft.us/api/v2/connections",
+			"https://high.csanalytics.powerplatform.microsoft.us/api/v2/connections",
+			"https://dod.csanalytics.csanalytics.appsplatform.us/api/v2/connections",
+		} {
+			scope, err := tryGetScopeFromURL(rawUrl, cloud.urls)
+			require.NoError(t, err, cloud.name+" "+rawUrl)
+			require.Equal(t, cloud.urls.AnalyticsScope, scope, cloud.name+" "+rawUrl)
+		}
 	}
 }
 
@@ -207,61 +214,95 @@ func TestUnitTryGetScopeFromURL_HostMatchingIsCaseInsensitiveAndIgnoresPort(t *t
 	require.Equal(t, "https://Org.API.CRM4.Dynamics.com:443/.default", scope)
 }
 
-// The URLs below each smuggle a known API domain into a part of the URL that is not its host, use plain http,
-// or name a host that is not a known Power Platform or Dataverse host. None of them may get a scope, because
-// the request would then carry a token to a host that should not receive it.
+// untrustedUrls returns URLs built from the cloud's own domains that each smuggle a known domain into a part of the URL
+// that is not its host, use plain http, or name a host that is not a known Power Platform or Dataverse host. None of
+// them may get the scope of the domain they mention, because the request would then carry that domain's token to a
+// host that should not receive it. lookAlike marks the hosts that imitate an API host without a dot boundary.
+func untrustedUrls(cloud scopeTestCloud) []struct {
+	url       string
+	lookAlike bool
+} {
+	urls := cloud.urls
+	return []struct {
+		url       string
+		lookAlike bool
+	}{
+		// Known domain in the query, fragment, path, or user info of a foreign host.
+		{url: "https://evil.example/p?" + urls.BapiUrl},
+		{url: "https://evil.example/#" + urls.BapiUrl},
+		{url: "https://" + urls.BapiUrl + "@evil.example/"},
+		{url: "https://evil.example/?" + urls.PowerAppsUrl},
+		{url: "https://evil.example/" + urls.PowerPlatformUrl + "/x"},
+		{url: "https://evil.example/" + urls.PowerAppsAdvisor + "/api/rule"},
+		{url: "https://evil.example/" + urls.AdminPowerPlatformUrl + "/api/tenant"},
+		{url: "https://evil.example/csanalytics"},
+		{url: "https://evil.example/" + cloud.dataverseHost + "/api/data/v9.2/accounts"},
+		// Known domain as the prefix of a foreign host, or without a dot boundary.
+		{url: "https://" + urls.BapiUrl + ".evil.example/x"},
+		{url: "https://" + urls.PowerPlatformUrl + ".evil.example/x"},
+		{url: "https://" + cloud.dataverseHost + ".evil.example/api/data/v9.2/accounts"},
+		{url: "https://evil" + urls.BapiUrl + "/x", lookAlike: true},
+		{url: "https://evil-" + urls.PowerPlatformUrl + "/x", lookAlike: true},
+		{url: "https://evildynamics.com/api/data/v9.2/accounts"},
+		{url: "https://csanalytics.evil.example/api/v2/connections"},
+		// Plain http, even to a known host.
+		{url: "http://" + urls.BapiUrl + "/insecure-scheme"},
+		{url: "http://" + urls.PowerPlatformUrl + "/insecure-scheme"},
+		{url: "http://" + cloud.dataverseHost + "/api/data/v9.2/accounts"},
+		{url: "http://127.0.0.1:8080/collect?x=" + urls.BapiUrl},
+		// Unknown hosts no longer get a token minted for themselves.
+		{url: "https://evil.example/anything"},
+		{url: "https://127.0.0.1/collect"},
+		// No host at all.
+		{url: "https:" + urls.BapiUrl},
+		{url: "https:///" + urls.BapiUrl},
+	}
+}
+
 func TestUnitTryGetScopeFromURL_RejectsUntrustedUrls(t *testing.T) {
 	t.Parallel()
 
-	urls := publicScopeTestUrls(t)
-	for _, url := range []string{
-		// Known domain in the query, fragment, path, or user info of a foreign host.
-		"https://evil.example/p?api.bap.microsoft.com",
-		"https://evil.example/#api.bap.microsoft.com",
-		"https://api.bap.microsoft.com@evil.example/",
-		"https://evil.example/api.powerplatform.com/x",
-		"https://evil.example/csanalytics",
-		"https://evil.example/org.crm4.dynamics.com/api/data/v9.2/accounts",
-		// Known domain as the prefix of a foreign host, or without a dot boundary.
-		"https://api.bap.microsoft.com.evil.example/x",
-		"https://evilapi.bap.microsoft.com/x",
-		"https://evil-api.powerplatform.com/x",
-		"https://evildynamics.com/api/data/v9.2/accounts",
-		"https://csanalytics.evil.example/api/v2/connections",
-		// Plain http, even to a known host.
-		"http://api.bap.microsoft.com/insecure-scheme",
-		"http://org.crm4.dynamics.com/api/data/v9.2/accounts",
-		"http://127.0.0.1:8080/collect?x=api.bap.microsoft.com",
-		// Unknown hosts no longer get a token minted for themselves.
-		"https://evil.example/anything",
-		"https://127.0.0.1/collect",
-		// No host at all.
-		"https:api.bap.microsoft.com",
-		"https:///api.bap.microsoft.com",
-	} {
-		scope, err := tryGetScopeFromURL(url, urls)
-		require.Error(t, err, url)
-		require.Empty(t, scope, url)
+	for _, cloud := range scopeTestClouds() {
+		t.Run(cloud.name, func(t *testing.T) {
+			t.Parallel()
+			for _, tc := range untrustedUrls(cloud) {
+				scope, err := tryGetScopeFromURL(tc.url, cloud.urls)
+				if tc.lookAlike && cloud.dataverseIsWholeNamespace {
+					// The look-alike host is inside this cloud's namespace, so it falls back to a token for itself, never
+					// to the token of the API host it imitates.
+					require.NoError(t, err, tc.url)
+					require.Equal(t, strings.TrimSuffix(tc.url, "/x")+"/.default", scope, tc.url)
+					continue
+				}
+				require.Error(t, err, tc.url)
+				require.Empty(t, scope, tc.url)
+			}
+		})
 	}
 }
 
 func TestUnitTryGetScopeFromURL_InvalidUrls(t *testing.T) {
 	t.Parallel()
 
-	urls := publicScopeTestUrls(t)
-	for _, url := range []string{
-		// An unknown host whose URL cannot be parsed used to panic with a nil pointer dereference.
-		"https://evil.example/%zz",
-		"https://api.bap.microsoft.com/%zz",
-		"/relative/api.bap.microsoft.com",
-		"",
-	} {
-		var scope string
-		var err error
-		require.NotPanics(t, func() { scope, err = tryGetScopeFromURL(url, urls) }, url)
-		var urlErr *customerrors.UrlFormatError
-		require.ErrorAs(t, err, &urlErr, url)
-		require.Empty(t, scope, url)
+	for _, cloud := range scopeTestClouds() {
+		t.Run(cloud.name, func(t *testing.T) {
+			t.Parallel()
+			for _, rawUrl := range []string{
+				// An unknown host whose URL cannot be parsed used to panic with a nil pointer dereference.
+				"https://evil.example/%zz",
+				"https://" + cloud.urls.BapiUrl + "/%zz",
+				"https://" + cloud.dataverseHost + "/%zz",
+				"/relative/" + cloud.urls.BapiUrl,
+				"",
+			} {
+				var scope string
+				var err error
+				require.NotPanics(t, func() { scope, err = tryGetScopeFromURL(rawUrl, cloud.urls) }, rawUrl)
+				var urlErr *customerrors.UrlFormatError
+				require.ErrorAs(t, err, &urlErr, rawUrl)
+				require.Empty(t, scope, rawUrl)
+			}
+		})
 	}
 }
 
