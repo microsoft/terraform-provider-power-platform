@@ -245,6 +245,10 @@ func untrustedUrls(cloud scopeTestCloud) []struct {
 		{url: "https://evil-" + urls.PowerPlatformUrl + "/x", lookAlike: true},
 		{url: "https://evildynamics.com/api/data/v9.2/accounts"},
 		{url: "https://csanalytics.evil.example/api/v2/connections"},
+		// IP literals whose IPv6 zone identifier imitates a known domain suffix.
+		{url: "https://[::1%25." + urls.BapiUrl + "]/status"},
+		{url: "https://[::ffff:127.0.0.1%25." + urls.PowerPlatformUrl + "]/status"},
+		{url: "https://[::1%25." + cloud.dataverseHost + "]/api/data/v9.2/accounts"},
 		// Plain http, even to a known host.
 		{url: "http://" + urls.BapiUrl + "/insecure-scheme"},
 		{url: "http://" + urls.PowerPlatformUrl + "/insecure-scheme"},

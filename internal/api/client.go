@@ -355,9 +355,10 @@ func tryGetScopeFromURL(rawUrl string, cloudConfig config.ProviderConfigUrls) (s
 	}
 }
 
-// isHostInDomains reports whether the host is one of the domains or a subdomain of one of them.
+// isHostInDomains reports whether the host is one of the domains or a subdomain of one of them. Only a plain DNS host
+// name can match: an IP literal never does, even when its IPv6 zone identifier (the text after '%') imitates a domain.
 func isHostInDomains(host string, domains ...string) bool {
-	if host == "" {
+	if !isDnsHostName(host) {
 		return false
 	}
 	for _, domain := range domains {
@@ -367,6 +368,20 @@ func isHostInDomains(host string, domains ...string) bool {
 		}
 	}
 	return false
+}
+
+// isDnsHostName reports whether the lowercase host consists only of the letters, digits, hyphens and dots of a DNS
+// host name.
+func isDnsHostName(host string) bool {
+	if host == "" {
+		return false
+	}
+	for _, c := range host {
+		if (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '-' && c != '.' {
+			return false
+		}
+	}
+	return true
 }
 
 func prepareRequestBody(body any) (io.Reader, error) {
