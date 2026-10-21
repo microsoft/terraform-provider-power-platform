@@ -317,3 +317,50 @@ func TestUnitTryGetScopeFromURL_EmptyConfiguredDomainMatchesNothing(t *testing.T
 	require.Error(t, err)
 	require.Empty(t, scope)
 }
+
+func TestUnitIsDnsHostName(t *testing.T) {
+	t.Parallel()
+
+	for _, host := range []string{
+		"api.bap.microsoft.com",
+		"org.crm4.dynamics.com",
+		"00000000-0000-0000-0000-000000000001.environment.api.powerplatform.com",
+		"localhost",
+		// An IPv4 literal is made of DNS characters, but it can never equal or end with a known domain.
+		"127.0.0.1",
+	} {
+		require.True(t, isDnsHostName(host), host)
+	}
+
+	for _, host := range []string{
+		"",
+		// IPv6 literals, with and without a zone identifier. A zone identifier is free text after '%', so it can
+		// imitate a known domain suffix; the '%' (and the ':' of the address) must keep these from ever matching.
+		"::1",
+		"fe80::1",
+		"fe80::1%eth0",
+		"::1%.api.bap.microsoft.com",
+		"::ffff:127.0.0.1%.api.powerplatform.com",
+		"%.api.bap.microsoft.com",
+		"api.bap.microsoft.com%eth0",
+		// Anything else outside [a-z0-9.-], including a trailing newline after an otherwise valid host.
+		"API.BAP.MICROSOFT.COM",
+		"api.bap.microsoft.com\n",
+		"api.bap.microsoft.com:443",
+		"api_bap.microsoft.com",
+		"api.bap.microsoft.com/",
+		"user@api.bap.microsoft.com",
+		"api.bap.mіcrosoft.com", // Cyrillic 'і'.
+	} {
+		require.False(t, isDnsHostName(host), "%q", host)
+	}
+}
+
+func TestUnitIsHostInDomains_RejectsIPv6ZoneIdentifier(t *testing.T) {
+	t.Parallel()
+
+	require.True(t, isHostInDomains("api.bap.microsoft.com", constants.PUBLIC_BAPI_DOMAIN))
+	require.False(t, isHostInDomains("fe80::1%eth0", "eth0"))
+	require.False(t, isHostInDomains("::1%.api.bap.microsoft.com", constants.PUBLIC_BAPI_DOMAIN))
+	require.False(t, isHostInDomains("::1%.org.crm4.dynamics.com", dataverseDomains...))
+}

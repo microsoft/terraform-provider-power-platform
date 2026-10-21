@@ -14,6 +14,7 @@ import (
 	"net/http"
 	neturl "net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -370,18 +371,15 @@ func isHostInDomains(host string, domains ...string) bool {
 	return false
 }
 
+// dnsHostNamePattern matches a non-empty lowercase host made only of the letters, digits, hyphens and dots of a DNS
+// host name. It excludes the ':' of an IPv6 literal and the '%' of its zone identifier. Go's '$' anchors at the very
+// end of the text, so a trailing newline does not match either.
+var dnsHostNamePattern = regexp.MustCompile(`^[a-z0-9.-]+$`)
+
 // isDnsHostName reports whether the lowercase host consists only of the letters, digits, hyphens and dots of a DNS
 // host name.
 func isDnsHostName(host string) bool {
-	if host == "" {
-		return false
-	}
-	for _, c := range host {
-		if (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '-' && c != '.' {
-			return false
-		}
-	}
-	return true
+	return dnsHostNamePattern.MatchString(host)
 }
 
 func prepareRequestBody(body any) (io.Reader, error) {
