@@ -605,6 +605,17 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 	return nil
 }
 
+// getRecordIdFromODataId returns the record id (the last GUID) from an OData row URL such as
+// https://<host>/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000000).
+func getRecordIdFromODataId(odataId string) (string, error) {
+	re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+	match := re.FindAllString(odataId, -1)
+	if len(match) == 0 {
+		return "", fmt.Errorf("no record id found in related record reference '%s'", odataId)
+	}
+	return match[len(match)-1], nil
+}
+
 func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]any) (tableLogicalName string, dataRecordId string, err error) {
 	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
 	if !ok {
@@ -690,7 +701,18 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 	}
 
 	for _, relation := range toBeDeleted {
-		_, err = client.Api.Execute(ctx, nil, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+		// Disassociate the related row with the $ref form. Sending DELETE to relation.OdataID (the related
+		// row's own URL) would delete the related row itself instead of only removing the link.
+		relatedRecordId, err := getRecordIdFromODataId(relation.OdataID)
+		if err != nil {
+			return err
+		}
+		disassociateUrl := &url.URL{
+			Scheme: constants.HTTPS,
+			Host:   environmentHost,
+			Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key, relatedRecordId),
+		}
+		_, err = client.Api.Execute(ctx, nil, "DELETE", disassociateUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}
