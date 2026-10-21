@@ -503,6 +503,16 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	return client.createEnvironmentWithRetry(ctx, environmentToCreate, 0)
 }
 
+// environmentIdFromLifecycle returns the id of the environment a lifecycle operation acts on, or an
+// empty string when the operation has not reported one.
+func environmentIdFromLifecycle(lifecycle *api.LifecycleDto) string {
+	if lifecycle == nil {
+		return ""
+	}
+	parts := strings.Split(lifecycle.Links.Environment.Path, "/")
+	return parts[len(parts)-1]
+}
+
 func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmentToCreate environmentCreateDto, retryCount int) (*EnvironmentDto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
@@ -546,6 +556,15 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	case http.StatusAccepted:
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
+			// The operation was accepted and may still finish creating the environment after we stop
+			// waiting. Return its id when the operation has already reported it, so the caller records
+			// the environment and Terraform can destroy it instead of leaving it behind untracked.
+			var waitErr *api.LifecycleWaitError
+			if errors.As(err, &waitErr) {
+				if pendingEnvironmentId := environmentIdFromLifecycle(waitErr.LastObserved); pendingEnvironmentId != "" {
+					return &EnvironmentDto{Name: pendingEnvironmentId}, err
+				}
+			}
 			return nil, err
 		}
 		if lifecycleResponse == nil {
@@ -555,8 +574,7 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 			return nil, fmt.Errorf("environment creation failed. lifecycle operation state: %s", lifecycleResponse.State.Id)
 		}
 
-		parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-		createdEnvironmentId = parts[len(parts)-1]
+		createdEnvironmentId = environmentIdFromLifecycle(lifecycleResponse)
 		tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 
 	case http.StatusCreated:
