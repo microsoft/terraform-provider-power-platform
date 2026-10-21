@@ -149,17 +149,21 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 	}
 }
 
-// pollLifecycleOperation reads the lifecycle operation once. The read gets its own deadline because
-// the HTTP client has none, so a single hung connection would otherwise consume the whole operation
-// budget instead of being retried on the next tick.
+// pollLifecycleOperation reads the lifecycle operation once. Each HTTP attempt of the read gets its own
+// deadline, so a single hung connection is retried on the next tick instead of consuming the whole
+// operation budget. Delays that the service asks for between attempts stay bounded by ctx alone. A
+// caller that already bounds its request attempts keeps its own bound.
 func (client *Client) pollLifecycleOperation(ctx context.Context, location string) (*LifecycleDto, *Response, error) {
-	pollCtx, cancel := context.WithTimeout(ctx, constants.LIFECYCLE_POLL_REQUEST_TIMEOUT)
-	defer cancel()
+	attemptTimeout, ok := requestAttemptTimeout(ctx)
+	if !ok {
+		attemptTimeout = constants.LIFECYCLE_POLL_REQUEST_TIMEOUT
+		ctx = WithRequestAttemptTimeout(ctx, attemptTimeout)
+	}
 
 	lifecycleResponse := LifecycleDto{}
-	response, err := client.Execute(pollCtx, nil, "GET", location, nil, nil, []int{http.StatusOK, http.StatusConflict, http.StatusNotFound}, &lifecycleResponse)
-	if err != nil && pollCtx.Err() != nil && ctx.Err() == nil {
-		return nil, response, fmt.Errorf("lifecycle operation poll did not complete within %s: %w", constants.LIFECYCLE_POLL_REQUEST_TIMEOUT, err)
+	response, err := client.Execute(ctx, nil, "GET", location, nil, nil, []int{http.StatusOK, http.StatusConflict, http.StatusNotFound}, &lifecycleResponse)
+	if err != nil && errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
+		return nil, response, fmt.Errorf("lifecycle operation poll request did not complete within %s: %w", attemptTimeout, err)
 	}
 	return &lifecycleResponse, response, err
 }
@@ -174,7 +178,7 @@ func isTransientLifecyclePollError(err error) bool {
 		return statusErr.StatusCode != http.StatusUnauthorized && helpers.ArrayContains(retryableStatusCodes, statusErr.StatusCode)
 	}
 	if errors.Is(err, context.DeadlineExceeded) {
-		// The caller has already ruled out the deadline of the whole wait, so this is the read's own.
+		// The caller has already ruled out the deadline of the whole wait, so this is an attempt's own.
 		return true
 	}
 	var sentErr RequestSentError
