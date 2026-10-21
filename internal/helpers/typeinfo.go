@@ -5,6 +5,7 @@ package helpers
 
 import (
 	"fmt"
+	"time"
 )
 
 // TypeInfo represents a managed object type in the provider such as a resource or data source.
@@ -12,6 +13,10 @@ import (
 type TypeInfo struct {
 	ProviderTypeName string
 	TypeName         string
+
+	// DefaultCreateTimeout replaces constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES as the
+	// create timeout of a resource whose configuration sets none. Zero keeps the shared default.
+	DefaultCreateTimeout time.Duration
 }
 
 // FullTypeName returns the full type name in the format provider_type.

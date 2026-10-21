@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/stretchr/testify/require"
 
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -97,6 +98,61 @@ func TestUnitEnterRequestContext_DataSourceRead_AppliesReadTimeout(t *testing.T)
 	deadline, ok := ctx.Deadline()
 	require.True(t, ok, "expected data source read context to have a deadline")
 	require.WithinDuration(t, time.Now().Add(2*time.Minute), deadline, 5*time.Second)
+}
+
+// createTimeoutRequest builds a resource create request whose configuration sets `timeouts.create`
+// to create, or leaves it unset when create is null.
+func createTimeoutRequest(ctx context.Context, create tftypes.Value) resource.CreateRequest {
+	timeoutsAttribute := timeouts.Attributes(ctx, timeouts.Opts{Create: true})
+	timeoutsType := timeoutsAttribute.GetType().TerraformType(ctx)
+	rootType := tftypes.Object{AttributeTypes: map[string]tftypes.Type{"timeouts": timeoutsType}}
+
+	return resource.CreateRequest{
+		Plan: tfsdk.Plan{
+			Schema: resourceschema.Schema{
+				Attributes: map[string]resourceschema.Attribute{"timeouts": timeoutsAttribute},
+			},
+			Raw: tftypes.NewValue(rootType, map[string]tftypes.Value{
+				"timeouts": tftypes.NewValue(timeoutsType, map[string]tftypes.Value{"create": create}),
+			}),
+		},
+	}
+}
+
+func TestUnitEnterRequestContext_ResourceCreate_UsesTypeDefaultCreateTimeout(t *testing.T) {
+	ctx := context.Background()
+	req := createTimeoutRequest(ctx, tftypes.NewValue(tftypes.String, nil))
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, helpers.TypeInfo{TypeName: "test", DefaultCreateTimeout: 60 * time.Minute}, req)
+	defer exitContext()
+
+	deadline, ok := ctx.Deadline()
+	require.True(t, ok, "expected resource create context to have a deadline")
+	require.WithinDuration(t, time.Now().Add(60*time.Minute), deadline, 5*time.Second)
+}
+
+func TestUnitEnterRequestContext_ResourceCreate_ConfiguredTimeoutOverridesTypeDefault(t *testing.T) {
+	ctx := context.Background()
+	req := createTimeoutRequest(ctx, tftypes.NewValue(tftypes.String, "2m"))
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, helpers.TypeInfo{TypeName: "test", DefaultCreateTimeout: 60 * time.Minute}, req)
+	defer exitContext()
+
+	deadline, ok := ctx.Deadline()
+	require.True(t, ok, "expected resource create context to have a deadline")
+	require.WithinDuration(t, time.Now().Add(2*time.Minute), deadline, 5*time.Second)
+}
+
+func TestUnitEnterRequestContext_ResourceCreate_WithoutTypeDefaultUsesSharedDefault(t *testing.T) {
+	ctx := context.Background()
+	req := createTimeoutRequest(ctx, tftypes.NewValue(tftypes.String, nil))
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, helpers.TypeInfo{TypeName: "test"}, req)
+	defer exitContext()
+
+	deadline, ok := ctx.Deadline()
+	require.True(t, ok, "expected resource create context to have a deadline")
+	require.WithinDuration(t, time.Now().Add(constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES), deadline, 5*time.Second)
 }
 
 // Helper function to check if a string contains a substring.

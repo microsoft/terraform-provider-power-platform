@@ -144,6 +144,10 @@ const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 	MAX_RETRY_COUNT                               = 10
 
+	// Creating an environment provisions its Dataverse organization within the same operation, and
+	// that provisioning has been observed to run past the shared 20 minute default by itself.
+	DEFAULT_ENVIRONMENT_CREATE_TIMEOUT = 60 * time.Minute
+
 	// BAPI can report an environment lifecycle operation as succeeded before the Dataverse
 	// metadata of that environment becomes readable, so it has to be polled for separately.
 	MAX_DATAVERSE_METADATA_RETRY_COUNT = 30

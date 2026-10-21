@@ -47,7 +47,8 @@ var _ resource.ResourceWithImportState = &Resource{}
 func NewEnvironmentResource() resource.Resource {
 	return &Resource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "environment",
+			TypeName:             "environment",
+			DefaultCreateTimeout: constants.DEFAULT_ENVIRONMENT_CREATE_TIMEOUT,
 		},
 	}
 }
@@ -107,6 +108,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
+				CreateDescription: `A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". ` +
+					`Valid time units are "s" (seconds), "m" (minutes), "h" (hours). ` +
+					fmt.Sprintf("Defaults to `%dm` because creating an environment includes provisioning its Dataverse database.", int(constants.DEFAULT_ENVIRONMENT_CREATE_TIMEOUT.Minutes())),
 				Update: true,
 				Delete: true,
 				Read:   true,
