@@ -201,8 +201,8 @@ const MAX_UNAUTHORIZED_RETRIES = 5
 
 // A lifecycle operation is polled for as long as its resource operation timeout allows. A single
 // failed read of the operation is retried on the next tick; only this many failures in a row end the
-// wait. Each read gets its own deadline, longer than the worst case of the retries Execute makes on
-// its own (MAX_RETRY_COUNT delays of at most 20 seconds), so it only cuts a connection that hangs.
+// wait. Each HTTP attempt of a read gets its own deadline, so a connection that hangs is cut and
+// retried. A lifecycle operation read answers within seconds, so five minutes only cuts a hung one.
 const (
 	LIFECYCLE_POLL_MAX_CONSECUTIVE_FAILURES = 5
 	LIFECYCLE_POLL_REQUEST_TIMEOUT          = 5 * time.Minute

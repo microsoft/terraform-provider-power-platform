@@ -166,12 +166,16 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			return nil, err
 		}
 
-		request, err := http.NewRequestWithContext(ctx, method, url, bodyBuffer)
+		attemptCtx, cancelAttempt := requestAttemptContext(ctx)
+		request, err := http.NewRequestWithContext(attemptCtx, method, url, bodyBuffer)
 		if err != nil {
+			cancelAttempt()
 			return nil, err
 		}
 
+		// doRequest reads the whole response body, so the attempt is over once it returns.
 		resp, err := client.doRequest(ctx, token, request, headers)
+		cancelAttempt()
 		if err != nil {
 			// If the operation deadline/cancellation stops a retry loop, retain the last real HTTP
 			// failure. doRequest synthesizes an empty 503 for a transport cancellation, which would
@@ -219,6 +223,29 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			return resp, err
 		}
 	}
+}
+
+type requestAttemptTimeoutKey struct{}
+
+// WithRequestAttemptTimeout bounds every single HTTP attempt that Execute makes under ctx by timeout.
+// The HTTP client has no timeout of its own, so without it one hung connection lasts until ctx ends.
+// Only the attempts are bounded: the delays between retries, which can follow a long Retry-After,
+// remain bounded by ctx alone. An attempt that runs out of time fails with context.DeadlineExceeded
+// while ctx itself is still live.
+func WithRequestAttemptTimeout(ctx context.Context, timeout time.Duration) context.Context {
+	return context.WithValue(ctx, requestAttemptTimeoutKey{}, timeout)
+}
+
+func requestAttemptTimeout(ctx context.Context) (time.Duration, bool) {
+	timeout, ok := ctx.Value(requestAttemptTimeoutKey{}).(time.Duration)
+	return timeout, ok && timeout > 0
+}
+
+func requestAttemptContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	if timeout, ok := requestAttemptTimeout(ctx); ok {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
 }
 
 // checkRetryAllowed returns nil when a response with an unacceptable status may be retried, or the

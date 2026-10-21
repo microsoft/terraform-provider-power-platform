@@ -315,3 +315,67 @@ func TestUnitDoWaitForLifecycleOperationStatus_ContextTimeout_ReportsLastObserve
 	require.Equal(t, "Running", waitErr.LastObserved.State.Id)
 	require.Equal(t, "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001", waitErr.LastObserved.Links.Environment.Path)
 }
+
+// A Retry-After longer than the attempt deadline is a delay the service asked for, not a hung
+// attempt, so it must be waited out under the deadline of the whole wait.
+func TestUnitDoWaitForLifecycleOperationStatus_RetryAfterLongerThanAttemptTimeout_IsWaitedOut(t *testing.T) {
+	t.Parallel()
+
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		callCount++
+		if callCount == 1 {
+			w.Header().Set(constants.HEADER_RETRY_AFTER, "1")
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"state":{"id":"Succeeded"}}`))
+	}))
+	defer server.Close()
+
+	// Sleeps for real, so that the Retry-After delay outlasts the attempt deadline.
+	client := lifecyclePollClient(server.URL, false)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	ctx = api.WithRequestAttemptTimeout(ctx, 200*time.Millisecond)
+
+	started := time.Now()
+	lifecycle, err := client.DoWaitForLifecycleOperationStatus(ctx, lifecycleAcceptedResponse(server.URL))
+	require.NoError(t, err)
+	require.NotNil(t, lifecycle)
+	require.Equal(t, "Succeeded", lifecycle.State.Id)
+	require.Equal(t, 2, callCount, "the 429 must be retried once, after the delay the service asked for")
+	require.GreaterOrEqual(t, time.Since(started), time.Second, "the Retry-After delay must not be cut short")
+}
+
+func TestUnitDoWaitForLifecycleOperationStatus_HungAttempt_IsRetried(t *testing.T) {
+	t.Parallel()
+
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		if callCount == 1 {
+			<-r.Context().Done()
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"state":{"id":"Succeeded"}}`))
+	}))
+	defer server.Close()
+
+	client := lifecyclePollClient(server.URL, true)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	ctx = api.WithRequestAttemptTimeout(ctx, 100*time.Millisecond)
+
+	lifecycle, err := client.DoWaitForLifecycleOperationStatus(ctx, lifecycleAcceptedResponse(server.URL))
+	require.NoError(t, err, "a hung attempt must be cut by its own deadline and retried on the next tick")
+	require.NotNil(t, lifecycle)
+	require.Equal(t, "Succeeded", lifecycle.State.Id)
+	require.Equal(t, 2, callCount)
+}
