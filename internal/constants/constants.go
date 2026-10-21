@@ -193,6 +193,15 @@ const (
 // refused for a reason other than expiry would be minted identically on every attempt.
 const MAX_UNAUTHORIZED_RETRIES = 2
 
+// A lifecycle operation is polled for as long as its resource operation timeout allows. A single
+// failed read of the operation is retried on the next tick; only this many failures in a row end the
+// wait. Each read gets its own deadline, longer than the worst case of the retries Execute makes on
+// its own (MAX_RETRY_COUNT delays of at most 20 seconds), so it only cuts a connection that hangs.
+const (
+	LIFECYCLE_POLL_MAX_CONSECUTIVE_FAILURES = 5
+	LIFECYCLE_POLL_REQUEST_TIMEOUT          = 5 * time.Minute
+)
+
 // Dataverse resolves an application user's application id against Entra, and a service principal
 // created moments earlier has not necessarily replicated there yet.
 const (
