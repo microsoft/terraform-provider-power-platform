@@ -1,5 +1,5 @@
 kind: fixed
-body: Retry `powerplatform_environment` creation on transient `GraphServerError` (HTTP 500) responses from the environment create API
+body: Retry `powerplatform_environment` creation on transient `GraphServerError` (HTTP 500) responses from the environment create API, recovering an environment the failed request already created by its validated Dataverse domain instead of creating a duplicate
 time: 2026-10-14T08:21:28.322048667Z
 custom:
     Issue: "1300"
