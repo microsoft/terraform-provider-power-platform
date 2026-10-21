@@ -1,0 +1,5 @@
+kind: fixed
+body: Default the powerplatform_environment create timeout to 60 minutes, because creating an environment includes provisioning its Dataverse database
+time: 2026-10-21T14:15:52.000000000Z
+custom:
+    Issue: "1308"

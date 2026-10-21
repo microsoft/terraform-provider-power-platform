@@ -67,7 +67,7 @@ func TestUnitApiClient_ExecuteWithoutRetry_ReplaysRefusedCredential(t *testing.T
 	)
 
 	assert.Error(t, err)
-	assert.Equal(t, 3, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
+	assert.Equal(t, constants.MAX_UNAUTHORIZED_RETRIES+1, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
 }
 
 func TestUnitApiClient_Execute_PersistentTransientFailure_StopsAtRetryLimit(t *testing.T) {

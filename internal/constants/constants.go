@@ -144,6 +144,10 @@ const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 	MAX_RETRY_COUNT                               = 10
 
+	// Creating an environment provisions its Dataverse organization within the same operation, and
+	// that provisioning has been observed to run past the shared 20 minute default by itself.
+	DEFAULT_ENVIRONMENT_CREATE_TIMEOUT = 60 * time.Minute
+
 	// BAPI can report an environment lifecycle operation as succeeded before the Dataverse
 	// metadata of that environment becomes readable, so it has to be polled for separately.
 	MAX_DATAVERSE_METADATA_RETRY_COUNT = 30
@@ -191,7 +195,18 @@ const (
 
 // MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
 // refused for a reason other than expiry would be minted identically on every attempt.
-const MAX_UNAUTHORIZED_RETRIES = 2
+// Five replays spaced by the default 10-20 second retry delay ride out roughly a minute of token
+// issuance or propagation lag, while a credential that stays refused still fails permanently after it.
+const MAX_UNAUTHORIZED_RETRIES = 5
+
+// A lifecycle operation is polled for as long as its resource operation timeout allows. A single
+// failed read of the operation is retried on the next tick; only this many failures in a row end the
+// wait. Each HTTP attempt of a read gets its own deadline, so a connection that hangs is cut and
+// retried. A lifecycle operation read answers within seconds, so five minutes only cuts a hung one.
+const (
+	LIFECYCLE_POLL_MAX_CONSECUTIVE_FAILURES = 5
+	LIFECYCLE_POLL_REQUEST_TIMEOUT          = 5 * time.Minute
+)
 
 // Dataverse resolves an application user's application id against Entra, and a service principal
 // created moments earlier has not necessarily replicated there yet.
