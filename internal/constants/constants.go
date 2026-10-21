@@ -195,7 +195,9 @@ const (
 
 // MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
 // refused for a reason other than expiry would be minted identically on every attempt.
-const MAX_UNAUTHORIZED_RETRIES = 2
+// Five replays spaced by the default 10-20 second retry delay ride out roughly a minute of token
+// issuance or propagation lag, while a credential that stays refused still fails permanently after it.
+const MAX_UNAUTHORIZED_RETRIES = 5
 
 // A lifecycle operation is polled for as long as its resource operation timeout allows. A single
 // failed read of the operation is retried on the next tick; only this many failures in a row end the
