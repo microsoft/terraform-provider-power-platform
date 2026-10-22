@@ -6,12 +6,22 @@ on:
      # run at 4 AM UTC every day
      - cron:  '0 4 * * *' 
   pull_request:
+    # Only a deliberate application of the run-acceptance-tests label starts a PR run. Later pushes
+    # do not re-run the acceptance tests on a still-labeled PR; the label is removed on push by
+    # remove_acceptance_tests_label.yml so a maintainer re-applies it after reviewing the new code.
+    # This is defense in depth only: the trust boundary is the acceptance-tests-pr environment on
+    # the tests job below, which requires a reviewer to approve every credentialed PR run.
+    types: [labeled]
   push:
      branches:
        - main
 
+# Eligible runs share the acceptancetests group so they run one at a time. A queued run in a group
+# is replaced by any newer run in that group, even with cancel-in-progress: false, so a pull_request
+# event for any other label gets its own per-run group. Otherwise routine labeling could discard a
+# pending acceptance-test run and then skip all of its own jobs.
 concurrency:
-  group: acceptancetests
+  group: ${{ (github.event_name == 'pull_request' && github.event.label.name != 'run-acceptance-tests') && format('acceptancetests-ignored-{0}', github.run_id) || 'acceptancetests' }}
   cancel-in-progress: false
 
 permissions:
@@ -22,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read  # Required for checkout
-    if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests'))
+    if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'run-acceptance-tests')
     outputs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
@@ -104,6 +114,11 @@ jobs:
     needs: [build, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
+    # The OIDC federated credentials for the acceptance test identity trust only these two
+    # environments, so the job gets cloud access only through their protection rules:
+    # - acceptance-tests-main: scheduled runs and pushes or manual runs on main (main-only branch policy).
+    # - acceptance-tests-pr: pull requests and manual runs on any other branch (required reviewers).
+    environment: ${{ (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') && 'acceptance-tests-main' || 'acceptance-tests-pr' }}
     permissions:
       id-token: write # Required for OIDC authentication
       contents: read  # Required for checkout
