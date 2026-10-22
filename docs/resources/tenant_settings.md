@@ -10,6 +10,79 @@ description: |-
 
 Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more details.
 
+## Migrating from v4.x
+
+This version reorganizes several tenant settings attributes to align with the Power Platform API. Configurations written for v4.x of the provider that use the attributes below will fail with an `Unsupported argument` error until they are updated. The changes below apply to both the `powerplatform_tenant_settings` resource and the `powerplatform_tenant_settings` data source.
+
+### Renamed and moved attributes
+
+Each renamed or moved attribute still manages the same underlying tenant setting, so moving the value to its new location keeps the current tenant configuration. After you update the configuration, `terraform plan` should show no changes to the tenant for these settings.
+
+| v4.x attribute | New attribute |
+| --- | --- |
+| `disable_survey_feedback` | `power_platform.product_feedback.disable_user_survey_feedback` |
+| `disable_nps_comments_reachout` | `power_platform.product_feedback.disable_microsoft_follow_up` |
+| `power_platform.intelligence.enable_open_ai_bot_publishing` | `power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled` |
+
+For example, this v4.x configuration:
+
+```terraform
+resource "powerplatform_tenant_settings" "settings" {
+  disable_survey_feedback       = true
+  disable_nps_comments_reachout = true
+
+  power_platform = {
+    intelligence = {
+      enable_open_ai_bot_publishing = true
+    }
+  }
+}
+```
+
+becomes:
+
+```terraform
+resource "powerplatform_tenant_settings" "settings" {
+  power_platform = {
+    product_feedback = {
+      disable_user_survey_feedback = true
+      disable_microsoft_follow_up  = true
+    }
+    intelligence = {
+      allow_copilot_authors_publish_when_ai_features_are_enabled = true
+    }
+  }
+}
+```
+
+Update any references to these attributes on the data source the same way, for example `data.powerplatform_tenant_settings.settings.disable_survey_feedback` becomes `data.powerplatform_tenant_settings.settings.power_platform.product_feedback.disable_user_survey_feedback`.
+
+### Deprecated attributes
+
+The following attributes are still accepted but are deprecated, have no replacement, and will be removed in a future release. Setting them produces a deprecation warning. Remove them from your configuration.
+
+- `power_platform.power_apps.disable_create_from_image`
+- `power_platform.power_apps.disable_create_from_figma`
+
+### New attributes
+
+The following attributes are new in this version. They are optional, so existing configurations do not need to set them.
+
+- `enable_support_use_bing_search_solutions`
+- `power_platform.product_feedback.disable_attachments`
+- `power_platform.product_feedback.disable_microsoft_surveys_send`
+- `power_platform.power_apps.disable_copilot`
+- `power_platform.power_apps.enable_canvas_app_insights`
+- `power_platform.power_automate.allow_use_of_hosted_browser`
+- `power_platform.power_automate.disable_copilot_help_assistance`
+- `power_platform.power_automate.disable_flow_resubmission`
+- `power_platform.governance.weekly_digest_email_recipients`
+- `power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments`
+- `power_platform.licensing.apply_auto_claim_power_automate_to_only_managed_environments`
+- `power_platform.intelligence.disable_basic_copilot_feedback`
+- `power_platform.intelligence.disable_additional_copilot_feedback`
+- `power_platform.intelligence.copilot_studio_authors_security_group_id`
+
 ## Example Usage
 
 ```terraform
