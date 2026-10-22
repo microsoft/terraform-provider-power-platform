@@ -16,8 +16,12 @@ on:
      branches:
        - main
 
+# Eligible runs share the acceptancetests group so they run one at a time. A queued run in a group
+# is replaced by any newer run in that group, even with cancel-in-progress: false, so a pull_request
+# event for any other label gets its own per-run group. Otherwise routine labeling could discard a
+# pending acceptance-test run and then skip all of its own jobs.
 concurrency:
-  group: acceptancetests
+  group: ${{ (github.event_name == 'pull_request' && github.event.label.name != 'run-acceptance-tests') && format('acceptancetests-ignored-{0}', github.run_id) || 'acceptancetests' }}
   cancel-in-progress: false
 
 permissions:
