@@ -14,6 +14,7 @@ import (
 	"net/http"
 	neturl "net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -94,7 +95,7 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 //
 // Parameters:
 //   - ctx: context.Context - Provides context for the request, allowing for timeout and cancellation control.
-//   - scopes: []string - A list of scopes that the request should be associated with. If no scopes are provided, the method attempts to infer the scope from the URL.
+//   - scopes: []string - A list of scopes that the request should be associated with. If no scopes are provided, the method infers the scope from the host of the URL, which must be an https URL of a known Power Platform or Dataverse host.
 //   - method: string - Specifies the HTTP method to be used for the request (e.g., "GET", "POST", "PATCH").
 //   - url: string - The URL to which the request is sent. This includes the scheme, host, path, and query parameters. The URL must be absolute and properly formatted.
 //   - headers: http.Header - A collection of HTTP headers to include in the request. Headers provide additional information about the request, such as content type, authorization tokens, and custom metadata.
@@ -106,6 +107,7 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 //   - *Response: The response from the HTTP request.
 //   - error: An error if the request fails. Possible error types include:
 //   - UrlFormatError: Returned if the URL is invalid or not absolute.
+//   - An error is also returned, before any request is sent, if no scopes are provided and none can be inferred from the URL.
 //   - UnexpectedHttpStatusCodeError: Returned if the response status code is not acceptable.
 //
 // If no scopes are provided, the method attempts to infer the scope from the URL. The URL is validated to ensure it is absolute and properly formatted.
@@ -301,24 +303,83 @@ func (client *Client) SleepWithContext(ctx context.Context, duration time.Durati
 	}
 }
 
-// TryGetScopeFromURL returns the authorization scope for the given API URL.
-func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
-	switch {
-	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
-		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
-		return cloudConfig.PowerAppsScope, nil
-	case strings.LastIndex(url, cloudConfig.PowerPlatformUrl) != -1:
-		return cloudConfig.PowerPlatformScope, nil
-	case strings.LastIndex(url, cloudConfig.PowerAppsAdvisor) != -1:
-		return cloudConfig.PowerAppsAdvisorScope, nil
-	case strings.LastIndex(url, cloudConfig.AdminPowerPlatformUrl) != -1:
-		return constants.PPAC_SCOPE, nil
-	case strings.LastIndex(url, "csanalytics") != -1:
-		return cloudConfig.AnalyticsScope, nil
-	default:
-		u, err := neturl.Parse(url)
-		return u.Scheme + "://" + u.Host + "/.default", err
+// dataverseDomains are the domains of Dataverse environment hosts in every supported cloud.
+var dataverseDomains = []string{
+	constants.PUBLIC_DATAVERSE_DOMAIN,
+	constants.USGOVHIGH_DATAVERSE_DOMAIN,
+	constants.USDOD_DATAVERSE_DOMAIN,
+	constants.CHINA_DATAVERSE_DOMAIN,
+	constants.EX_DATAVERSE_DOMAIN,
+	constants.RX_DATAVERSE_DOMAIN,
+}
+
+// analyticsDomains are the domains of the admin analytics hosts, which are chosen by geography rather than by cloud.
+var analyticsDomains = []string{
+	constants.PUBLIC_ANALYTICS_DOMAIN,
+	constants.USGOV_ANALYTICS_DOMAIN,
+	constants.USDOD_ANALYTICS_DOMAIN,
+}
+
+// tryGetScopeFromURL returns the authorization scope for a request to the given API URL.
+//
+// The scope is chosen from the parsed host of the URL alone. A host belongs to a domain only when it is the
+// domain itself or a subdomain of it, so a URL that merely mentions a known domain elsewhere (in its path,
+// query, fragment, user info, or as the prefix of a longer host name) never gets that domain's token.
+// Only https URLs get a scope, and a host that is neither a known API host nor a Dataverse host is rejected
+// instead of being sent a token minted for itself.
+func tryGetScopeFromURL(rawUrl string, cloudConfig config.ProviderConfigUrls) (string, error) {
+	u, err := neturl.Parse(rawUrl)
+	if err != nil || !u.IsAbs() {
+		return "", customerrors.NewUrlFormatError(rawUrl, err)
 	}
+	if !strings.EqualFold(u.Scheme, constants.HTTPS) {
+		return "", fmt.Errorf("refusing to authorize a request to '%s': only %s urls can be authorized", rawUrl, constants.HTTPS)
+	}
+
+	host := strings.ToLower(u.Hostname())
+	switch {
+	case isHostInDomains(host, cloudConfig.BapiUrl, cloudConfig.PowerAppsUrl):
+		return cloudConfig.PowerAppsScope, nil
+	case isHostInDomains(host, cloudConfig.PowerPlatformUrl):
+		return cloudConfig.PowerPlatformScope, nil
+	case isHostInDomains(host, cloudConfig.PowerAppsAdvisor):
+		return cloudConfig.PowerAppsAdvisorScope, nil
+	case isHostInDomains(host, cloudConfig.AdminPowerPlatformUrl):
+		return constants.PPAC_SCOPE, nil
+	case isHostInDomains(host, analyticsDomains...):
+		return cloudConfig.AnalyticsScope, nil
+	case isHostInDomains(host, cloudConfig.LicensingUrl),
+		isHostInDomains(host, dataverseDomains...):
+		return constants.HTTPS + "://" + u.Host + "/.default", nil
+	default:
+		return "", fmt.Errorf("refusing to authorize a request to '%s': '%s' is not a known Power Platform or Dataverse host, so no authorization scope can be inferred for it", rawUrl, host)
+	}
+}
+
+// isHostInDomains reports whether the host is one of the domains or a subdomain of one of them. Only a plain DNS host
+// name can match: an IP literal never does, even when its IPv6 zone identifier (the text after '%') imitates a domain.
+func isHostInDomains(host string, domains ...string) bool {
+	if !isDnsHostName(host) {
+		return false
+	}
+	for _, domain := range domains {
+		domain = strings.ToLower(domain)
+		if domain != "" && (host == domain || strings.HasSuffix(host, "."+domain)) {
+			return true
+		}
+	}
+	return false
+}
+
+// dnsHostNamePattern matches a non-empty lowercase host made only of the letters, digits, hyphens and dots of a DNS
+// host name. It excludes the ':' of an IPv6 literal and the '%' of its zone identifier. Go's '$' anchors at the very
+// end of the text, so a trailing newline does not match either.
+var dnsHostNamePattern = regexp.MustCompile(`^[a-z0-9.-]+$`)
+
+// isDnsHostName reports whether the lowercase host consists only of the letters, digits, hyphens and dots of a DNS
+// host name.
+func isDnsHostName(host string) bool {
+	return dnsHostNamePattern.MatchString(host)
 }
 
 func prepareRequestBody(body any) (io.Reader, error) {
