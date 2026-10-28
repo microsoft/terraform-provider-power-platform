@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "InternalServerError",
+        "message": "Something unexpected happened.",
+        "detailUrlType": "NotSpecified"
+    }
+}

@@ -504,9 +504,22 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 }
 
 func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmentToCreate environmentCreateDto, retryCount int) (*EnvironmentDto, error) {
-	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
-		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
+	// recoveryDomain is the durable identity used to recover a create whose response was lost. It is only
+	// set when validateEnvironmentDetails proves the Dataverse domain is free before the first create
+	// request, so any environment holding that domain afterwards can only have been created by this call.
+	recoveryDomain := validatedCreateDomain(environmentToCreate)
+	if recoveryDomain != "" {
+		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, recoveryDomain)
 		if err != nil {
+			if retryCount > 0 {
+				// An earlier attempt validated the domain as free, so if it is taken now that attempt most
+				// likely created the environment and it only just became visible. Adopt it instead of
+				// failing and leaving an environment Terraform does not know about.
+				env, found, recoverErr := client.recoverCreatedEnvironment(ctx, environmentToCreate, recoveryDomain)
+				if recoverErr != nil || found {
+					return env, recoverErr
+				}
+			}
 			return nil, err
 		}
 	}
@@ -536,7 +549,7 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
-		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
+		return client.handleCreateServerError(ctx, environmentToCreate, apiResponse, recoveryDomain, retryCount)
 	}
 
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
@@ -579,6 +592,110 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		return nil, errors.New("environment creation failed. the API did not return an id for the created environment")
 	}
 
+	return client.getCreatedEnvironment(ctx, environmentToCreate, createdEnvironmentId)
+}
+
+// handleCreateServerError handles an HTTP 500 from the environment create request. The request is not
+// idempotent and a GraphServerError does not prove that nothing was provisioned, so it is only retried
+// when an environment the failed request may have created can be recovered by its validated domain.
+func (client *Client) handleCreateServerError(ctx context.Context, environmentToCreate environmentCreateDto, apiResponse *api.Response, recoveryDomain string, retryCount int) (*EnvironmentDto, error) {
+	createError := customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
+	if !isGraphServerError(apiResponse.BodyAsBytes) || recoveryDomain == "" {
+		return nil, createError
+	}
+
+	// Give the environment list a moment to reflect an environment the failed request may have created.
+	if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+		return nil, err
+	}
+	env, found, err := client.recoverCreatedEnvironment(ctx, environmentToCreate, recoveryDomain)
+	if err != nil || found {
+		return env, err
+	}
+	if retryCount >= constants.MAX_RETRY_COUNT {
+		return nil, createError
+	}
+	tflog.Info(ctx, "Environment creation failed with a transient GraphServerError and no environment exists for its domain. Retrying")
+	return client.createEnvironmentWithRetry(ctx, environmentToCreate, retryCount+1)
+}
+
+// validatedCreateDomain returns the Dataverse domain that validateEnvironmentDetails checks for
+// availability before the environment is created, or "" when that check does not apply (no Dataverse,
+// no explicit domain, or no location because the environment is placed by macro region).
+func validatedCreateDomain(environmentToCreate environmentCreateDto) string {
+	if environmentToCreate.Properties.LinkedEnvironmentMetadata == nil || environmentToCreate.Location == "" {
+		return ""
+	}
+	return environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName
+}
+
+// recoverCreatedEnvironment looks for an environment holding the validated domain. When one exists it
+// was created by an earlier attempt of this create, so it waits for that environment to finish
+// provisioning and returns it with found set. A recovered environment that failed to provision is
+// returned with its id and an error so the caller records it and Terraform can destroy it.
+func (client *Client) recoverCreatedEnvironment(ctx context.Context, environmentToCreate environmentCreateDto, domain string) (*EnvironmentDto, bool, error) {
+	environmentId, err := client.findEnvironmentByDomain(ctx, domain)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to recover environment creation by domain '%s': %w", domain, err)
+	}
+	if environmentId == "" {
+		return nil, false, nil
+	}
+
+	tflog.Info(ctx, "Recovered environment creation by its domain", map[string]any{"environmentId": environmentId, "domain": domain})
+	if err := client.waitForRecoveredEnvironmentProvisioning(ctx, environmentId); err != nil {
+		return &EnvironmentDto{Name: environmentId}, true, err
+	}
+
+	env, err := client.getCreatedEnvironment(ctx, environmentToCreate, environmentId)
+	return env, true, err
+}
+
+// waitForRecoveredEnvironmentProvisioning polls a recovered environment until it has provisioned. The
+// normal create path waits on the create lifecycle operation, but a recovered environment has no
+// operation to wait on because the create response that carried it was lost.
+func (client *Client) waitForRecoveredEnvironmentProvisioning(ctx context.Context, environmentId string) error {
+	for {
+		env, err := client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return fmt.Errorf("failed to read recovered environment '%s': %w", environmentId, err)
+		}
+
+		provisioningState := ""
+		if env.Properties != nil {
+			provisioningState = env.Properties.ProvisioningState
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Recovered environment '%s' provisioning state: '%s'", environmentId, provisioningState))
+
+		switch provisioningState {
+		case "Succeeded":
+			return nil
+		case "Failed", "Canceled", "Cancelled", "Deleting":
+			return fmt.Errorf("environment creation failed. recovered environment '%s' provisioning state: %s", environmentId, provisioningState)
+		}
+
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+	}
+}
+
+func (client *Client) findEnvironmentByDomain(ctx context.Context, domain string) (string, error) {
+	environments, err := client.GetEnvironments(ctx)
+	if err != nil {
+		return "", err
+	}
+	for _, environment := range environments {
+		if environment.Properties != nil &&
+			environment.Properties.LinkedEnvironmentMetadata != nil &&
+			strings.EqualFold(environment.Properties.LinkedEnvironmentMetadata.DomainName, domain) {
+			return environment.Name, nil
+		}
+	}
+	return "", nil
+}
+
+func (client *Client) getCreatedEnvironment(ctx context.Context, environmentToCreate environmentCreateDto, createdEnvironmentId string) (*EnvironmentDto, error) {
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
 		// The environment was created, we just can't read it back. Return the id along with the error
@@ -605,6 +722,15 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	return env, err
+}
+
+// isGraphServerError reports whether a BAP error body carries the transient GraphServerError code.
+func isGraphServerError(body []byte) bool {
+	var errBody graphServerErrorResponseDto
+	if err := json.Unmarshal(body, &errBody); err != nil {
+		return false
+	}
+	return errBody.Error.Code == "GraphServerError"
 }
 
 // waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and
