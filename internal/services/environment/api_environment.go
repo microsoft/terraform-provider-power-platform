@@ -451,6 +451,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation State: '%s'", lifecycleEnv.Properties.ProvisioningState))
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
+			recordNewDataverseOrg(lifecycleEnv)
 			return lifecycleEnv, nil
 		} else if lifecycleEnv.Properties.ProvisioningState != "LinkedDatabaseProvisioning" && lifecycleEnv.Properties.ProvisioningState != "Succeeded" {
 			return lifecycleEnv, fmt.Errorf("dataverse creation failed. provisioning state: %s", lifecycleEnv.Properties.ProvisioningState)
@@ -497,6 +498,17 @@ func (client *Client) modifyEnvironmentTypeWithRetry(ctx context.Context, enviro
 		return client.modifyEnvironmentTypeWithRetry(ctx, environmentId, environmentType, retryCount+1)
 	}
 	return nil
+}
+
+// recordNewDataverseOrg tells the api client that the Dataverse organization of env was just provisioned,
+// so the 401 answers it gives its caller for a while afterwards are replayed for longer.
+func recordNewDataverseOrg(env *EnvironmentDto) {
+	if env == nil || env.Properties == nil || env.Properties.LinkedEnvironmentMetadata == nil {
+		return
+	}
+	if instanceUrl := env.Properties.LinkedEnvironmentMetadata.InstanceURL; instanceUrl != "" {
+		api.RecordNewDataverseOrg(instanceUrl)
+	}
 }
 
 func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
@@ -610,6 +622,7 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		if err != nil {
 			return nil, err
 		}
+		recordNewDataverseOrg(env)
 	}
 
 	env, err = client.waitForRequestedEnvironmentProperties(ctx, createdEnvironmentId, env, environmentToCreate.Properties.DisplayName, environmentToCreate.Properties.EnvironmentSku)
