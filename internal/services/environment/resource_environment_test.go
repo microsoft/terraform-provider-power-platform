@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -1660,6 +1661,13 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.unique_name", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "release_cycle", "Standard"),
+					// The api client replays the 401 answers of an organization the provider just created for longer.
+					func(_ *terraform.State) error {
+						if !api.IsNewDataverseOrg("https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts") {
+							return errors.New("creating the environment did not record its Dataverse organization as new")
+						}
+						return nil
+					},
 				),
 			},
 		},

@@ -4,15 +4,19 @@
 package api_test
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
@@ -111,6 +115,113 @@ func TestUnitApiClient_Execute_PersistentUnauthorized_StopsAtUnauthorizedRetryLi
 	var statusErr customerrors.UnexpectedHttpStatusCodeError
 	if assert.ErrorAs(t, err, &statusErr) {
 		assert.Equal(t, http.StatusUnauthorized, statusErr.StatusCode)
+	}
+}
+
+// unauthorizedWindowLogs returns the log entries that report how long a run of 401 answers lasted.
+func unauthorizedWindowLogs(t *testing.T, output *bytes.Buffer) []map[string]any {
+	t.Helper()
+	entries, err := tflogtest.MultilineJSONDecode(output)
+	if err != nil {
+		t.Fatalf("decoding the log output: %v", err)
+	}
+	var windows []map[string]any
+	for _, entry := range entries {
+		if _, ok := entry["unauthorized_window"]; ok {
+			windows = append(windows, entry)
+		}
+	}
+	return windows
+}
+
+// A Dataverse organization the provider has just created refuses its caller for longer than the
+// MAX_UNAUTHORIZED_RETRIES cap allows, so its 401 answers are replayed until a time budget is spent.
+func TestUnitApiClient_Execute_NewDataverseOrg_ReplaysUnauthorizedPastTheRetryCaps(t *testing.T) {
+	refusals := constants.MAX_RETRY_COUNT + constants.MAX_UNAUTHORIZED_RETRIES
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		if attempts <= refusals {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	api.RecordNewDataverseOrg(server.URL + "/")
+
+	var logOutput bytes.Buffer
+	ctx := tflogtest.RootLogger(context.Background(), &logOutput)
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	resp, err := client.Execute(ctx, []string{"test"}, http.MethodGet, server.URL+"/api/data/v9.2/contacts", http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.NoError(t, err, "a new organization that accepts its caller within the time budget must not fail the request")
+	assert.Equal(t, refusals+1, attempts)
+	if assert.NotNil(t, resp) {
+		assert.Equal(t, http.StatusOK, resp.HttpResponse.StatusCode)
+	}
+
+	windows := unauthorizedWindowLogs(t, &logOutput)
+	if assert.Len(t, windows, 1, "the end of the run of 401 answers must be logged once") {
+		assert.Equal(t, "WARN", strings.ToUpper(fmt.Sprint(windows[0]["@level"])), "the nightly acceptance run logs at WARN, so the measurement must be a warning")
+		assert.InDelta(t, refusals, windows[0]["unauthorized_replays"], 0)
+		assert.Equal(t, true, windows[0]["new_dataverse_org"])
+		assert.Equal(t, "was answered with HTTP 200", windows[0]["unauthorized_outcome"])
+		assert.Equal(t, server.URL+"/api/data/v9.2/contacts", windows[0]["request_url_no_query"])
+	}
+}
+
+func TestUnitApiClient_Execute_NewDataverseOrg_StopsAtUnauthorizedTimeBudget(t *testing.T) {
+	const retryAfterSeconds = 30
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		w.Header().Set(constants.HEADER_RETRY_AFTER, strconv.Itoa(retryAfterSeconds))
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+	api.RecordNewDataverseOrg(server.URL)
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	replays := int(constants.NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET / (retryAfterSeconds * time.Second))
+	assert.Equal(t, replays+1, attempts, "the replays of a new organization must stop once their delays add up to the time budget")
+	assert.ErrorContains(t, err, fmt.Sprintf("still unauthorized after %d retries", replays))
+	var statusErr customerrors.UnexpectedHttpStatusCodeError
+	if assert.ErrorAs(t, err, &statusErr) {
+		assert.Equal(t, http.StatusUnauthorized, statusErr.StatusCode)
+	}
+}
+
+// Every request that was refused at least once reports how long the refusals lasted, so a nightly
+// acceptance run measures the window even for organizations the provider did not create.
+func TestUnitApiClient_Execute_LogsHowLongUnauthorizedLasted(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	var logOutput bytes.Buffer
+	ctx := tflogtest.RootLogger(context.Background(), &logOutput)
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.Execute(ctx, []string{"test"}, http.MethodGet, server.URL+"/path?secret=1", http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Error(t, err)
+	assert.Equal(t, constants.MAX_UNAUTHORIZED_RETRIES+1, attempts, "an organization the provider did not just create keeps the replay cap")
+	windows := unauthorizedWindowLogs(t, &logOutput)
+	if assert.Len(t, windows, 1) {
+		assert.Equal(t, "WARN", strings.ToUpper(fmt.Sprint(windows[0]["@level"])))
+		assert.InDelta(t, constants.MAX_UNAUTHORIZED_RETRIES, windows[0]["unauthorized_replays"], 0)
+		assert.Equal(t, false, windows[0]["new_dataverse_org"])
+		assert.Equal(t, "was given up while still unauthorized", windows[0]["unauthorized_outcome"])
+		assert.Equal(t, server.URL+"/path", windows[0]["request_url_no_query"], "the logged url must not carry the query")
 	}
 }
 

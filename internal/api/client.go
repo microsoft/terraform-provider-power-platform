@@ -113,6 +113,8 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 // is not acceptable, an error is returned. If a responseObj is provided, the response body is unmarshaled into this object.
 // Transient statuses are retried at most constants.MAX_RETRY_COUNT times (401 at most constants.MAX_UNAUTHORIZED_RETRIES times),
 // after which the last response is returned together with an error wrapping UnexpectedHttpStatusCodeError.
+// A 401 from a Dataverse organization this provider process has just created (see RecordNewDataverseOrg) is
+// instead replayed until the delays between its replays add up to constants.NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET.
 func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
 	return client.doExecute(ctx, scopes, method, url, headers, body, acceptableStatusCodes, responseObj, retryTransientStatuses)
 }
@@ -153,7 +155,8 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 
 	var lastRetryableResponse *Response
 	retries := 0
-	unauthorizedRetries := 0
+	unauthorized := unauthorizedReplays{}
+	unauthorized.newOrgAge, unauthorized.newOrg = newDataverseOrgAge(url)
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
 
@@ -177,6 +180,7 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		resp, err := client.doRequest(ctx, token, request, headers)
 		cancelAttempt()
 		if err != nil {
+			unauthorized.endWindow(ctx, method, url, "ended without an answer: "+err.Error())
 			// If the operation deadline/cancellation stops a retry loop, retain the last real HTTP
 			// failure. doRequest synthesizes an empty 503 for a transport cancellation, which would
 			// otherwise erase the service status/body that caused the retries.
@@ -185,6 +189,8 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 			}
 			return resp, err
 		}
+
+		unauthorized.observe(ctx, method, url, resp.HttpResponse.StatusCode)
 
 		err = validateNoManagementApplicationPermissionsForBapiRequest(resp)
 		if err != nil {
@@ -205,21 +211,22 @@ func (client *Client) doExecute(ctx context.Context, scopes []string, method, ur
 		}
 
 		statusCode := resp.HttpResponse.StatusCode
-		if err := checkRetryAllowed(retry, acceptableStatusCodes, resp, retries, unauthorizedRetries); err != nil {
+		if err := checkRetryAllowed(retry, acceptableStatusCodes, resp, retries, unauthorized); err != nil {
+			unauthorized.endWindow(ctx, method, url, "was given up while still unauthorized")
 			return resp, err
 		}
-		if statusCode == http.StatusUnauthorized {
-			unauthorizedRetries++
-		}
-		retries++
 		lastRetryableResponse = resp
 
 		waitFor := retryAfter(ctx, resp.HttpResponse)
+		if unauthorized.recordRetry(statusCode, waitFor) {
+			retries++
+		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", resp.HttpResponse.StatusCode, url, waitFor))
 
 		err = client.SleepWithContext(ctx, waitFor)
 		if err != nil {
+			unauthorized.endWindow(ctx, method, url, "was interrupted while still unauthorized: "+err.Error())
 			return resp, err
 		}
 	}
@@ -250,7 +257,7 @@ func requestAttemptContext(ctx context.Context) (context.Context, context.Cancel
 
 // checkRetryAllowed returns nil when a response with an unacceptable status may be retried, or the
 // error to surface when the status is permanent or its retry budget is exhausted.
-func checkRetryAllowed(retry retryBehavior, acceptableStatusCodes []int, resp *Response, retries, unauthorizedRetries int) error {
+func checkRetryAllowed(retry retryBehavior, acceptableStatusCodes []int, resp *Response, retries int, unauthorized unauthorizedReplays) error {
 	statusCode := resp.HttpResponse.StatusCode
 	statusErr := customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, statusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 
@@ -258,8 +265,15 @@ func checkRetryAllowed(retry retryBehavior, acceptableStatusCodes []int, resp *R
 		// The credential was refused, so the request never reached the operation and replaying
 		// it with a freshly acquired token cannot duplicate a non-idempotent mutation. A 401 caused
 		// by missing permissions is permanent, so the replays are bounded in every retry mode.
-		if unauthorizedRetries >= constants.MAX_UNAUTHORIZED_RETRIES {
-			return fmt.Errorf("request was still unauthorized after %d retries with a fresh token: %w", unauthorizedRetries, statusErr)
+		if unauthorized.newOrg {
+			if unauthorized.waited >= constants.NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET {
+				return fmt.Errorf("request was still unauthorized after %d retries with a fresh token over %s, the most the provider waits for a Dataverse organization it created %s ago to accept its caller: %w",
+					unauthorized.count, unauthorized.waited, unauthorized.newOrgAge.Round(time.Second), statusErr)
+			}
+			return nil
+		}
+		if unauthorized.count >= constants.MAX_UNAUTHORIZED_RETRIES {
+			return fmt.Errorf("request was still unauthorized after %d retries with a fresh token: %w", unauthorized.count, statusErr)
 		}
 	} else if retry == retryNever || !helpers.ArrayContains(retryableStatusCodes, statusCode) {
 		return statusErr

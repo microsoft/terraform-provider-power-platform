@@ -1,0 +1,5 @@
+kind: fixed
+body: Retry a 401 from a Dataverse organization the provider created within the last hour for up to 10 minutes instead of 5 times, and log at WARN how long each run of 401 answers lasted
+time: 2026-10-28T19:58:14.000000000Z
+custom:
+    Issue: "1308"

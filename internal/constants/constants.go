@@ -199,6 +199,20 @@ const (
 // issuance or propagation lag, while a credential that stays refused still fails permanently after it.
 const MAX_UNAUTHORIZED_RETRIES = 5
 
+// A Dataverse organization that the provider has just created answers its caller with 401 for a
+// while: the nightly acceptance runs fail with "still unauthorized" only in tests that created their
+// environment minutes earlier, while every other request with the same credential succeeds. Such a
+// window has outlasted two calls in a row with two replays each (at least 40-80 seconds), and before
+// replays were capped every window ended. So a 401 from an organization this provider process created less than
+// NEW_DATAVERSE_ORG_PERIOD ago is replayed until the delays between the replays add up to
+// NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET, the same ten minutes the provider already waits for a
+// new organization to stop answering 403 (DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT). Any other 401
+// keeps the MAX_UNAUTHORIZED_RETRIES cap, so a credential that is refused for good still fails fast.
+const (
+	NEW_DATAVERSE_ORG_PERIOD                    = 60 * time.Minute
+	NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET = 10 * time.Minute
+)
+
 // A lifecycle operation is polled for as long as its resource operation timeout allows. A single
 // failed read of the operation is retried on the next tick; only this many failures in a row end the
 // wait. Each HTTP attempt of a read gets its own deadline, so a connection that hangs is cut and
