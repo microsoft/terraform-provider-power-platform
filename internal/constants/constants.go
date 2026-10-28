@@ -122,6 +122,25 @@ const (
 	RX_ANALYTICS_SCOPE              = ""
 )
 
+// Every Dataverse environment has its own host (for example org.crm4.dynamics.com), so these hosts are not
+// part of a cloud's configuration. These are the DNS domains under which the supported clouds host Dataverse.
+// The ex and rx clouds have no publicly documented Dataverse domain, so their whole cloud namespace is accepted.
+const (
+	PUBLIC_DATAVERSE_DOMAIN    = "dynamics.com" // Also serves GCC (crm9.dynamics.com).
+	USGOVHIGH_DATAVERSE_DOMAIN = "microsoftdynamics.us"
+	USDOD_DATAVERSE_DOMAIN     = "crm.appsplatform.us"
+	CHINA_DATAVERSE_DOMAIN     = "dynamics.cn"
+	EX_DATAVERSE_DOMAIN        = "eaglex.ic.gov"
+	RX_DATAVERSE_DOMAIN        = "microsoft.scloud"
+)
+
+// The admin analytics (csanalytics) host is chosen by the tenant's geography rather than by its cloud.
+const (
+	PUBLIC_ANALYTICS_DOMAIN = "csanalytics.powerplatform.microsoft.com"
+	USGOV_ANALYTICS_DOMAIN  = "csanalytics.powerplatform.microsoft.us" // Serves GCC and GCC High.
+	USDOD_ANALYTICS_DOMAIN  = "csanalytics.appsplatform.us"
+)
+
 const (
 	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
 	PPAC_SCOPE    = "065d9450-1e87-434e-ac2f-69af271549ed"
