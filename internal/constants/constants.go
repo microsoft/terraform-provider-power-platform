@@ -237,6 +237,19 @@ const (
 	NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET = 10 * time.Minute
 )
 
+// A Dataverse organization that the provider has just created can also accept its caller before it has
+// assigned that caller its security roles: a solution import into an organization created minutes
+// earlier has failed validation with "The user with id ... has not been assigned any roles. They need a
+// role with the prvImportCustomization privilege", although the same import passes once the roles are
+// in place. Such a refusal from an organization this provider process created less than
+// NEW_DATAVERSE_ORG_PERIOD ago is replayed every NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_INTERVAL until
+// the delays add up to NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_BUDGET, the same ten minutes as its 401
+// replays. Anywhere else a caller without roles is a configuration error and fails at once.
+const (
+	NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_INTERVAL = 15 * time.Second
+	NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_BUDGET   = 10 * time.Minute
+)
+
 // A lifecycle operation is polled for as long as its resource operation timeout allows. A single
 // failed read of the operation is retried on the next tick; only this many failures in a row end the
 // wait. Each HTTP attempt of a read gets its own deadline, so a connection that hangs is cut and

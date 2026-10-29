@@ -175,27 +175,27 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		Path:   "/api/data/v9.2/StageSolution",
 	}
 
+	// A Dataverse organization created minutes earlier can fail this validation because it has not yet
+	// assigned the caller its roles. Staging only uploads the file, so it is safe to repeat.
 	stageSolutionResponse := stageSolutionImportResponseDto{}
-	resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &stageSolutionResponse)
+	var resp *api.Response
+	err = client.Api.ReplayWhileNewDataverseOrgAssignsCallerRoles(ctx, apiUrl.String(), func() (bool, error) {
+		stageSolutionResponse = stageSolutionImportResponseDto{}
+		var stageErr error
+		resp, stageErr = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &stageSolutionResponse)
+		if stageErr != nil {
+			return false, stageErr
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return false, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+			return false, err
+		}
+		return stageSolutionResultError(stageSolutionResponse.StageSolutionResults)
+	})
 	if err != nil {
 		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
-	}
-	if stageSolutionResponse.StageSolutionResults.StageSolutionStatus != "Passed" {
-		e := fmt.Errorf("solution failed with status: '%s'", stageSolutionResponse.StageSolutionResults.StageSolutionStatus)
-
-		for _, missingDependency := range stageSolutionResponse.StageSolutionResults.MissingDependencies {
-			e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
-		}
-		for _, validation := range stageSolutionResponse.StageSolutionResults.SolutionValidationResults {
-			e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
-		}
-		return nil, e
 	}
 
 	solutionComponents, err := client.createSolutionComponentParameters(settings)
@@ -266,6 +266,26 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 			return nil, err
 		}
 	}
+}
+
+// stageSolutionResultError returns the error for a StageSolution result that did not pass, nil for one that
+// did, and whether the validation refused the caller for having no roles. Without roles the caller cannot
+// be validated at all, so such a result is worth repeating once the organization has assigned them.
+func stageSolutionResultError(results stageSolutionImportResultResponseDto) (bool, error) {
+	if results.StageSolutionStatus == "Passed" {
+		return false, nil
+	}
+
+	e := fmt.Errorf("solution failed with status: '%s'", results.StageSolutionStatus)
+	for _, missingDependency := range results.MissingDependencies {
+		e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
+	}
+	callerWithoutRoles := false
+	for _, validation := range results.SolutionValidationResults {
+		e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
+		callerWithoutRoles = callerWithoutRoles || api.IsCallerWithoutRolesMessage(validation.Message)
+	}
+	return callerWithoutRoles, e
 }
 
 func (client *Client) createSolutionComponentParameters(settings []byte) ([]any, error) {
