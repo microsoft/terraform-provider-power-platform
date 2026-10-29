@@ -8,6 +8,8 @@ description: |-
 
 {{ .Description | trimspace }}
 
+~> **Use this resource for configuration data only.** `powerplatform_data_record` is intended to manage configuration that is stored as Dataverse rows, such as business units, security roles, teams, application users or environment variable values. Do not use it to manage business data: rows that people or business processes create and change as part of normal work, such as accounts, contacts, leads, opportunities or cases. Terraform treats your configuration as the source of truth for every row it manages, so changes made to those rows outside Terraform can be overwritten or deleted on the next apply.
+
 Data Record is a special type of a resources, that allows creation of any type Dataverese table record. The syntax for working with `data_record` resource is simmilar to raw WebAPI HTTP requests that this record uses:
 
 - [WebAPI overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview)
@@ -23,6 +25,17 @@ Look the correct name up against your own environment:
 ```text
 GET https://<environment>.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='<table>')/ManyToOneRelationships?$select=ReferencingEntityNavigationPropertyName,ReferencedEntity,ReferencingAttribute
 ```
+
+## Relationship (collection) columns
+
+A collection-valued relationship (one-to-many or many-to-many, for example `teamroles_association`) is set by assigning a set of `table_logical_name` / `data_record_id` objects to the relationship name. On every apply the provider associates the listed rows with this record.
+
+When you remove an item from that set, the optional `relationship_removal_behavior` attribute decides what happens to the related row:
+
+- `delete_related_record` (the default when the attribute is not set): the related row itself is deleted from Dataverse. This is the behavior of earlier provider versions.
+- `disassociate`: only the link between the two rows is removed, with a `DELETE <record>/<relationship>(<related id>)/$ref` request, and the related row is kept.
+
+Use `disassociate` when the related rows are managed elsewhere (for example security roles assigned to a team or an application user), so that removing an assignment does not delete the role. This setting only applies to items removed from a relationship during an update; it does not change what happens when the `powerplatform_data_record` resource itself is destroyed.
 
 ## Example Usage
 

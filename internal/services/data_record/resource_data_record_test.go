@@ -5,10 +5,14 @@ package data_record_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
+	"sort"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1046,6 +1050,135 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 	})
 }
 
+func TestAccDataRecordResource_Validate_Remove_Relationship_Item_Disassociate_Keeps_Related_Row(t *testing.T) {
+	environmentConfig := `
+				resource "powerplatform_environment" "test_env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+					  language_code     = "1033"
+					  currency_code     = "USD"
+					  security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+					timeouts = {
+					  create = "60m"
+					}
+				}
+
+				resource "powerplatform_data_record" "data_record_sample_contact1" {
+					environment_id     = powerplatform_environment.test_env.id
+					table_logical_name = "contact"
+					columns = {
+					  contactid = "00000000-0000-0000-0000-000000000010"
+					  firstname = "contact1"
+					}
+				}
+
+				resource "powerplatform_data_record" "data_record_sample_contact2" {
+					environment_id     = powerplatform_environment.test_env.id
+					table_logical_name = "contact"
+					columns = {
+					  contactid = "00000000-0000-0000-0000-000000000020"
+					  firstname = "contact2"
+					}
+
+					depends_on = [powerplatform_data_record.data_record_sample_contact1]
+				}
+	`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: environmentConfig + `
+				resource "powerplatform_data_record" "data_record_account" {
+					environment_id                = powerplatform_environment.test_env.id
+					table_logical_name            = "account"
+					relationship_removal_behavior = "disassociate"
+					columns = {
+						name = "Sample Account"
+
+						contact_customer_accounts = toset([
+							{
+								table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+								data_record_id     = powerplatform_data_record.data_record_sample_contact1.id
+							},
+							{
+								table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+								data_record_id     = powerplatform_data_record.data_record_sample_contact2.id
+							}
+						])
+					}
+				}
+				`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetSizeExact(2),
+						})),
+				},
+			},
+			{
+				// Remove contact1 from the relationship only. contact1 stays in the configuration,
+				// so the related row itself must still exist in Dataverse after the apply.
+				Config: environmentConfig + `
+				resource "powerplatform_data_record" "data_record_account" {
+					environment_id                = powerplatform_environment.test_env.id
+					table_logical_name            = "account"
+					relationship_removal_behavior = "disassociate"
+					columns = {
+						name = "Sample Account"
+
+						contact_customer_accounts = toset([
+							{
+								table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+								data_record_id     = powerplatform_data_record.data_record_sample_contact2.id
+							}
+						])
+					}
+				}
+
+				data "powerplatform_data_records" "removed_contact" {
+					environment_id    = powerplatform_environment.test_env.id
+					entity_collection = "contacts"
+					filter            = "contactid eq 00000000-0000-0000-0000-000000000010"
+					select            = ["contactid", "firstname"]
+
+					depends_on = [powerplatform_data_record.data_record_account]
+				}
+
+				data "powerplatform_data_records" "kept_contact" {
+					environment_id    = powerplatform_environment.test_env.id
+					entity_collection = "contacts"
+					filter            = "contactid eq 00000000-0000-0000-0000-000000000020"
+					select            = ["contactid", "firstname"]
+
+					depends_on = [powerplatform_data_record.data_record_account]
+				}
+				`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
+						knownvalue.MapPartial(map[string]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.MapExact(map[string]knownvalue.Check{
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     knownvalue.StringExact("00000000-0000-0000-0000-000000000020"),
+								}),
+							}),
+						})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.kept_contact", "rows.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.removed_contact", "rows.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.removed_contact", "rows.0.contactid", "00000000-0000-0000-0000-000000000010"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.removed_contact", "rows.0.firstname", "contact1"),
+				),
+			},
+		},
+	})
+}
+
 func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -1375,6 +1508,353 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 							}),
 						})),
 				},
+			},
+		},
+	})
+}
+
+// removeRelationshipItemMock is an in-memory Dataverse for an account with a contact_customer_accounts relationship.
+// It records which contacts are linked to the account, which contact rows were deleted and which links were removed
+// with a $ref DELETE while the second test step is applied.
+type removeRelationshipItemMock struct {
+	mu                    sync.Mutex
+	linkedContacts        map[string]bool
+	deletedContacts       map[string]bool
+	disassociatedContacts map[string]bool
+	applyingSecondStep    bool
+	// deletedRowsStayReadable keeps serving a deleted contact on GET, so a test can assert on the requests the
+	// provider sent without the refresh of the still-configured contact resource failing afterwards.
+	deletedRowsStayReadable bool
+}
+
+const (
+	removeRelationshipItemContact1 = "00000000-0000-0000-0000-000000000010"
+	removeRelationshipItemContact2 = "00000000-0000-0000-0000-000000000011"
+)
+
+func registerRemoveRelationshipItemMocks() *removeRelationshipItemMock {
+	const envHost = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com"
+	const fixtures = "tests/resource/Validate_Update_Relationships/"
+	const accountId = "00000000-0000-0000-0000-000000000020"
+
+	m := &removeRelationshipItemMock{
+		linkedContacts:        map[string]bool{},
+		deletedContacts:       map[string]bool{},
+		disassociatedContacts: map[string]bool{},
+	}
+
+	sortedLinkedContacts := func() []string {
+		ids := make([]string, 0, len(m.linkedContacts))
+		for id := range m.linkedContacts {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+		return ids
+	}
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixtures+"get_environment_00000000-0000-0000-0000-000000000001.json").String()))
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixtures+"get_entitydefinition_contact.json").String()))
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/EntityDefinitions%28LogicalName=%27account%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixtures+"get_entitydefinition_account.json").String()))
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/EntityDefinitions(LogicalName='account')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships`,
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixtures+"get_entitydefinition_account.json").String()))
+
+	httpmock.RegisterResponder("POST", envHost+`/api/data/v9.2/contacts`,
+		func(req *http.Request) (*http.Response, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return nil, err
+			}
+			contactId := ""
+			switch string(body) {
+			case `{"firstname":"contact1"}`:
+				contactId = removeRelationshipItemContact1
+			case `{"firstname":"contact2"}`:
+				contactId = removeRelationshipItemContact2
+			default:
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", fmt.Sprintf("%s/api/data/v9.2/contacts(%s)", envHost, contactId))
+			return resp, nil
+		})
+
+	for _, contactId := range []string{removeRelationshipItemContact1, removeRelationshipItemContact2} {
+		httpmock.RegisterResponder("GET", fmt.Sprintf("%s/api/data/v9.2/contacts%%28%s%%29", envHost, contactId),
+			func(req *http.Request) (*http.Response, error) {
+				m.mu.Lock()
+				defer m.mu.Unlock()
+				if m.deletedContacts[contactId] && !m.deletedRowsStayReadable {
+					resp := httpmock.NewStringResponse(http.StatusNotFound, "")
+					resp.Request = req
+					return resp, nil
+				}
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("%sget_contact_%s.json", fixtures, contactId)).String()), nil
+			})
+	}
+
+	httpmock.RegisterResponder("POST", envHost+`/api/data/v9.2/accounts`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", fmt.Sprintf("%s/api/data/v9.2/accounts(%s)", envHost, accountId))
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("PATCH", envHost+`/api/data/v9.2/accounts%28`+accountId+`%29`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", fmt.Sprintf("%s/api/data/v9.2/accounts(%s)", envHost, accountId))
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/accounts%28`+accountId+`%29`,
+		httpmock.NewStringResponder(http.StatusOK, httpmock.File(fixtures+"get_account_00000000-0000-0000-0000-000000000020_1.json").String()))
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/accounts%28`+accountId+`%29/contact_customer_accounts?$select=createdon`,
+		func(req *http.Request) (*http.Response, error) {
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			rows := []map[string]any{}
+			for _, id := range sortedLinkedContacts() {
+				rows = append(rows, map[string]any{"createdon": "2024-06-12T14:13:17Z", "contactid": id})
+			}
+			return httpmock.NewJsonResponse(http.StatusOK, map[string]any{"value": rows})
+		})
+
+	httpmock.RegisterResponder("GET", envHost+`/api/data/v9.2/accounts%28`+accountId+`%29/contact_customer_accounts/$ref`,
+		func(req *http.Request) (*http.Response, error) {
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			refs := []map[string]any{}
+			for _, id := range sortedLinkedContacts() {
+				refs = append(refs, map[string]any{"@odata.id": fmt.Sprintf("%s/api/data/v9.2/contacts(%s)", envHost, id)})
+			}
+			return httpmock.NewJsonResponse(http.StatusOK, map[string]any{"value": refs})
+		})
+
+	httpmock.RegisterResponder("POST", envHost+`/api/data/v9.2/accounts%28`+accountId+`%29/contact_customer_accounts/$ref`,
+		func(req *http.Request) (*http.Response, error) {
+			body := map[string]string{}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return nil, err
+			}
+			contactId := regexp.MustCompile(`contacts\(([0-9a-f-]+)\)$`).FindStringSubmatch(body["@odata.id"])
+			if contactId == nil {
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			m.linkedContacts[contactId[1]] = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	// Disassociate: DELETE <account>/contact_customer_accounts(<contact>)/$ref only removes the link.
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`/api/data/v9\.2/accounts(?:\(|%28)`+accountId+`(?:\)|%29)/contact_customer_accounts(?:\(|%28)([0-9a-f-]+)(?:\)|%29)/\$ref$`),
+		func(req *http.Request) (*http.Response, error) {
+			contactId := httpmock.MustGetSubmatch(req, 1)
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			if m.applyingSecondStep {
+				m.disassociatedContacts[contactId] = true
+			}
+			delete(m.linkedContacts, contactId)
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	// Deleting a contact row removes the row itself, and with it the link to the account.
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`/api/data/v9\.2/contacts(?:\(|%28)([0-9a-f-]+)(?:\)|%29)$`),
+		func(req *http.Request) (*http.Response, error) {
+			contactId := httpmock.MustGetSubmatch(req, 1)
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			if m.applyingSecondStep {
+				m.deletedContacts[contactId] = true
+			}
+			delete(m.linkedContacts, contactId)
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`/api/data/v9\.2/accounts(?:\(|%28)`+accountId+`(?:\)|%29)$`),
+		httpmock.NewStringResponder(http.StatusNoContent, ""))
+
+	return m
+}
+
+// removeRelationshipItemConfig returns a configuration with two contacts and an account that links the given contacts
+// through contact_customer_accounts. behaviorConfig is inserted into the account resource as is.
+func removeRelationshipItemConfig(behaviorConfig string, linkedContactResources ...string) string {
+	links := ""
+	for _, contactResource := range linkedContactResources {
+		links += `
+							{
+								table_logical_name = powerplatform_data_record.` + contactResource + `.table_logical_name
+								data_record_id     = powerplatform_data_record.` + contactResource + `.id
+							},`
+	}
+	return `
+				resource "powerplatform_data_record" "data_record_sample_contact1" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "contact"
+					columns = {
+					  firstname = "contact1"
+					}
+				}
+
+				resource "powerplatform_data_record" "data_record_sample_contact2" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "contact"
+					columns = {
+					  firstname = "contact2"
+					}
+				}
+
+				resource "powerplatform_data_record" "data_record_account" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "account"
+					` + behaviorConfig + `
+					columns = {
+						name = "Sample Account"
+
+						contact_customer_accounts = toset([` + links + `
+						])
+					}
+				}
+	`
+}
+
+func removeRelationshipItemFirstStep(m *removeRelationshipItemMock, behaviorConfig string) resource.TestStep {
+	return resource.TestStep{
+		Config: removeRelationshipItemConfig(behaviorConfig, "data_record_sample_contact1", "data_record_sample_contact2"),
+		ConfigStateChecks: []statecheck.StateCheck{
+			statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
+				knownvalue.MapPartial(map[string]knownvalue.Check{
+					"contact_customer_accounts": knownvalue.SetSizeExact(2),
+				})),
+		},
+		Check: func(_ *terraform.State) error {
+			m.mu.Lock()
+			defer m.mu.Unlock()
+			m.applyingSecondStep = true
+			return nil
+		},
+	}
+}
+
+var removeRelationshipItemOnlyContact2Linked = statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
+	knownvalue.MapPartial(map[string]knownvalue.Check{
+		"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
+			knownvalue.MapExact(map[string]knownvalue.Check{
+				"table_logical_name": knownvalue.StringExact("contact"),
+				"data_record_id":     knownvalue.StringExact(removeRelationshipItemContact2),
+			}),
+		}),
+	}))
+
+func TestUnitDataRecordResource_Validate_Remove_Relationship_Item_Disassociate_Keeps_Related_Row(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	m := registerRemoveRelationshipItemMocks()
+	const behaviorConfig = `relationship_removal_behavior = "disassociate"`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			removeRelationshipItemFirstStep(m, behaviorConfig),
+			{
+				// contact1 is removed from the relationship but stays in the configuration.
+				Config: removeRelationshipItemConfig(behaviorConfig, "data_record_sample_contact2"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					removeRelationshipItemOnlyContact2Linked,
+					statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("relationship_removal_behavior"), knownvalue.StringExact("disassociate")),
+				},
+				Check: func(_ *terraform.State) error {
+					m.mu.Lock()
+					defer m.mu.Unlock()
+					m.applyingSecondStep = false
+					if len(m.deletedContacts) != 0 {
+						return fmt.Errorf("expected removing a contact from contact_customer_accounts to keep the contact row, but these contacts were deleted: %v", m.deletedContacts)
+					}
+					if !m.disassociatedContacts[removeRelationshipItemContact1] || len(m.disassociatedContacts) != 1 {
+						return fmt.Errorf("expected only contact1 to be disassociated from the account with a $ref DELETE, got: %v", m.disassociatedContacts)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+func TestUnitDataRecordResource_Validate_Remove_Relationship_Item_Default_Deletes_Related_Row(t *testing.T) {
+	for name, behaviorConfig := range map[string]string{
+		"not set":                        "",
+		"explicit delete_related_record": `relationship_removal_behavior = "delete_related_record"`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			httpmock.Activate()
+			defer httpmock.DeactivateAndReset()
+
+			// The default behavior deletes the contact1 row while the contact1 resource is still configured. The
+			// mock keeps serving that row on GET so the step can assert on the requests that were sent.
+			m := registerRemoveRelationshipItemMocks()
+			m.deletedRowsStayReadable = true
+
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					removeRelationshipItemFirstStep(m, behaviorConfig),
+					{
+						// contact1 is removed from the relationship but stays in the configuration.
+						Config: removeRelationshipItemConfig(behaviorConfig, "data_record_sample_contact2"),
+						ConfigStateChecks: []statecheck.StateCheck{
+							removeRelationshipItemOnlyContact2Linked,
+						},
+						Check: func(_ *terraform.State) error {
+							m.mu.Lock()
+							defer m.mu.Unlock()
+							m.applyingSecondStep = false
+							if !m.deletedContacts[removeRelationshipItemContact1] || len(m.deletedContacts) != 1 {
+								return fmt.Errorf("expected the default behavior to delete only the contact1 row, got deleted contacts: %v", m.deletedContacts)
+							}
+							if len(m.disassociatedContacts) != 0 {
+								return fmt.Errorf("expected the default behavior to delete the related row and not send a $ref DELETE, but these contacts were disassociated: %v", m.disassociatedContacts)
+							}
+							return nil
+						},
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestUnitDataRecordResource_Validate_Relationship_Removal_Behavior_Invalid_Value(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_data_record" "data_record_account" {
+					environment_id                = "00000000-0000-0000-0000-000000000001"
+					table_logical_name            = "account"
+					relationship_removal_behavior = "delete"
+					columns = {
+						name = "Sample Account"
+					}
+				}
+				`,
+				ExpectError: regexp.MustCompile(`(?s)relationship_removal_behavior.*value must be one of`),
 			},
 		},
 	})

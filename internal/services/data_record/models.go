@@ -47,11 +47,29 @@ type DataRecordResource struct {
 	EnvironmentClient environment.Client
 }
 
+// Values of the data record resource's relationship_removal_behavior attribute.
+const (
+	// RelationshipRemovalBehaviorDeleteRelatedRecord deletes the related row when it is removed from a
+	// collection-valued relationship. This is the default and the provider's original behavior.
+	RelationshipRemovalBehaviorDeleteRelatedRecord = "delete_related_record"
+	// RelationshipRemovalBehaviorDisassociate only removes the link (a $ref DELETE) and keeps the related row.
+	RelationshipRemovalBehaviorDisassociate = "disassociate"
+)
+
 type DataRecordResourceModel struct {
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	DisableOnDestroy types.Bool     `tfsdk:"disable_on_destroy"`
-	Id               types.String   `tfsdk:"id"`
-	EnvironmentId    types.String   `tfsdk:"environment_id"`
-	TableLogicalName types.String   `tfsdk:"table_logical_name"`
-	Columns          types.Dynamic  `tfsdk:"columns"`
+	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
+	DisableOnDestroy            types.Bool     `tfsdk:"disable_on_destroy"`
+	RelationshipRemovalBehavior types.String   `tfsdk:"relationship_removal_behavior"`
+	Id                          types.String   `tfsdk:"id"`
+	EnvironmentId               types.String   `tfsdk:"environment_id"`
+	TableLogicalName            types.String   `tfsdk:"table_logical_name"`
+	Columns                     types.Dynamic  `tfsdk:"columns"`
+}
+
+// relationshipRemovalBehavior returns the configured relationship removal behavior, or the default when it is not set.
+func (m *DataRecordResourceModel) relationshipRemovalBehavior() string {
+	if m.RelationshipRemovalBehavior.IsNull() || m.RelationshipRemovalBehavior.IsUnknown() || m.RelationshipRemovalBehavior.ValueString() == "" {
+		return RelationshipRemovalBehaviorDeleteRelatedRecord
+	}
+	return m.RelationshipRemovalBehavior.ValueString()
 }
