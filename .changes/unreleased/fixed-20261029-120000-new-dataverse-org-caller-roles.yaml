@@ -1,0 +1,5 @@
+kind: fixed
+body: Retry the solution staging of powerplatform_solution and powerplatform_managed_solution for up to 10 minutes while a Dataverse organization the provider created within the last hour reports that the caller has not been assigned any roles, and log at WARN how long the wait lasted
+time: 2026-10-29T12:00:00.000000000Z
+custom:
+    Issue: "1308"
