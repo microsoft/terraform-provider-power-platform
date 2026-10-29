@@ -40,7 +40,7 @@ func TestAccEnvironmentApplicationUserResource_CreateDelete(t *testing.T) {
 		
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "switzerland"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code     = "1033"
