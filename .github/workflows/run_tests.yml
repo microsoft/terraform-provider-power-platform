@@ -27,7 +27,7 @@ jobs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
         with:
           egress-policy: audit
 
@@ -45,7 +45,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+      uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
       with:
         egress-policy: audit
 
@@ -77,7 +77,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+      uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
       with:
         egress-policy: audit
 
@@ -110,7 +110,7 @@ jobs:
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
+      uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
       with:
         egress-policy: audit
 
@@ -173,6 +173,12 @@ jobs:
         ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
         ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
+        # Deliberately empty. The macro region acceptance tests need a tenant that provisions by
+        # macro region geography, and this tenant provisions by datacenter location, so
+        # mocks.SkipIfNotMacroRegionTenant skips them. Set this to a macro region id such as
+        # eu-efta to run them against a macro region tenant. Leaving it unset would skip them
+        # just the same, but then the omission would look like an oversight rather than a choice.
+        ACCEPTANCE_TESTS_MACRO_REGION: ""
       run: |
         go clean -testcache
         # Test Execution Command
@@ -193,7 +199,7 @@ jobs:
         # - -set-exit-code: Preserves the original test exit code
         # - -iocopy: Copies test output to stdout while generating the report
         # - -out junit.xml: Writes JUnit-formatted test results to junit.xml
-        go test -p 2 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
+        go test -p 2 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -shuffle=off | go-junit-report -set-exit-code  -iocopy -out junit.xml
         
     - name: Prepare coverage report
       if: success() || failure()
@@ -202,14 +208,14 @@ jobs:
 
     - name: Upload Coverage Artifacts
       if: success() || failure()
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: Test Coverage
         path: test-coverage.cov.html
 
     - name: Upload coverage results to Codecov
       if: success() || failure()
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -223,7 +229,7 @@ jobs:
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+      uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
       with:
         name: Test Results
         path: junit.xml

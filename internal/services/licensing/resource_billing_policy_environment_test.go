@@ -174,20 +174,30 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					display_name     = "billing_policy_example_environment_1_` + mocks.TestName() + `"	
 					location         = "unitedstates"
 					environment_type = "Sandbox"
-
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env2" {
 					display_name     = "billing_policy_example_environment_2_` + mocks.TestName() + `"	
 					location         = "unitedstates"
 					environment_type = "Sandbox"
+
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env3" {
 					display_name     = "billing_policy_example_environment_3_` + mocks.TestName() + `"	
 					location         = "unitedstates"
 					environment_type = "Sandbox"
+
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "time_sleep" "wait_for_environments" {
@@ -233,7 +243,9 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location         = "unitedstates"
 					environment_type = "Sandbox"
 
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env2" {
@@ -241,7 +253,9 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location         = "unitedstates"
 					environment_type = "Sandbox"
 
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env3" {
@@ -249,7 +263,9 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location         = "unitedstates"
 					environment_type = "Sandbox"
 
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "time_sleep" "wait_for_environments" {
@@ -295,13 +311,19 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location         = "unitedstates"
 					environment_type = "Sandbox"
 
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env2" {
 					display_name     = "billing_policy_example_environment_2_` + mocks.TestName() + `"	
 					location         = "unitedstates"
 					environment_type = "Sandbox"
+
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "powerplatform_environment" "env3" {
@@ -309,7 +331,9 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location         = "unitedstates"
 					environment_type = "Sandbox"
 
-					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					lifecycle {
+						ignore_changes = [billing_policy_id]
+					}
 				}
 
 				resource "time_sleep" "wait_for_environments" {

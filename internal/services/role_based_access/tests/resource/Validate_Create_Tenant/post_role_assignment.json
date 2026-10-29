@@ -1,0 +1,11 @@
+{
+  "roleAssignmentId": "11111111-1111-1111-1111-111111111111",
+  "scope": "/tenants/00000000-0000-0000-0000-000000000001",
+  "principalType": "ApplicationUser",
+  "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "createdByPrincipalType": "User",
+  "createdByPrincipalObjectId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  "createdOn": "2026-06-22T15:09:35Z",
+  "expiresOn": null
+}

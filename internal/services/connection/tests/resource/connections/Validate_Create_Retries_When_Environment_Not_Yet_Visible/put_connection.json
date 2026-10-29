@@ -1,0 +1,36 @@
+{
+    "name": "d4e4a6ff9a67492aa1f6de854528668c",
+    "id": "/providers/Microsoft.PowerApps/apis/shared_azureopenai/connections/d4e4a6ff9a67492aa1f6de854528668c",
+    "type": "Microsoft.PowerApps/apis/connections",
+    "properties": {
+        "apiId": "/providers/Microsoft.PowerApps/apis/shared_azureopenai",
+        "displayName": "OpenAI Connection",
+        "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1705/1.0.1705.3833/azureopenai/icon.png",
+        "statuses": [
+            {
+                "status": "Connected"
+            }
+        ],
+        "connectionParameters": {
+            "azureOpenAIResourceName": "aaa",
+            "azureSearchEndpointUrl": "ccc",
+            "sku": "Enterprise"
+        },
+        "keywordsRemaining": 0,
+        "createdBy": {
+            "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+            "displayName": "admin",
+            "email": "admin@contoso.com",
+            "type": "User",
+            "tenantId": "1111111-8fa6-462e-a5a1-000000000000c",
+            "userPrincipalName": "admin@contoso.com"
+        },
+        "createdTime": "2024-07-30T15:16:03.3742074Z",
+        "lastModifiedTime": "2024-07-30T15:16:03.3742074Z",
+        "environment": {
+            "id": "/providers/Microsoft.PowerApps/environments/00000000-0000-0000-0000-000000000001",
+            "name": "00000000-0000-0000-0000-000000000001"
+        },
+        "allowSharing": false
+    }
+}

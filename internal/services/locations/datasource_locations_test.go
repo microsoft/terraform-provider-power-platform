@@ -3,15 +3,32 @@
 package locations_test
 
 import (
+	"context"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 )
+
+func TestUnitLocationsDataSource_V5MigrationNotice(t *testing.T) {
+	var resp datasource.SchemaResponse
+	locations.NewLocationsDataSource().Schema(context.Background(), datasource.SchemaRequest{}, &resp)
+	if resp.Schema.DeprecationMessage != "" {
+		t.Error("the locations data source itself is not deprecated")
+	}
+	for _, expected := range []string{"Upcoming breaking change in v5.0.0", "macro regions", "response structure", "unchanged until v5.0.0"} {
+		if !strings.Contains(resp.Schema.MarkdownDescription, expected) {
+			t.Errorf("expected %q in locations migration notice, got %q", expected, resp.Schema.MarkdownDescription)
+		}
+	}
+}
 
 func TestAccLocationsDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{

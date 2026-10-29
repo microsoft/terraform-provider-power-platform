@@ -123,3 +123,47 @@ func TestUnitResponse_MarshallTo(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitDoRequest_TransportFailure_IsMarkedRequestSent(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	server.Close()
+
+	cfg := config.ProviderConfig{TelemetryOptout: true}
+	client := NewApiClientBase(&cfg, NewAuthBase(&cfg))
+
+	token := "test-token"
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, server.URL, nil)
+	require.NoError(t, err)
+
+	_, err = client.doRequest(context.Background(), &token, req, http.Header{})
+	require.Error(t, err)
+
+	var sent RequestSentError
+	require.ErrorAs(t, err, &sent, "a transport failure must be marked as request sent")
+	require.Equal(t, sent.Err.Error(), err.Error(), "the marker must not change the error text")
+}
+
+func TestUnitDoRequest_RedirectLimit_ReturnsDoError(t *testing.T) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, server.URL+"/loop", http.StatusFound)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TelemetryOptout: true}
+	client := NewApiClientBase(&cfg, NewAuthBase(&cfg))
+
+	token := "test-token"
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, server.URL, nil)
+	require.NoError(t, err)
+
+	resp, err := client.doRequest(context.Background(), &token, req, http.Header{})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "stopped after 10 redirects")
+	require.NotNil(t, resp)
+
+	var sent RequestSentError
+	require.ErrorAs(t, err, &sent, "a redirect failure must be marked as request sent")
+}

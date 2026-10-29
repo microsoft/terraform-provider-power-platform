@@ -971,6 +971,20 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 						default_action_rule_behavior = ""
 						endpoint_rules               = []
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+					  },
+					  {
+						# shared_mailgun and shared_polydoc are pinned here because their live "unblockable"
+						# governance metadata flaps between apply and refresh, causing plan drift.
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_mailgun"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_polydoc"
 					  }
 					])
 				  
@@ -986,15 +1000,20 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 					  if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
 					])
 				  
-					blocked_connectors = toset([for conn
-					  in data.powerplatform_connectors.all_connectors.connectors :
-					  {
-						id                           = conn.id
-						default_action_rule_behavior = ""
-						action_rules                 = [],
-						endpoint_rules               = []
-					  }
-					if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
+					# A static list rather than the whole live catalog: unlisted connectors fall into the
+					# Blocked default anyway, and the catalog drifts between apply and refresh.
+					blocked_connectors = toset([for id in [
+					  "/providers/Microsoft.PowerApps/apis/shared_10to8",
+					  "/providers/Microsoft.PowerApps/apis/shared_box",
+					  "/providers/Microsoft.PowerApps/apis/shared_dropbox",
+					  "/providers/Microsoft.PowerApps/apis/shared_rss",
+					  "/providers/Microsoft.PowerApps/apis/shared_slack",
+					] : {
+					  id                           = id
+					  default_action_rule_behavior = ""
+					  action_rules                 = []
+					  endpoint_rules               = []
+					}])
 				  }
 
 				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
@@ -1028,12 +1047,18 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "1"),
 
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id": "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_mailgun",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_polydoc",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.*", map[string]string{
 						"id":                           "/providers/Microsoft.PowerApps/apis/shared_sql",
@@ -1050,6 +1075,7 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 						"endpoint_rules.#":             "0",
 					}),
 
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.*", map[string]string{
 						"id":                           "/providers/Microsoft.PowerApps/apis/shared_10to8",
 						"default_action_rule_behavior": "",

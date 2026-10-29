@@ -58,21 +58,26 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 
 	apiResponse, err := httpClient.Do(request)
 
-	if err != nil && apiResponse == nil {
-		resp := &Response{
-			HttpResponse: &http.Response{
+	if err != nil {
+		resp := &Response{HttpResponse: apiResponse}
+		if apiResponse == nil {
+			resp.HttpResponse = &http.Response{
 				StatusCode: http.StatusServiceUnavailable,
 				Status:     http.StatusText(http.StatusServiceUnavailable),
 				Header:     http.Header{},
 				Body:       io.NopCloser(bytes.NewReader([]byte{})),
 				Request:    request,
-			},
+			}
+		} else {
+			// Do returns a response with an error when the redirect policy fails; its body is already closed.
+			_ = apiResponse.Body.Close()
 		}
-		return resp, err
+		// The request may have reached the service even though the response was lost.
+		return resp, RequestSentError{Err: err}
 	}
 
 	if apiResponse == nil {
-		return nil, errors.New("unexpected nil response without error")
+		return nil, RequestSentError{Err: errors.New("unexpected nil response without error")}
 	}
 
 	resp := &Response{
@@ -80,7 +85,7 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 
 	defer apiResponse.Body.Close()
-	body, err := io.ReadAll(apiResponse.Body)
+	body, readErr := io.ReadAll(apiResponse.Body)
 	resp.BodyAsBytes = body
 
 	// Check for CAE challenge response if CAE is enabled
@@ -100,7 +105,11 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		return resp, caeError
 	}
 
-	return resp, err
+	if readErr != nil {
+		// The response status arrived, so the request was processed; only its body was lost.
+		return resp, RequestSentError{Err: readErr}
+	}
+	return resp, nil
 }
 
 type Response struct {

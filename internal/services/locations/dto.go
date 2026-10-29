@@ -4,7 +4,16 @@
 package locations
 
 type locationDto struct {
-	Value []locationsArrayDto `json:"value"`
+	Value                  []locationsArrayDto `json:"value"`
+	TenantProvisioningMode string              `json:"tenantProvisioningMode"`
+	MacroRegions           []macroRegionDto    `json:"macroRegions"`
+}
+
+type macroRegionDto struct {
+	MacroRegionId string `json:"macroRegionId"`
+	DisplayName   string `json:"displayName"`
+	// Pointer because the live API omits the key for some macro regions (for example `europe-uk`).
+	DataResidencyNote *string `json:"dataResidencyNote"`
 }
 
 type locationsArrayDto struct {

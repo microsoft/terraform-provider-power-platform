@@ -161,8 +161,8 @@ Read-Only:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
 - `disable_copilot` (Boolean) Disable Copilot
-- `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
-- `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
+- `disable_create_from_figma` (Boolean, Deprecated) Disable Create From Figma. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.
+- `disable_create_from_image` (Boolean, Deprecated) Disable Create From Image. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment

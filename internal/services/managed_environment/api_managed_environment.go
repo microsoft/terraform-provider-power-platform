@@ -49,6 +49,34 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 
 	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
+	// A 409 means the request was rejected, not applied. It comes back both when the environment is
+	// already managed and when the environment is busy, for example straight after it was created.
+	// Treating it as success silently skips the enablement: there is no lifecycle operation to wait
+	// for, and the caller then fails reading state back with "doesn't have managed environment
+	// feature enabled". Tell the two cases apart by looking at the environment itself, and retry when
+	// it is genuinely not managed yet.
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		env, envErr := client.environmentClient.GetEnvironment(ctx, environmentId)
+		if envErr != nil {
+			return envErr
+		}
+		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == constants.PROTECTION_LEVEL_STANDARD {
+			// Already managed, so there is nothing to enable and retrying cannot help. This also covers
+			// an environment that is in an environment group, where the group made it managed and the
+			// governance configuration is locked; the caller reports that when it reads the settings.
+			tflog.Debug(ctx, "Managed Environment is already enabled, nothing to do")
+			return nil
+		}
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment: the environment kept rejecting the request with 409 and is still not managed", constants.MAX_RETRY_COUNT)
+		}
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Enablement was rejected with 409 and the environment is not managed yet. Retrying...")
+		return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, retryCount+1)
+	}
+
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
@@ -64,7 +92,25 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
 		return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, retryCount+1)
 	}
-	return nil
+	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, 0)
+}
+
+func (client *client) waitForManagedEnvironmentEnablement(ctx context.Context, environmentId string, retryCount int) error {
+	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+	if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == constants.PROTECTION_LEVEL_STANDARD {
+		return nil
+	}
+	if retryCount >= constants.MAX_RETRY_COUNT {
+		return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment: the lifecycle operation completed but the environment is still not managed", constants.MAX_RETRY_COUNT)
+	}
+	if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+		return err
+	}
+	tflog.Info(ctx, "Managed Environment Enablement lifecycle operation completed but the environment is not managed yet. Retrying state read...")
+	return client.waitForManagedEnvironmentEnablement(ctx, environmentId, retryCount+1)
 }
 
 func (client *client) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
@@ -91,6 +137,26 @@ func (client *client) disableManagedEnvironmentWithRetry(ctx context.Context, en
 	}
 
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
+
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		env, envErr := client.environmentClient.GetEnvironment(ctx, environmentId)
+		if envErr != nil {
+			return envErr
+		}
+		if env.Properties.GovernanceConfiguration != nil && env.Properties.GovernanceConfiguration.ProtectionLevel == managedEnv.ProtectionLevel {
+			tflog.Debug(ctx, "Managed Environment is already disabled, nothing to do")
+			return nil
+		}
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DisableManagedEnvironment: the environment kept rejecting the request with 409 and the requested Basic protection level was not established", constants.MAX_RETRY_COUNT)
+		}
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Disablement was rejected with 409 and the requested Basic protection level is not established. Retrying...")
+		return client.disableManagedEnvironmentWithRetry(ctx, environmentId, retryCount+1)
+	}
+
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)

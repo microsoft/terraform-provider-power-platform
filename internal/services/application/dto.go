@@ -93,7 +93,47 @@ type applicationUsersResponseDto struct {
 }
 
 type applicationUserDto struct {
-	FullName      string `json:"fullname"`
-	ApplicationId string `json:"applicationid"`
-	SystemUserId  string `json:"systemuserid"`
+	FullName       string                       `json:"fullname"`
+	ApplicationId  string                       `json:"applicationid"`
+	SystemUserId   string                       `json:"systemuserid"`
+	BusinessUnitId string                       `json:"_businessunitid_value"`
+	IsDisabled     bool                         `json:"isdisabled"`
+	DeletedState   int64                        `json:"deletedstate"`
+	SecurityRoles  []applicationSecurityRoleDto `json:"systemuserroles_association,omitempty"`
+}
+
+// teamDto is the team equivalent of applicationUserDto, carrying only what role assignment needs.
+type teamDto struct {
+	TeamId         string                       `json:"teamid"`
+	Name           string                       `json:"name"`
+	TeamType       int64                        `json:"teamtype"`
+	BusinessUnitId string                       `json:"_businessunitid_value"`
+	SecurityRoles  []applicationSecurityRoleDto `json:"teamroles_association,omitempty"`
+}
+
+// roleHolderDto is the normalised view of a principal that holds security roles, whether that
+// principal is a system user or a team.
+type roleHolderDto struct {
+	Id             string
+	BusinessUnitId string
+	SecurityRoles  []applicationSecurityRoleDto
+}
+
+type applicationSecurityRoleDto struct {
+	RoleId         string `json:"roleid"`
+	Name           string `json:"name"`
+	BusinessUnitId string `json:"_businessunitid_value"`
+}
+
+type applicationSecurityRoleArrayDto struct {
+	Value []applicationSecurityRoleDto `json:"value"`
+}
+
+type applicationBusinessUnitArrayDto struct {
+	Value []applicationBusinessUnitDto `json:"value"`
+}
+
+type applicationBusinessUnitDto struct {
+	BusinessUnitId string `json:"businessunitid"`
+	Name           string `json:"name"`
 }

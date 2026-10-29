@@ -57,6 +57,8 @@ Optional:
 Read-Only:
 
 - `allow_bing_search` (Boolean) Allow Bing search in the environment
+- `allow_flex_routing` (Boolean) Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.
+- `allow_microsoft_365_services` (Boolean) Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.
 - `allow_moving_data_across_regions` (Boolean) Allow moving data across regions
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
@@ -69,6 +71,7 @@ Read-Only:
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
+- `macro_region` (String) Macro region geography of the environment (`eu-efta`, `north-america` etc.). Can be queried using the `powerplatform_macro_regions` data source.
 - `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
 - `release_cycle` (String) Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).
 

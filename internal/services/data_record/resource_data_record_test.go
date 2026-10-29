@@ -1684,3 +1684,84 @@ func TestUnitDataRecordResource_Validate_Read_ParentDeleted(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitDataRecordResource_Validate_Import(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Import/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Import/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Import/get_contact_00000000-0000-0000-0000-000000000010.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/([a-zA-Z]+)`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	config := `
+	resource "powerplatform_data_record" "data_record_sample_contact1" {
+		environment_id     = "00000000-0000-0000-0000-000000000001"
+		table_logical_name = "contact"
+		columns = {
+			firstname = "John"
+			lastname  = "Doe"
+		}
+	}`
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				Config:        config,
+				ResourceName:  "powerplatform_data_record.data_record_sample_contact1",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000001/contact(00000000-0000-0000-0000-000000000010)",
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("expected 1 imported state, got %d", len(states))
+					}
+					state := states[0]
+					if state.ID != "00000000-0000-0000-0000-000000000010" {
+						return fmt.Errorf("expected id '00000000-0000-0000-0000-000000000010', got '%s'", state.ID)
+					}
+					if got := state.Attributes["environment_id"]; got != "00000000-0000-0000-0000-000000000001" {
+						return fmt.Errorf("expected environment_id '00000000-0000-0000-0000-000000000001', got '%s'", got)
+					}
+					if got := state.Attributes["table_logical_name"]; got != "contact" {
+						return fmt.Errorf("expected table_logical_name 'contact', got '%s'", got)
+					}
+					return nil
+				},
+			},
+			{
+				Config:        config,
+				ResourceName:  "powerplatform_data_record.data_record_sample_contact1",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000010",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+		},
+	})
+}

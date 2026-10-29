@@ -4,6 +4,7 @@ page_title: "powerplatform_user Resource - Power Platform"
 subcategory: ""
 description: |-
   This resource associates a user to a Power Platform environment.
+  Upcoming breaking change in v5.0.0: Import IDs will require the composite environment_id/user_aad_id format, where user_aad_id is the user's Microsoft Entra object ID (aad_id). Legacy single-ID imports will no longer be supported. Update import commands and import blocks when upgrading. This resource is not deprecated, and current import behavior remains unchanged until v5.0.0.
   Additional Resources:
   
   Add users to an environment https://learn.microsoft.com/power-platform/admin/add-users-to-environment
@@ -14,6 +15,8 @@ description: |-
 # powerplatform_user (Resource)
 
 This resource associates a user to a Power Platform environment.
+
+**Upcoming breaking change in v5.0.0:** Import IDs will require the composite `environment_id/user_aad_id` format, where `user_aad_id` is the user's Microsoft Entra object ID (`aad_id`). Legacy single-ID imports will no longer be supported. Update import commands and import blocks when upgrading. This resource is not deprecated, and current import behavior remains unchanged until v5.0.0.
 
 Additional Resources:
 

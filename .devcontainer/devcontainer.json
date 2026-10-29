@@ -19,7 +19,6 @@
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
         "go.useLanguageServer": true,
-        "go.goroot": "/usr/local/go",
         "editor.formatOnSave": true,
         "files.insertFinalNewline": true,
         "[makefile]": {

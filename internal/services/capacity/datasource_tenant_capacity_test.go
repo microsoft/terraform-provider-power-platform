@@ -4,13 +4,31 @@
 package capacity_test
 
 import (
+	"context"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/capacity"
 )
+
+func TestUnitTenantCapacityDataSource_V5Deprecation(t *testing.T) {
+	var resp datasource.SchemaResponse
+	capacity.NewTenantCapcityDataSource().Schema(context.Background(), datasource.SchemaRequest{}, &resp)
+	attribute := resp.Schema.Attributes["tenant_id"]
+	for _, text := range []string{attribute.GetDeprecationMessage(), attribute.GetMarkdownDescription()} {
+		if !strings.Contains(text, "v5.0.0") || !strings.Contains(text, "provider's tenant configuration") {
+			t.Errorf("expected v5 removal and migration guidance, got %q", text)
+		}
+	}
+	if !attribute.IsOptional() {
+		t.Error("tenant_id must remain optional until v5.0.0")
+	}
+}
 
 func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()

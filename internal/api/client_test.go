@@ -6,17 +6,137 @@ package api_test
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestUnitApiClient_ExecuteWithoutRetry_DoesNotReplayTransientMutation(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "ambiguous import start", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.ExecuteWithoutRetry(
+		context.Background(),
+		[]string{"test"},
+		http.MethodPost,
+		server.URL,
+		http.Header{},
+		map[string]string{"operation": "start"},
+		[]int{http.StatusOK},
+		nil,
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, 1, attempts, "an ambiguous non-idempotent mutation start must never be replayed")
+}
+
+func TestUnitApiClient_ExecuteWithoutRetry_ReplaysRefusedCredential(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.ExecuteWithoutRetry(
+		context.Background(),
+		[]string{"test"},
+		http.MethodPost,
+		server.URL,
+		http.Header{},
+		map[string]string{"operation": "start"},
+		[]int{http.StatusNoContent},
+		nil,
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, 3, attempts, "a 401 proves the request never reached the operation, so it is replayed with a bounded number of fresh tokens")
+}
+
+func TestUnitApiClient_Execute_PersistentTransientFailure_StopsAtRetryLimit(t *testing.T) {
+	const failureBody = "bad gateway"
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, failureBody, http.StatusBadGateway)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	resp, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Equal(t, constants.MAX_RETRY_COUNT+1, attempts, "a persistent transient failure must be retried a bounded number of times")
+	var statusErr customerrors.UnexpectedHttpStatusCodeError
+	if assert.ErrorAs(t, err, &statusErr) {
+		assert.Equal(t, http.StatusBadGateway, statusErr.StatusCode)
+		assert.Contains(t, string(statusErr.Body), failureBody)
+	}
+	if assert.NotNil(t, resp, "the last response must be returned") {
+		assert.Equal(t, http.StatusBadGateway, resp.HttpResponse.StatusCode)
+	}
+}
+
+func TestUnitApiClient_Execute_PersistentUnauthorized_StopsAtUnauthorizedRetryLimit(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Equal(t, constants.MAX_UNAUTHORIZED_RETRIES+1, attempts, "a 401 that a fresh token does not fix is permanent and must not be retried indefinitely")
+	var statusErr customerrors.UnexpectedHttpStatusCodeError
+	if assert.ErrorAs(t, err, &statusErr) {
+		assert.Equal(t, http.StatusUnauthorized, statusErr.StatusCode)
+	}
+}
+
+func TestUnitApiClient_Execute_TransientFailure_RecoversBeforeRetryLimit(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		if attempts <= constants.MAX_RETRY_COUNT {
+			http.Error(w, "too many requests", http.StatusTooManyRequests)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	resp, err := client.Execute(context.Background(), []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.NoError(t, err, "a request that succeeds on the last allowed retry must succeed")
+	assert.Equal(t, constants.MAX_RETRY_COUNT+1, attempts)
+	if assert.NotNil(t, resp) {
+		assert.Equal(t, http.StatusOK, resp.HttpResponse.StatusCode)
+	}
+}
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
 	t.Parallel()
@@ -306,4 +426,84 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			assert.Equal(t, tc.expectedResult, result, "IsCaeChallengeResponse returned unexpected result")
 		})
 	}
+}
+
+func TestUnitApiClient_Execute_CancelledRetry_ReturnsLastRealFailure(t *testing.T) {
+	const failureBody = "athena is unavailable right now"
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts == 1 {
+			// A real, retryable failure carrying a body worth keeping.
+			http.Error(w, failureBody, http.StatusServiceUnavailable)
+			return
+		}
+		// Stall the second attempt so the caller's deadline expires mid-request. doRequest then
+		// synthesizes an empty 503, which must not replace the failure above.
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{TestMode: true}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+
+	resp, err := client.Execute(ctx, []string{"test"}, http.MethodGet, server.URL, http.Header{}, nil, []int{http.StatusOK}, nil)
+
+	assert.Error(t, err, "the cancelled retry loop must still report an error")
+	assert.GreaterOrEqual(t, attempts, 2, "the request should have been retried at least once")
+	if assert.NotNil(t, resp, "the last real response must be returned, not dropped") {
+		assert.Equal(t, http.StatusServiceUnavailable, resp.HttpResponse.StatusCode)
+		assert.Contains(t, string(resp.BodyAsBytes), failureBody,
+			"the body of the failure that caused the retries must survive the cancellation")
+	}
+}
+
+// A request without explicit scopes must never carry a token to a host that only mentions a known API domain
+// somewhere in its URL, and a URL that cannot be parsed must be rejected rather than crash the provider.
+func TestUnitApiClient_Execute_InferredScope_SendsNoTokenToForeignHost(t *testing.T) {
+	t.Parallel()
+
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{
+		TestMode: true,
+		Urls: config.ProviderConfigUrls{
+			BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
+			PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
+			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+		},
+	}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+
+	for _, target := range []string{
+		server.URL + "/collect?x=" + constants.PUBLIC_BAPI_DOMAIN,
+		server.URL + "/" + constants.PUBLIC_POWERPLATFORM_API_DOMAIN + "/collect",
+		server.URL + "/collect#" + constants.PUBLIC_POWERAPPS_API_DOMAIN,
+		strings.Replace(server.URL, "://", "://"+constants.PUBLIC_BAPI_DOMAIN+"@", 1) + "/collect",
+		server.URL + "/collect",
+	} {
+		_, err := client.Execute(context.Background(), nil, http.MethodGet, target, http.Header{}, nil, []int{http.StatusOK}, nil)
+		assert.Error(t, err, target)
+	}
+
+	for _, target := range []string{"https://evil.example/%zz", "https://" + constants.PUBLIC_BAPI_DOMAIN + "/%zz"} {
+		assert.NotPanics(t, func() {
+			_, err := client.Execute(context.Background(), nil, http.MethodGet, target, http.Header{}, nil, []int{http.StatusOK}, nil)
+			var urlErr *customerrors.UrlFormatError
+			assert.ErrorAs(t, err, &urlErr, target)
+		}, target)
+	}
+
+	assert.Zero(t, requests.Load(), "no request, and so no token, may reach a host that is not a known Power Platform or Dataverse host")
 }

@@ -87,6 +87,8 @@ makefile
 coverage.out
 examples/temp
 
+.copilot-tracking
+
 .userstory.prompt.md
 
 .codeqldb

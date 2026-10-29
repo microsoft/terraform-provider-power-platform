@@ -1,0 +1,55 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "switzerland",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "00000000-0000-0000-0000-000000000002",
+        "azureRegion": "switzerlandwest",
+        "displayName": "displayname",
+        "createdTime": "2026-08-19T07:45:25.3761337Z",
+        "billingPolicy": {
+            "id": ""
+        },
+        "provisioningState": "Succeeded",
+        "creationType": "User",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "runtimeEndpoints": {
+            "microsoft.BusinessAppPlatform": "https://switzerland.api.bap.microsoft.com",
+            "microsoft.CommonDataModel": "https://switzerland.api.cds.microsoft.com",
+            "microsoft.PowerApps": "https://switzerland.api.powerapps.com",
+            "microsoft.Flow": "https://switzerland.api.flow.microsoft.com"
+        },
+        "databaseType": "CommonDataService",
+        "linkedEnvironmentMetadata": {
+            "resourceId": "orgid",
+            "friendlyName": "displayname",
+            "uniqueName": "00000000-0000-0000-0000-000000000001",
+            "domainName": "00000000-0000-0000-0000-000000000001",
+            "version": "9.2.23092.00206",
+            "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
+            "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
+            "baseLanguage": 1033,
+            "instanceState": "Ready",
+            "backgroundOperationsState": "Enabled",
+            "platformSku": "Standard",
+            "schemaType": "Standard"
+        },
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "runtimeReasonCode": "NotSpecified",
+                "id": "Enabled"
+            }
+        },
+        "updateCadence": {
+            "id": "Moderate"
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Basic"
+        }
+    }
+}

@@ -3,14 +3,28 @@
 package rest_test
 
 import (
+	"context"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 )
+
+func TestUnitTestRest_V5Deprecation(t *testing.T) {
+	var resp frameworkresource.SchemaResponse
+	rest.NewDataverseWebApiResource().Schema(context.Background(), frameworkresource.SchemaRequest{}, &resp)
+	for _, text := range []string{resp.Schema.DeprecationMessage, resp.Schema.MarkdownDescription} {
+		if !strings.Contains(text, "removed in v5.0.0") || !strings.Contains(text, "purpose-built resources") {
+			t.Errorf("expected v5 removal and migration guidance, got %q", text)
+		}
+	}
+}
 
 func TestAccTestRest_Validate_Create(t *testing.T) {
 	beforeUpdateRegex := `^\{"@odata\.context":"https:\/\/org[0-9a-fA-F]{8}\.crm\.dynamics\.com\/api\/data\/v9\.2\/\$metadata#accounts\(name,accountid\)\/\$entity","@odata\.etag":"W\/\\"[0-9]{7}\\"","name":"powerplatform_rest","accountid":"00000000-0000-0000-0000-000000000001"\}$`

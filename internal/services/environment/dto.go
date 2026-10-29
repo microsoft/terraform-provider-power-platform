@@ -32,14 +32,25 @@ var (
 	CadenceTypes                         = []string{CadenceTypesFrequent, CadenceTypesModerate}
 	ReleaseCycleTypes                    = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
 	ReleaseCycleFirstReleaseOnlyRegex    = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
+
+	// Locations with full in-region generative AI capacity do not offer the "move data across regions"
+	// setting at all. Capacity driven, so this list changes as Microsoft adds in-region capacity:
+	// https://learn.microsoft.com/power-platform/admin/geographical-availability-copilot
+	// Government clouds are also excluded, but are rejected earlier by the cloud type check.
+	locationsWithInRegionCopilotCapacity = []string{"unitedstates"}
+
+	// EuDataBoundaryLocations are the environment locations that sit inside the EU Data Boundary,
+	// which covers the European Union and the EFTA states.
+	EuDataBoundaryLocations = []string{"europe", "france", "germany", "italy", "norway", "poland", "sweden", "switzerland"}
 )
 
 type EnvironmentDto struct {
-	Id         string                   `json:"id,omitempty"`
-	Type       string                   `json:"type,omitempty"`
-	Location   string                   `json:"location,omitempty"`
-	Name       string                   `json:"name,omitempty"`
-	Properties *EnviromentPropertiesDto `json:"properties"`
+	Id          string                   `json:"id,omitempty"`
+	Type        string                   `json:"type,omitempty"`
+	Location    string                   `json:"location,omitempty"`
+	MacroRegion string                   `json:"macroRegion,omitempty"`
+	Name        string                   `json:"name,omitempty"`
+	Properties  *EnviromentPropertiesDto `json:"properties"`
 }
 
 type EnviromentPropertiesDto struct {
@@ -62,6 +73,7 @@ type EnviromentPropertiesDto struct {
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	M365Enabled               bool                              `json:"m365Enabled,omitempty"`
 	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
 }
 
@@ -71,11 +83,13 @@ type GenerativeAiFeaturesDto struct {
 
 type GenerativeAiFeaturesPropertiesDto struct {
 	CopilotPolicies *CopilotPoliciesDto `json:"copilotPolicies,omitempty"`
-	BingChatEnabled bool                `json:"bingChatEnabled"`
+	BingChatEnabled *bool               `json:"bingChatEnabled,omitempty"`
+	M365Enabled     *bool               `json:"m365Enabled,omitempty"`
 }
 
 type CopilotPoliciesDto struct {
-	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
+	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled,omitempty"`
+	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled,omitempty"`
 }
 
 type ClusterDto struct {
@@ -193,9 +207,20 @@ type environmentArrayDto struct {
 	Value []EnvironmentDto `json:"value"`
 }
 
+// Location carries omitempty because the API rejects an empty "location" alongside
+// "macroRegion" with AmbiguousLocationSpecification.
 type environmentCreateDto struct {
-	Location   string                         `json:"location"`
-	Properties environmentCreatePropertiesDto `json:"properties"`
+	Location    string                         `json:"location,omitempty"`
+	MacroRegion string                         `json:"macroRegion,omitempty"`
+	Properties  environmentCreatePropertiesDto `json:"properties"`
+}
+
+// BAPI reinterprets the locations/{segment} path as a macro region id on macro region tenants.
+func (dto environmentCreateDto) geoSegment() string {
+	if dto.MacroRegion != "" {
+		return dto.MacroRegion
+	}
+	return dto.Location
 }
 
 type modifySkuDto struct {
@@ -213,6 +238,7 @@ type environmentCreatePropertiesDto struct {
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	M365Enabled               bool                              `json:"m365Enabled,omitempty"`
 	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
@@ -288,8 +314,22 @@ type validateUpdateEnvironmentDetailsDto struct {
 	EnvironmentName string `json:"environmentName"`
 }
 
+// tenantProvisioningModeMacroRegion is the only mode that changes placement semantics. The API
+// spells the classic mode "region" in lowercase and this one in camelCase, so anything that is not
+// an exact match is treated as classic to avoid misrouting sovereign clouds.
+const tenantProvisioningModeMacroRegion = "macroRegion"
+
 type LocationArrayDto struct {
-	Value []LocationDto `json:"value"`
+	Value                  []LocationDto    `json:"value"`
+	TenantProvisioningMode string           `json:"tenantProvisioningMode"`
+	MacroRegions           []macroRegionDto `json:"macroRegions"`
+}
+
+type macroRegionDto struct {
+	MacroRegionId string `json:"macroRegionId"`
+	DisplayName   string `json:"displayName"`
+	// Pointer because some macro regions omit the key entirely.
+	DataResidencyNote *string `json:"dataResidencyNote"`
 }
 
 type LocationDto struct {

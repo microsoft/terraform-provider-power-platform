@@ -3,17 +3,34 @@
 package authorization_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
+	frameworkresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/authorization"
 )
+
+func TestUnitUserResource_V5ImportNotice(t *testing.T) {
+	var resp frameworkresource.SchemaResponse
+	authorization.NewUserResource().Schema(context.Background(), frameworkresource.SchemaRequest{}, &resp)
+	if resp.Schema.DeprecationMessage != "" {
+		t.Error("the user resource itself is not deprecated")
+	}
+	for _, expected := range []string{"Upcoming breaking change in v5.0.0", "environment_id/user_aad_id", "Microsoft Entra object ID", "Legacy single-ID imports", "unchanged until v5.0.0"} {
+		if !strings.Contains(resp.Schema.MarkdownDescription, expected) {
+			t.Errorf("expected %q in import migration notice, got %q", expected, resp.Schema.MarkdownDescription)
+		}
+	}
+}
 
 func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -138,6 +155,58 @@ func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitUserResource_Validate_Create_Environment_User_Delayed_Display_Name(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	// the principal of a freshly created Entra user is not resolvable yet, so the display name comes back empty
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	queryUserInx := 0
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			queryUserInx++
+			if queryUserInx < 3 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/role_assignments_00000000-0000-0000-0000-000000000001_no_display_name.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env_Delayed_Display_Name/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
 				),
 			},
 		},
@@ -414,6 +483,8 @@ func TestUnitUserResource_Validate_Update_Environment_User(t *testing.T) {
 }
 
 func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
+	t.Skip("No Dynamics 365 licenses left in the test tenant, skipping acceptance test for now. Will re-enable once we have a new test tenant with available licenses.")
+
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,

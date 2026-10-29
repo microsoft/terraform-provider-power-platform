@@ -66,6 +66,9 @@ resource "powerplatform_environment_settings" "settings" {
       max_upload_file_size_in_bytes = 123456
     }
   }
+  privacy_and_security = {
+    blocked_attachment_extensions = toset(["exe", "dll", "ps1"])
+  }
   product = {
     behavior_settings = {
       show_dashboard_cards_in_expanded_state = true
@@ -111,6 +114,7 @@ resource "powerplatform_environment_settings" "settings" {
 
 - `audit_and_logs` (Attributes) Audit and Logs (see [below for nested schema](#nestedatt--audit_and_logs))
 - `email` (Attributes) Email (see [below for nested schema](#nestedatt--email))
+- `privacy_and_security` (Attributes) Privacy and Security settings. See the environment Privacy + Security settings for more details. (see [below for nested schema](#nestedatt--privacy_and_security))
 - `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
@@ -154,6 +158,14 @@ Optional:
 
 
 
+<a id="nestedatt--privacy_and_security"></a>
+### Nested Schema for `privacy_and_security`
+
+Optional:
+
+- `blocked_attachment_extensions` (Set of String) Blocked attachment extensions enforced at the environment level.
+
+
 <a id="nestedatt--product"></a>
 ### Nested Schema for `product`
 
@@ -161,7 +173,7 @@ Optional:
 
 - `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
 - `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
-- `security` (Attributes) Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
+- `security` (Attributes) Security. When omitted or set to null, existing security settings are read but are not sent in updates. Omit this block when configuring product features on a non-managed environment, as IP firewall settings require a Managed Environment. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
 
 <a id="nestedatt--product--behavior_settings"></a>
 ### Nested Schema for `product.behavior_settings`

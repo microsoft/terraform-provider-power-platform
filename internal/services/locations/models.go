@@ -3,7 +3,10 @@
 
 package locations
 
-import "github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+import (
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 type DataSourceModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
@@ -20,4 +23,15 @@ type DataModel struct {
 	CanProvisionDatabase                   bool     `tfsdk:"can_provision_database"`
 	CanProvisionCustomerEngagementDatabase bool     `tfsdk:"can_provision_customer_engagement_database"`
 	AzureRegions                           []string `tfsdk:"azure_regions"`
+}
+
+type macroRegionsDataSourceModel struct {
+	Timeouts     timeouts.Value         `tfsdk:"timeouts"`
+	MacroRegions []macroRegionDataModel `tfsdk:"macro_regions"`
+}
+
+type macroRegionDataModel struct {
+	MacroRegionId     types.String `tfsdk:"macro_region_id"`
+	DisplayName       types.String `tfsdk:"display_name"`
+	DataResidencyNote types.String `tfsdk:"data_residency_note"`
 }

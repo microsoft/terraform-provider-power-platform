@@ -1,0 +1,11 @@
+{
+    "StageSolutionResults": {
+        "StageSolutionUploadId": "upload-id",
+        "StageSolutionStatus": "Passed",
+        "SolutionValidationResults": [],
+        "MissingDependencies": [],
+        "SolutionDetails": {
+            "SolutionUniqueName": "TerraformSimpleTestSolution"
+        }
+    }
+}

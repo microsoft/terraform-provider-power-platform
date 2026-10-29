@@ -55,6 +55,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	defer exitContext()
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource associates a user to a Power Platform environment.\n\n" +
+			"**Upcoming breaking change in v5.0.0:** Import IDs will require the composite `environment_id/user_aad_id` format, where `user_aad_id` is the user's Microsoft Entra object ID (`aad_id`). Legacy single-ID imports will no longer be supported. Update import commands and import blocks when upgrading. This resource is not deprecated, and current import behavior remains unchanged until v5.0.0.\n\n" +
 			"Additional Resources:\n\n" +
 			"* [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)\n\n" +
 			"* [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)\n\n" +
@@ -303,6 +304,9 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		if user.AadObjectId == "" {
 			user.Id = state.AadId.ValueString()
 			user.AadObjectId = state.AadId.ValueString()
+		}
+		// the principal display name is not always resolvable, keep the known one instead of clearing it
+		if user.DomainName == "" {
 			user.DomainName = state.UserPrincipalName.ValueString()
 		}
 

@@ -1,0 +1,15 @@
+{
+    "value": [
+        {
+            "solutionid": "86928ed8-df37-4ce2-add5-47030a833bff",
+            "environment_id": "00000000-0000-0000-0000-000000000001",
+            "uniquename": "TerraformSimpleTestSolution",
+            "friendlyname": "Terraform Simple Test Solution",
+            "ismanaged": true,
+            "createdon": "2024-01-01T00:00:00Z",
+            "version": "1.0.0.1",
+            "modifiedon": "2024-01-01T00:00:00Z",
+            "installedon": "2024-01-01T00:00:00Z"
+        }
+    ]
+}

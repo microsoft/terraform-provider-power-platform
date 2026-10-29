@@ -174,6 +174,23 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					},
 				},
 			},
+			"privacy_and_security": schema.SingleNestedAttribute{
+				MarkdownDescription: "Privacy and Security settings. See the environment Privacy + Security settings for more details.",
+				Optional:            true, Computed: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"blocked_attachment_extensions": schema.SetAttribute{
+						ElementType:         types.StringType,
+						MarkdownDescription: "Blocked attachment extensions enforced at the environment level.",
+						Optional:            true, Computed: true,
+						PlanModifiers: []planmodifier.Set{
+							setplanmodifier.UseStateForUnknown(),
+						},
+					},
+				},
+			},
 			"product": schema.SingleNestedAttribute{
 				MarkdownDescription: "Product",
 				Optional:            true, Computed: true,
@@ -343,9 +360,12 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 						},
 					},
 					"security": schema.SingleNestedAttribute{
-						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
+						MarkdownDescription: "Security. When omitted or set to null, existing security settings are read but are not sent in updates. Omit this block when configuring product features on a non-managed environment, as IP firewall settings require a Managed Environment. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
 						Optional:            true,
 						Computed:            true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"enable_ip_based_cookie_binding": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based cookie binding",
@@ -497,12 +517,14 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	defer exitContext()
 
 	var plan EnvironmentSettingsResourceModel
+	var config EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	settingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
+	settingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan, config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -581,7 +603,9 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 
 	var plan EnvironmentSettingsResourceModel
 	var state EnvironmentSettingsResourceModel
+	var config EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -596,7 +620,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	envSettingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
+	envSettingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan, config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return

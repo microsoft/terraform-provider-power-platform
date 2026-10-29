@@ -42,13 +42,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
+	environmentvariable "github.com/microsoft/terraform-provider-power-platform/internal/services/environment_variable"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
+	managedsolution "github.com/microsoft/terraform-provider-power-platform/internal/services/managed_solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/publisher"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
@@ -403,10 +407,13 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
+		func() resource.Resource { return managedsolution.NewManagedSolutionResource() },
+		func() resource.Resource { return environmentvariable.NewEnvironmentVariableResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return authorization.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
+		func() resource.Resource { return publisher.NewPublisherResource() },
 		func() resource.Resource { return environment_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
@@ -420,6 +427,9 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
 		},
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
+		func() resource.Resource { return application.NewApplicationUserResource() },
+		func() resource.Resource { return application.NewSecurityRoleAssignmentResource() },
+		func() resource.Resource { return role_based_access.NewRbacRoleAssignmentResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
 	}
@@ -440,17 +450,21 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 		func() datasource.DataSource { return environment_settings.NewEnvironmentSettingsDataSource() },
 		func() datasource.DataSource { return locations.NewLocationsDataSource() },
+		func() datasource.DataSource { return locations.NewMacroRegionsDataSource() },
 		func() datasource.DataSource { return languages.NewLanguagesDataSource() },
 		func() datasource.DataSource { return currencies.NewCurrenciesDataSource() },
 		func() datasource.DataSource { return authorization.NewSecurityRolesDataSource() },
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
+		func() datasource.DataSource { return publisher.NewPublishersDataSource() },
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 		func() datasource.DataSource { return connection.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRbacRoleAssignmentsDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRoleDefinitionsDataSource() },
 	}
 }
 

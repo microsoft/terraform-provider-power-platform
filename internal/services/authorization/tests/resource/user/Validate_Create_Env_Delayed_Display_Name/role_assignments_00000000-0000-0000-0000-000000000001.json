@@ -1,0 +1,44 @@
+{
+    "value": [
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments/00000000-0000-0000-0000-000000000001",
+            "type": "Microsoft.BusinessAppPlatform/scopes/environments/roleAssignments",
+            "name": "00000000-0000-0000-0000-000000000001",
+            "properties": {
+                "scope": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001",
+                "roleDefinition": {
+                    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleDefinitions/EnvironmentAdmin",
+                    "type": "Microsoft.BusinessAppPlatform/scopes/environments/roleDefinitions",
+                    "name": "EnvironmentAdmin"
+                },
+                "principal": {
+                    "id": "00000000-0000-0000-0000-000000000002",
+                    "displayName": "test",
+                    "email": "test@contoso.onmicrosoft.com",
+                    "type": "User",
+                    "tenantId": "00000000-0000-0000-0000-000000000000"
+                }
+            }
+        },
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments/00000000-0000-0000-0000-000000000002",
+            "type": "Microsoft.BusinessAppPlatform/scopes/environments/roleAssignments",
+            "name": "00000000-0000-0000-0000-000000000002",
+            "properties": {
+                "scope": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001",
+                "roleDefinition": {
+                    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleDefinitions/EnvironmentMaker",
+                    "type": "Microsoft.BusinessAppPlatform/scopes/environments/roleDefinitions",
+                    "name": "EnvironmentMaker"
+                },
+                "principal": {
+                    "id": "00000000-0000-0000-0000-000000000002",
+                    "displayName": "test",
+                    "email": "test@contoso.onmicrosoft.com",
+                    "type": "User",
+                    "tenantId": "00000000-0000-0000-0000-000000000000"
+                }
+            }
+        }
+    ]
+}

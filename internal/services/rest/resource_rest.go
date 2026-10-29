@@ -76,8 +76,9 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		DeprecationMessage: "This resource is deprecated. Please consider using specific resources for your use case, or opening a GitHub issue requesting a new resource for your use case.",
-		MarkdownDescription: `Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
+		DeprecationMessage: "The powerplatform_rest resource is deprecated and will be removed in v5.0.0. Migrate to purpose-built resources for your use case before upgrading. If no suitable resource exists, open a GitHub issue requesting one.",
+		MarkdownDescription: "Deprecated: `powerplatform_rest` will be removed in v5.0.0. Migrate to purpose-built resources for your use case before upgrading. If no suitable resource exists, open a GitHub issue requesting one. This removal does not affect the `powerplatform_rest_query` data source.\n\n" +
+			`Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
 		* Create: will be called once during the lifecycle of the resource (first 'terraform apply')
 		* Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
 		* Update: will be called every time during 'terraform apply' if the resource has changed (change done by the user or different values returned by the 'read' operation than those in the current state)

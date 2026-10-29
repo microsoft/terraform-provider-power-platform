@@ -122,6 +122,25 @@ const (
 	RX_ANALYTICS_SCOPE              = ""
 )
 
+// Every Dataverse environment has its own host (for example org.crm4.dynamics.com), so these hosts are not
+// part of a cloud's configuration. These are the DNS domains under which the supported clouds host Dataverse.
+// The ex and rx clouds have no publicly documented Dataverse domain, so their whole cloud namespace is accepted.
+const (
+	PUBLIC_DATAVERSE_DOMAIN    = "dynamics.com" // Also serves GCC (crm9.dynamics.com).
+	USGOVHIGH_DATAVERSE_DOMAIN = "microsoftdynamics.us"
+	USDOD_DATAVERSE_DOMAIN     = "crm.appsplatform.us"
+	CHINA_DATAVERSE_DOMAIN     = "dynamics.cn"
+	EX_DATAVERSE_DOMAIN        = "eaglex.ic.gov"
+	RX_DATAVERSE_DOMAIN        = "microsoft.scloud"
+)
+
+// The admin analytics (csanalytics) host is chosen by the tenant's geography rather than by its cloud.
+const (
+	PUBLIC_ANALYTICS_DOMAIN = "csanalytics.powerplatform.microsoft.com"
+	USGOV_ANALYTICS_DOMAIN  = "csanalytics.powerplatform.microsoft.us" // Serves GCC and GCC High.
+	USDOD_ANALYTICS_DOMAIN  = "csanalytics.appsplatform.us"
+)
+
 const (
 	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
 	PPAC_SCOPE    = "065d9450-1e87-434e-ac2f-69af271549ed"
@@ -143,6 +162,64 @@ const (
 const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 	MAX_RETRY_COUNT                               = 10
+
+	// BAPI can report an environment lifecycle operation as succeeded before the Dataverse
+	// metadata of that environment becomes readable, so it has to be polled for separately.
+	MAX_DATAVERSE_METADATA_RETRY_COUNT = 30
+)
+
+// PROTECTION_LEVEL_STANDARD is the governance configuration protection level of a
+// managed environment. Anything else (for example "Basic") is not managed.
+const PROTECTION_LEVEL_STANDARD = "Standard"
+
+// The BAP read endpoint is eventually consistent with the regional lifecycle operation that applies
+// generative AI settings, so the values are re-read until they converge.
+const (
+	ENVIRONMENT_AI_FEATURES_POLL_INTERVAL = 3 * time.Second
+	ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT  = 20 * time.Second
+)
+
+// The connectivity endpoint is eventually consistent with environment provisioning, so a freshly
+// created environment is not immediately addressable there.
+const (
+	CONNECTIVITY_ENVIRONMENT_POLL_INTERVAL = 15 * time.Second
+	CONNECTIVITY_ENVIRONMENT_POLL_TIMEOUT  = 10 * time.Minute
+)
+
+// A freshly provisioned Dataverse organization answers Web API calls with 403 until it has
+// provisioned the caller as an application user.
+const (
+	DATAVERSE_CALLER_PROVISIONING_POLL_INTERVAL = 15 * time.Second
+	DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT  = 10 * time.Minute
+)
+
+// The RBAC role assignment collection is eventually consistent with the create that committed an
+// assignment, so a create has to wait for its own assignment to become listable. Environment scope
+// listings have been observed to lag by more than two minutes.
+const (
+	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 10 * time.Minute
+)
+
+// The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
+// and a lost assertion fails a whole provider operation rather than a single request.
+const (
+	OIDC_ASSERTION_MAX_ATTEMPTS = 5
+	OIDC_ASSERTION_RETRY_DELAY  = 3 * time.Second
+)
+
+// MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
+// refused for a reason other than expiry would be minted identically on every attempt.
+const MAX_UNAUTHORIZED_RETRIES = 2
+
+// Dataverse resolves an application user's application id against Entra, and a service principal
+// created moments earlier has not necessarily replicated there yet.
+const (
+	ENTRA_APPLICATION_PROPAGATION_POLL_INTERVAL = 15 * time.Second
+	ENTRA_APPLICATION_PROPAGATION_POLL_TIMEOUT  = 10 * time.Minute
+
+	// The Dataverse error code for "we didn't find that application ID in your Azure Active Directory".
+	DATAVERSE_APPLICATION_NOT_IN_ENTRA_ERROR_CODE = "0x8004f510"
 )
 
 const (
@@ -215,4 +292,5 @@ const (
 	ERROR_POLICY_ASSIGNED_TO_ENV_GROUP = "POLICY_ASSIGNED_TO_ENV_GROUP"
 	ERROR_ENVIRONMENT_SETTINGS_FAILED  = "ENVIRONMENT_SETTINGS_FAILED"
 	ERROR_ENVIRONMENT_CREATION         = "ENVIRONMENT_CREATION"
+	ERROR_ENVIRONMENT_DELETION         = "ENVIRONMENT_DELETION"
 )

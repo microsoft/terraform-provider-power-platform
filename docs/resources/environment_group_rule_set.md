@@ -4,17 +4,11 @@ page_title: "powerplatform_environment_group_rule_set Resource - Power Platform"
 subcategory: ""
 description: |-
   Allows the creation of environment group rulesets. See Power Platform documentation https://learn.microsoft.com/power-platform/admin/environment-groups for more information on the available rules that can be applied to an environment group.
-  Note: This resource is available as preview
-  Known Limitations: This resource is not supported for with service principal authentication.
 ---
 
 # powerplatform_environment_group_rule_set (Resource)
 
 Allows the creation of environment group rulesets. See [Power Platform documentation](https://learn.microsoft.com/power-platform/admin/environment-groups) for more information on the available rules that can be applied to an environment group.
-
-**Note:** This resource is available as **preview**
-
-**Known Limitations:** This resource is not supported for with service principal authentication.
 
 ## Example Usage
 
@@ -43,26 +37,71 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
       share_mode      = "exclude sharing with security groups"
       share_max_limit = 42
     }
+
     usage_insights = {
       insights_enabled = false
     }
+
     maker_welcome_content = {
       maker_onboarding_url      = "https://contoso.com/onboarding"
       maker_onboarding_markdown = "## Welcome to the environment!\n\n**This is a markdown description.**"
     }
+
     solution_checker_enforcement = {
       solution_checker_mode = "block"
       send_emails_enabled   = true
     }
+
     backup_retention = {
       period_in_days = 21
     }
+
     ai_generated_descriptions = {
       ai_description_enabled = false
     }
+
     ai_generative_settings = {
       move_data_across_regions_enabled = true
       bing_search_enabled              = false
+    }
+
+    advanced_connector_policies_only = {
+      enabled = true
+    }
+
+    content_security_policy = {
+      enabled               = true
+      enabled_for_canvas    = true
+      enabled_for_code_apps = true
+
+      configuration = {
+        img_src     = ["https://example.com"]
+        connect_src = ["https://api.example.com"]
+        strict_csp  = true
+      }
+
+      configuration_for_canvas = {
+        connect_src = ["https://canvas-api.example.com"]
+        strict_csp  = true
+      }
+
+      configuration_for_code_apps = {
+        script_src = ["https://cdn.example.com"]
+      }
+    }
+
+    advanced_connector_policies = {
+      allowed_connectors = [
+        {
+          connector_id = "shared_commondataservice"
+          actions_mode = "all_allowed"
+        },
+        {
+          connector_id    = "shared_office365"
+          actions_mode    = "some_allowed"
+          allowed_actions = ["SendEmail", "GetEvents"]
+        }
+      ]
     }
   }
 }
@@ -83,19 +122,52 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
 ### Read-Only
 
 - `id` (String) Unique id of the environment group ruleset
+- `policy_id` (String) Unique id of the rule-based policy backing `maker_welcome_content`, `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies`. Null when none of those rules are configured.
 
 <a id="nestedatt--rules"></a>
 ### Nested Schema for `rules`
 
 Optional:
 
+- `advanced_connector_policies` (Attributes) Manages which connectors are allowed and what actions they can perform in environments within this group. (see [below for nested schema](#nestedatt--rules--advanced_connector_policies))
+- `advanced_connector_policies_only` (Attributes) Controls whether only advanced connector policies are applied to environments in this group. When enabled, environments in the group will only use advanced connector policies. (see [below for nested schema](#nestedatt--rules--advanced_connector_policies_only))
 - `ai_generated_descriptions` (Attributes) AI Generated Descriptions (see [below for nested schema](#nestedatt--rules--ai_generated_descriptions))
 - `ai_generative_settings` (Attributes) AI Generative Settings (see [below for nested schema](#nestedatt--rules--ai_generative_settings))
 - `backup_retention` (Attributes) Backup Retention (see [below for nested schema](#nestedatt--rules--backup_retention))
+- `content_security_policy` (Attributes) Configures the [Content Security Policy (CSP)](https://learn.microsoft.com/power-platform/admin/content-security-policy) for Power Apps in this environment group. (see [below for nested schema](#nestedatt--rules--content_security_policy))
 - `maker_welcome_content` (Attributes) Maker Welcome Content (see [below for nested schema](#nestedatt--rules--maker_welcome_content))
 - `sharing_controls` (Attributes) Sharing controls (see [below for nested schema](#nestedatt--rules--sharing_controls))
 - `solution_checker_enforcement` (Attributes) Solution Checker Enforcement (see [below for nested schema](#nestedatt--rules--solution_checker_enforcement))
 - `usage_insights` (Attributes) Usage Insights (see [below for nested schema](#nestedatt--rules--usage_insights))
+
+<a id="nestedatt--rules--advanced_connector_policies"></a>
+### Nested Schema for `rules.advanced_connector_policies`
+
+Required:
+
+- `allowed_connectors` (Attributes List) List of connectors that are allowed in the environment group (see [below for nested schema](#nestedatt--rules--advanced_connector_policies--allowed_connectors))
+
+<a id="nestedatt--rules--advanced_connector_policies--allowed_connectors"></a>
+### Nested Schema for `rules.advanced_connector_policies.allowed_connectors`
+
+Required:
+
+- `actions_mode` (String) Controls which actions are allowed for this connector. Use `all_allowed` to permit all actions, or `some_allowed` to restrict to specific actions listed in `allowed_actions`.
+- `connector_id` (String) Short connector identifier (e.g., `shared_commondataservice`). The provider automatically prepends `/providers/Microsoft.PowerApps/apis/`.
+
+Optional:
+
+- `allowed_actions` (List of String) List of specific action names allowed for this connector. Only used when `actions_mode` is `some_allowed`.
+
+
+
+<a id="nestedatt--rules--advanced_connector_policies_only"></a>
+### Nested Schema for `rules.advanced_connector_policies_only`
+
+Required:
+
+- `enabled` (Boolean) Enable advanced connector policies only
+
 
 <a id="nestedatt--rules--ai_generated_descriptions"></a>
 ### Nested Schema for `rules.ai_generated_descriptions`
@@ -120,6 +192,71 @@ Required:
 Required:
 
 - `period_in_days` (Number) Backup retention period in days: 7, 14, 21, 28
+
+
+<a id="nestedatt--rules--content_security_policy"></a>
+### Nested Schema for `rules.content_security_policy`
+
+Required:
+
+- `enabled` (Boolean) Enable Content Security Policy for model-driven apps
+- `enabled_for_canvas` (Boolean) Enable Content Security Policy for canvas apps
+- `enabled_for_code_apps` (Boolean) Enable Content Security Policy for code-first apps
+
+Optional:
+
+- `configuration` (Attributes) CSP directive configuration for model-driven apps. Each attribute is a list of allowed source URIs. (see [below for nested schema](#nestedatt--rules--content_security_policy--configuration))
+- `configuration_for_canvas` (Attributes) CSP directive configuration for canvas apps. Each attribute is a list of allowed source URIs. (see [below for nested schema](#nestedatt--rules--content_security_policy--configuration_for_canvas))
+- `configuration_for_code_apps` (Attributes) CSP directive configuration for code-first apps. Each attribute is a list of allowed source URIs. (see [below for nested schema](#nestedatt--rules--content_security_policy--configuration_for_code_apps))
+- `report_uri` (String) URI to send CSP violation reports to
+- `reporting_endpoint` (String) Reporting endpoint for CSP violations
+
+<a id="nestedatt--rules--content_security_policy--configuration"></a>
+### Nested Schema for `rules.content_security_policy.configuration`
+
+Optional:
+
+- `connect_src` (List of String) Allowed sources for fetch, XHR, WebSocket (`connect-src` directive)
+- `font_src` (List of String) Allowed sources for fonts (`font-src` directive)
+- `form_action` (List of String) Allowed targets for form submissions (`form-action` directive)
+- `frame_ancestor` (List of String) Allowed sources that can embed this content (`frame-ancestors` directive)
+- `frame_src` (List of String) Allowed sources for frames (`frame-src` directive)
+- `img_src` (List of String) Allowed sources for images (`img-src` directive)
+- `script_src` (List of String) Allowed sources for scripts (`script-src` directive)
+- `strict_csp` (Boolean) When `true`, enables strict Content Security Policy enforcement for model-driven apps.
+- `style_src` (List of String) Allowed sources for stylesheets (`style-src` directive)
+
+
+<a id="nestedatt--rules--content_security_policy--configuration_for_canvas"></a>
+### Nested Schema for `rules.content_security_policy.configuration_for_canvas`
+
+Optional:
+
+- `connect_src` (List of String) Allowed sources for fetch, XHR, WebSocket (`connect-src` directive)
+- `font_src` (List of String) Allowed sources for fonts (`font-src` directive)
+- `form_action` (List of String) Allowed targets for form submissions (`form-action` directive)
+- `frame_ancestor` (List of String) Allowed sources that can embed this content (`frame-ancestors` directive)
+- `frame_src` (List of String) Allowed sources for frames (`frame-src` directive)
+- `img_src` (List of String) Allowed sources for images (`img-src` directive)
+- `script_src` (List of String) Allowed sources for scripts (`script-src` directive)
+- `strict_csp` (Boolean) When `true`, enables strict Content Security Policy enforcement for canvas apps.
+- `style_src` (List of String) Allowed sources for stylesheets (`style-src` directive)
+
+
+<a id="nestedatt--rules--content_security_policy--configuration_for_code_apps"></a>
+### Nested Schema for `rules.content_security_policy.configuration_for_code_apps`
+
+Optional:
+
+- `connect_src` (List of String) Allowed sources for fetch, XHR, WebSocket (`connect-src` directive)
+- `font_src` (List of String) Allowed sources for fonts (`font-src` directive)
+- `form_action` (List of String) Allowed targets for form submissions (`form-action` directive)
+- `frame_ancestor` (List of String) Allowed sources that can embed this content (`frame-ancestors` directive)
+- `frame_src` (List of String) Allowed sources for frames (`frame-src` directive)
+- `img_src` (List of String) Allowed sources for images (`img-src` directive)
+- `script_src` (List of String) Allowed sources for scripts (`script-src` directive)
+- `style_src` (List of String) Allowed sources for stylesheets (`style-src` directive)
+
 
 
 <a id="nestedatt--rules--maker_welcome_content"></a>

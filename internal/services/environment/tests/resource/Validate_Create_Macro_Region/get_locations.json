@@ -1,0 +1,90 @@
+{
+    "tenantProvisioningMode": "macroRegion",
+    "macroRegions": [
+        {
+            "macroRegionId": "asia-pacific",
+            "displayName": "Asia Pacific",
+            "dataResidencyNote": "Your data will reside within the Asia-Pacific region."
+        },
+        {
+            "macroRegionId": "emea",
+            "displayName": "Europe, UK, Middle East, Africa",
+            "dataResidencyNote": "Your data will reside within Europe, the United Kingdom, the Middle East, or Africa."
+        },
+        {
+            "macroRegionId": "eu-efta",
+            "displayName": "European Union & EFTA",
+            "dataResidencyNote": "Your data will reside within EU and EFTA member states which are EUDB regions."
+        },
+        {
+            "macroRegionId": "europe-uk",
+            "displayName": "Europe & UK"
+        },
+        {
+            "macroRegionId": "north-america",
+            "displayName": "North America",
+            "dataResidencyNote": "Your data will reside within the United States or Canada."
+        },
+        {
+            "macroRegionId": "the-americas",
+            "displayName": "The Americas",
+            "dataResidencyNote": "Your data will reside within the Americas."
+        }
+    ],
+    "value": [
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates",
+            "type": "Microsoft.BusinessAppPlatform/locations",
+            "name": "unitedstates",
+            "properties": {
+                "displayName": "United States",
+                "code": "NA",
+                "isDefault": false,
+                "isDisabled": false,
+                "canProvisionDatabase": true,
+                "canProvisionCustomerEngagementDatabase": true,
+                "hasFirstReleaseIslandAvailableForProvisioning": true,
+                "azureRegions": [
+                    "eastus",
+                    "westus"
+                ]
+            }
+        },
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/locations/europe",
+            "type": "Microsoft.BusinessAppPlatform/locations",
+            "name": "europe",
+            "properties": {
+                "displayName": "Europe",
+                "code": "EMEA",
+                "isDefault": true,
+                "isDisabled": false,
+                "canProvisionDatabase": true,
+                "canProvisionCustomerEngagementDatabase": true,
+                "hasFirstReleaseIslandAvailableForProvisioning": true,
+                "azureRegions": [
+                    "westeurope",
+                    "northeurope"
+                ]
+            }
+        },
+        {
+            "id": "/providers/Microsoft.BusinessAppPlatform/locations/switzerland",
+            "type": "Microsoft.BusinessAppPlatform/locations",
+            "name": "switzerland",
+            "properties": {
+                "displayName": "Switzerland",
+                "code": "CHE",
+                "isDefault": false,
+                "isDisabled": false,
+                "canProvisionDatabase": true,
+                "canProvisionCustomerEngagementDatabase": true,
+                "hasFirstReleaseIslandAvailableForProvisioning": false,
+                "azureRegions": [
+                    "switzerlandnorth",
+                    "switzerlandwest"
+                ]
+            }
+        }
+    ]
+}

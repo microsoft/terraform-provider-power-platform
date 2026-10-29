@@ -42,11 +42,15 @@ func findLocation(locations LocationArrayDto, locationToFind string) (*LocationD
 		}
 	}
 
-	locationNames := make([]string, len(locations.Value))
+	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames(locations), ", "))
+}
+
+func locationNames(locations LocationArrayDto) []string {
+	names := make([]string, len(locations.Value))
 	for i, loc := range locations.Value {
-		locationNames[i] = loc.Name
+		names[i] = loc.Name
 	}
-	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames, ", "))
+	return names
 }
 
 func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
@@ -76,10 +80,44 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 	return &locationsArray, nil
 }
 
-func (client *Client) LocationValidator(ctx context.Context, location, azureRegion string) error {
+func macroRegionIds(locations LocationArrayDto) []string {
+	ids := make([]string, len(locations.MacroRegions))
+	for i, macroRegion := range locations.MacroRegions {
+		ids[i] = macroRegion.MacroRegionId
+	}
+	return ids
+}
+
+func findMacroRegion(locations LocationArrayDto, macroRegionToFind string) error {
+	for _, macroRegion := range locations.MacroRegions {
+		if macroRegion.MacroRegionId == macroRegionToFind {
+			return nil
+		}
+	}
+	return fmt.Errorf("macro region '%s' is not valid. valid macro regions are: %s", macroRegionToFind, strings.Join(macroRegionIds(locations), ", "))
+}
+
+// ValidateEnvironmentPlacement rejects placement attributes that do not match the tenant's
+// provisioning mode, which is auto-detected from the same locations response used for validation.
+func (client *Client) ValidateEnvironmentPlacement(ctx context.Context, location, macroRegion, azureRegion string) error {
 	locationsArray, err := client.GetLocations(ctx)
 	if err != nil {
 		return err
+	}
+
+	if locationsArray.TenantProvisioningMode == tenantProvisioningModeMacroRegion {
+		if macroRegion == "" {
+			// The locations list stays fully populated on a macro region tenant, so findLocation
+			// would succeed here and the create would only fail later with MacroRegionRequired.
+			return fmt.Errorf("this tenant provisions environments by macro region, so 'location' cannot be used. set 'macro_region' to one of: %s", strings.Join(macroRegionIds(*locationsArray), ", "))
+		}
+		return findMacroRegion(*locationsArray, macroRegion)
+	}
+
+	if macroRegion != "" {
+		// A tenant that provisions by location returns 201 and silently ignores macroRegion, placing
+		// the environment in the tenant default location. Refuse rather than misplace the data.
+		return fmt.Errorf("this tenant provisions environments by location, so 'macro_region' cannot be used. set 'location' to one of: %s", strings.Join(locationNames(*locationsArray), ", "))
 	}
 
 	foundLocation, err := findLocation(*locationsArray, location)
@@ -91,12 +129,8 @@ func (client *Client) LocationValidator(ctx context.Context, location, azureRegi
 		return nil
 	}
 
-	isRegionFound, err := findAzureRegion(foundLocation, azureRegion)
-	if err != nil || !isRegionFound {
-		return err
-	}
-
-	return nil
+	_, err = findAzureRegion(foundLocation, azureRegion)
+	return err
 }
 
 type currencyCodeValidatorDto struct {
@@ -231,6 +265,9 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	if err != nil {
 		return "", err
 	}
+	if env.Properties.LinkedEnvironmentMetadata == nil {
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
+	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
 		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
@@ -244,6 +281,11 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
+	// Without an id the request degrades into a "list environments" call that returns HTTP 200 with a collection body.
+	if environmentId == "" {
+		return nil, errors.New("environment id must not be empty")
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -261,6 +303,10 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
+	}
+
+	if env.Properties == nil {
+		return nil, fmt.Errorf("unexpected response when reading environment '%s': the response contains no environment properties", environmentId)
 	}
 
 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
@@ -307,7 +353,7 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
 		if retryCount >= constants.MAX_RETRY_COUNT {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
+			return customerrors.NewProviderError(constants.ERROR_ENVIRONMENT_DELETION, "maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
 		body := string(response.BodyAsBytes)
 		if body == "" {
@@ -336,7 +382,7 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
 		if retryCount >= constants.MAX_RETRY_COUNT {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+			return customerrors.NewProviderError(constants.ERROR_ENVIRONMENT_DELETION, "maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
@@ -502,15 +548,16 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		if err != nil {
 			return nil, err
 		}
-
-		if lifecycleResponse.State.Id == "Succeeded" {
-			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-			if len(parts) == 0 {
-				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
-			}
-			createdEnvironmentId = parts[len(parts)-1]
-			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
+		if lifecycleResponse == nil {
+			return nil, errors.New("environment creation failed. the create request did not return a lifecycle operation to wait for")
 		}
+		if lifecycleResponse.State.Id != "Succeeded" {
+			return nil, fmt.Errorf("environment creation failed. lifecycle operation state: %s", lifecycleResponse.State.Id)
+		}
+
+		parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+		createdEnvironmentId = parts[len(parts)-1]
+		tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 
 	case http.StatusCreated:
 		envCreatedResponse := lifecycleCreatedDto{}
@@ -526,10 +573,32 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		return nil, fmt.Errorf("unexpected HTTP status code: %d", apiResponse.HttpResponse.StatusCode)
 	}
 
+	// Guard against reading the environment with an empty id, which resolves to the environment
+	// list endpoint and would silently return an empty environment.
+	if createdEnvironmentId == "" {
+		return nil, errors.New("environment creation failed. the API did not return an id for the created environment")
+	}
+
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
-		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
+		// The environment was created, we just can't read it back. Return the id along with the error
+		// so the caller can still record it, otherwise Terraform never learns about an environment
+		// that exists and the next apply fails with DomainNameAlreadyInUse.
+		return &EnvironmentDto{Name: createdEnvironmentId}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
+
+	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil {
+		env, err = client.waitForDataverseMetadata(ctx, createdEnvironmentId, env)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	env, err = client.waitForRequestedEnvironmentProperties(ctx, createdEnvironmentId, env, environmentToCreate.Properties.DisplayName, environmentToCreate.Properties.EnvironmentSku)
+	if err != nil {
+		return &EnvironmentDto{Name: createdEnvironmentId}, err
+	}
+
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
@@ -538,8 +607,187 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	return env, err
 }
 
-func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) error {
-	return client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0)
+// waitForRequestedEnvironmentProperties re-reads the environment until it reports the display name and
+// sku that were requested. Shortly after provisioning BAPI can still return the Dataverse organization's
+// placeholder friendly name and the default "Production" sku, which Terraform rejects as an inconsistent
+// result after apply.
+func (client *Client) waitForRequestedEnvironmentProperties(ctx context.Context, environmentId string, env *EnvironmentDto, expectedDisplayName, expectedSku string) (*EnvironmentDto, error) {
+	if expectedDisplayName == "" && expectedSku == "" {
+		return env, nil
+	}
+
+	matchesRequest := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil {
+			return false
+		}
+		if expectedDisplayName != "" && e.Properties.DisplayName != expectedDisplayName {
+			return false
+		}
+		if expectedSku != "" && e.Properties.EnvironmentSku != expectedSku {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesRequest(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not report the requested display name '%s' and sku '%s'", environmentId, expectedDisplayName, expectedSku)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report the requested display name and sku yet, retrying read", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
+// waitForDataverseMetadata polls the environment until its Dataverse metadata is readable. BAPI
+// reports the environment lifecycle operation as succeeded before that metadata is exposed, and
+// without it the provider would write a null `dataverse` block into state.
+func (client *Client) waitForDataverseMetadata(ctx context.Context, environmentId string, env *EnvironmentDto) (*EnvironmentDto, error) {
+	for attempt := 0; ; attempt++ {
+		if env.Properties != nil && env.Properties.LinkedEnvironmentMetadata != nil {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_DATAVERSE_METADATA_RETRY_COUNT {
+			return nil, fmt.Errorf("dataverse was requested for environment '%s' but its metadata was still not returned by the API after %d attempts", environmentId, attempt)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse metadata for environment '%s' is not available yet. Retrying", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
+// waitForDataverseRuntimeState re-reads the environment until its administration mode and background
+// operations state match what was just requested. UpdateEnvironment already waits for the runtime
+// state it changes, but a later, independent GetEnvironment call (e.g. for AI features) is not
+// guaranteed to observe that same change, which otherwise surfaces as "provider produced inconsistent
+// result after apply" for attributes the caller never intended to touch on this apply.
+func (client *Client) waitForDataverseRuntimeState(ctx context.Context, environmentId string, env *EnvironmentDto, expectedAdminMode, expectedBackgroundOperation *bool) (*EnvironmentDto, error) {
+	if expectedAdminMode == nil && expectedBackgroundOperation == nil {
+		return env, nil
+	}
+
+	matchesExpectedState := func(e *EnvironmentDto) bool {
+		if e == nil || e.Properties == nil || e.Properties.LinkedEnvironmentMetadata == nil {
+			return false
+		}
+		if expectedAdminMode != nil && (runtimeStateId(e) == "AdminMode") != *expectedAdminMode {
+			return false
+		}
+		if expectedBackgroundOperation != nil && (e.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState == "Enabled") != *expectedBackgroundOperation {
+			return false
+		}
+		return true
+	}
+
+	for attempt := 0; ; attempt++ {
+		if matchesExpectedState(env) {
+			return env, nil
+		}
+
+		if attempt >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("environment '%s' did not converge to the requested administration mode/background operations state", environmentId)
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' runtime state has not converged yet. Retrying", environmentId))
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+
+		var err error
+		env, err = client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
+func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) (*EnvironmentDto, error) {
+	if err := client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0); err != nil {
+		return nil, err
+	}
+	return client.waitForEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig.Properties)
+}
+
+// A successful lifecycle operation does not guarantee that the regional write is already visible on the
+// BAP read endpoint, so the environment is re-read until it reports the values that were just applied.
+func (client *Client) waitForEnvironmentAiFeatures(ctx context.Context, environmentId string, expected GenerativeAiFeaturesPropertiesDto) (*EnvironmentDto, error) {
+	maxRetries := int(constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT / constants.ENVIRONMENT_AI_FEATURES_POLL_INTERVAL)
+
+	for retry := 0; ; retry++ {
+		env, err := client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+
+		if environmentAiFeaturesMatch(env, expected) {
+			return env, nil
+		}
+
+		if retry >= maxRetries {
+			return nil, fmt.Errorf("environment '%s' did not report the requested generative AI features within %s", environmentId, constants.ENVIRONMENT_AI_FEATURES_POLL_TIMEOUT)
+		}
+
+		tflog.Debug(ctx, "Environment generative AI features are not visible yet, retrying read")
+		if err := client.Api.SleepWithContext(ctx, constants.ENVIRONMENT_AI_FEATURES_POLL_INTERVAL); err != nil {
+			return nil, err
+		}
+	}
+}
+
+// Only the values that were sent are compared, because omitted values are left untouched by the API.
+func environmentAiFeaturesMatch(env *EnvironmentDto, expected GenerativeAiFeaturesPropertiesDto) bool {
+	if env == nil || env.Properties == nil {
+		return false
+	}
+
+	if expected.BingChatEnabled != nil && env.Properties.BingChatEnabled != *expected.BingChatEnabled {
+		return false
+	}
+	if expected.M365Enabled != nil && env.Properties.M365Enabled != *expected.M365Enabled {
+		return false
+	}
+	if expected.CopilotPolicies == nil {
+		return true
+	}
+
+	var actualCrossGeo, actualCrossBoundary bool
+	if env.Properties.CopilotPolicies != nil {
+		actualCrossGeo = isBoolPointerTrue(env.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled)
+		actualCrossBoundary = isBoolPointerTrue(env.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled)
+	}
+
+	if expected.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && actualCrossGeo != *expected.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
+		return false
+	}
+	if expected.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled != nil && actualCrossBoundary != *expected.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled {
+		return false
+	}
+	return true
+}
+
+func isBoolPointerTrue(value *bool) bool {
+	return value != nil && *value
 }
 
 func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto, retryCount int) error {
@@ -615,6 +863,13 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 	}
 
+	// Only a runtime state the caller actually sent is waited for; an omitted one is left untouched
+	// by the API and has nothing to converge to.
+	requestedRuntimeStateId := ""
+	if environment.Properties != nil && environment.Properties.States != nil && environment.Properties.States.Runtime != nil {
+		requestedRuntimeStateId = environment.Properties.States.Runtime.Id
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -660,7 +915,7 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	// despite lifecycle operation success, the environment may not be ready yet.
-	for {
+	for attempt := 0; ; attempt++ {
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
@@ -670,12 +925,31 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 		}
 		tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
 		if env.Properties.States.Management.Id == "Ready" {
-			return env, nil
+			// The read endpoint is eventually consistent with the runtime state the update just
+			// applied, so a converged management state can still report the previous admin mode.
+			// Returning here would hand Terraform a value that contradicts the plan.
+			if requestedRuntimeStateId == "" || runtimeStateId(env) == requestedRuntimeStateId {
+				return env, nil
+			}
+			if attempt >= constants.MAX_RETRY_COUNT {
+				return nil, fmt.Errorf("environment '%s' still reports runtime state '%s' after the update requested '%s'", environmentId, runtimeStateId(env), requestedRuntimeStateId)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Environment '%s' does not report runtime state '%s' yet, retrying read", environmentId, requestedRuntimeStateId))
+			continue
 		} else if env.Properties.States.Management.Id == "Running" {
 			continue
 		}
 		return nil, errors.New("environment update failed. unexpected management state: " + env.Properties.States.Management.Id)
 	}
+}
+
+// runtimeStateId returns the environment's runtime state id, or "Enabled" when the API omits the
+// runtime state, which is how it renders an environment that is not in administration mode.
+func runtimeStateId(env *EnvironmentDto) string {
+	if env == nil || env.Properties == nil || env.Properties.States == nil || env.Properties.States.Runtime == nil || env.Properties.States.Runtime.Id == "" {
+		return "Enabled"
+	}
+	return env.Properties.States.Runtime.Id
 }
 
 func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {

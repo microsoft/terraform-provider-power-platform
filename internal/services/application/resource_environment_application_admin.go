@@ -270,7 +270,7 @@ func (r *EnvironmentApplicationAdminResource) Delete(ctx context.Context, req re
 	}
 
 	// Now delete the system user
-	err = r.ApplicationClient.DeleteSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserId)
+	err = r.ApplicationClient.PermanentlyDeleteSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Failed to delete system user for application '%s' in environment '%s'",

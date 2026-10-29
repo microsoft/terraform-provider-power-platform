@@ -3,6 +3,7 @@
 page_title: "powerplatform_rest Resource - Power Platform"
 subcategory: ""
 description: |-
+  Deprecated: powerplatform_rest will be removed in v5.0.0. Migrate to purpose-built resources for your use case before upgrading. If no suitable resource exists, open a GitHub issue requesting one. This removal does not affect the powerplatform_rest_query data source.
   Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
   * Create: will be called once during the lifecycle of the resource (first 'terraform apply')
   * Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
@@ -15,6 +16,8 @@ description: |-
 ---
 
 # powerplatform_rest (Resource)
+
+Deprecated: `powerplatform_rest` will be removed in v5.0.0. Migrate to purpose-built resources for your use case before upgrading. If no suitable resource exists, open a GitHub issue requesting one. This removal does not affect the `powerplatform_rest_query` data source.
 
 Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
 		* Create: will be called once during the lifecycle of the resource (first 'terraform apply')

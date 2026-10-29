@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
@@ -400,7 +401,7 @@ func (r *ManagedEnvironmentResource) validateAndPrepareSolutionCheckerRules(ctx 
 // buildManagedEnvironmentDto creates the GovernanceConfigurationDto from the plan.
 func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnvironmentResourceModel, solutionCheckerRuleOverrides *string) environment.GovernanceConfigurationDto {
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: "Standard",
+		ProtectionLevel: constants.PROTECTION_LEVEL_STANDARD,
 		Settings: &environment.SettingsDto{
 			ExtendedSettings: environment.ExtendedSettingsDto{
 				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
@@ -457,12 +458,29 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 		return
 	}
 	plan.Id = plan.EnvironmentId
-	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
 
-	if env.Properties.GovernanceConfiguration.Settings == nil {
+	// protectionLevel is what says whether the environment is managed. "Standard" is managed and
+	// "Basic" is not, which is what this provider writes when enabling and disabling it.
+	if env.Properties.GovernanceConfiguration == nil || env.Properties.GovernanceConfiguration.ProtectionLevel != constants.PROTECTION_LEVEL_STANDARD {
 		diagnostics.AddError(
 			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
 			fmt.Sprintf("environment '%s' doesn't have managed environment feature enabled", env.Name),
+		)
+		return
+	}
+	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
+
+	// Managed, but the settings came back empty. Reporting this as "not enabled" is misleading: it is
+	// what you see when the environment is in an environment group, because the group's rules govern
+	// these settings and the environment level ones are not returned.
+	if env.Properties.GovernanceConfiguration.Settings == nil {
+		detail := fmt.Sprintf("environment '%s' is a managed environment but returned no managed environment settings.", env.Name)
+		if env.Properties.ParentEnvironmentGroup != nil {
+			detail = fmt.Sprintf("%s It is in an environment group, where the group's rules govern these settings instead.", detail)
+		}
+		diagnostics.AddError(
+			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
+			detail,
 		)
 		return
 	}

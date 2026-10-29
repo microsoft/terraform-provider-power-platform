@@ -146,6 +146,20 @@ func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, req T) (con
 
 		ctx, cancel := context.WithTimeout(ctx, dur)
 		return ctx, &cancel
+	case datasource.ReadRequest:
+		diag := req.Config.GetAttribute(ctx, path.Root("timeouts"), &tos)
+		if diag.HasError() {
+			return ctx, nil
+		}
+
+		dur, err := tos.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		if err != nil {
+			// function returns default timeout even if error occurs
+			tflog.Debug(ctx, "Could not retrieve read timeout, using default")
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, dur)
+		return ctx, &cancel
 	default:
 		return ctx, nil
 	}

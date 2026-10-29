@@ -1,0 +1,47 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "switzerland",
+    "macroRegion": "eu-efta",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "00000000-0000-0000-0000-000000000002",
+        "azureRegion": "switzerlandwest",
+        "displayName": "macro region environment",
+        "description": "provisioned by macro region",
+        "provisioningState": "Succeeded",
+        "creationType": "User",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "databaseType": "CommonDataService",
+        "linkedEnvironmentMetadata": {
+            "resourceId": "6450637c-f9a8-4988-8cf7-b03723d51ab7",
+            "friendlyName": "macro region environment",
+            "uniqueName": "00000000-0000-0000-0000-000000000001",
+            "domainName": "00000000-0000-0000-0000-000000000001",
+            "version": "9.2.23092.00206",
+            "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
+            "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
+            "baseLanguage": 1033,
+            "instanceState": "Ready",
+            "backgroundOperationsState": "Enabled",
+            "platformSku": "Standard",
+            "schemaType": "Standard"
+        },
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "runtimeReasonCode": "NotSpecified",
+                "id": "Enabled"
+            }
+        },
+        "updateCadence": {
+            "id": "Moderate"
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Basic"
+        }
+    }
+}

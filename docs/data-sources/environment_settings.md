@@ -41,6 +41,7 @@ data "powerplatform_environment_settings" "example" {
 
 - `audit_and_logs` (Attributes) Audit and Logs (see [below for nested schema](#nestedatt--audit_and_logs))
 - `email` (Attributes) Email (see [below for nested schema](#nestedatt--email))
+- `privacy_and_security` (Attributes) Privacy and Security settings. See the environment Privacy + Security settings for more details. (see [below for nested schema](#nestedatt--privacy_and_security))
 - `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
@@ -78,6 +79,14 @@ Optional:
 
 - `max_upload_file_size_in_bytes` (Number) Maximum file size that can be uploaded to the environment
 
+
+
+<a id="nestedatt--privacy_and_security"></a>
+### Nested Schema for `privacy_and_security`
+
+Optional:
+
+- `blocked_attachment_extensions` (Set of String) Blocked attachment extensions enforced at the environment level.
 
 
 <a id="nestedatt--product"></a>

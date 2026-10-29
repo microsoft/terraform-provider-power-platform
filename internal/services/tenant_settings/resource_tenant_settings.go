@@ -181,13 +181,13 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								Optional:            true,
 							},
 							"disable_create_from_image": schema.BoolAttribute{
-								DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
-								MarkdownDescription: "[DEPRECATED] Disable Create From Image",
+								MarkdownDescription: "Disable Create From Image. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
+								DeprecationMessage:  "This attribute is deprecated and will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
 								Optional:            true,
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
-								DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
-								MarkdownDescription: "[DEPRECATED] Disable Create From Figma",
+								MarkdownDescription: "Disable Create From Figma. Deprecated: this attribute will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
+								DeprecationMessage:  "This attribute is deprecated and will be removed in v5.0.0 with no replacement. Remove it from configurations and references before upgrading.",
 								Optional:            true,
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{

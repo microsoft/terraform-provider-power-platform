@@ -1,0 +1,17 @@
+{
+    "publisherid": "11111111-1111-1111-1111-111111111111",
+    "friendlyname": "Updated Contoso Publisher",
+    "uniquename": "contoso",
+    "customizationprefix": "cts",
+    "customizationoptionvalueprefix": 72710,
+    "description": "Updated publisher",
+    "emailaddress": "updated@contoso.example",
+    "supportingwebsiteurl": "https://support.contoso.example",
+    "isreadonly": false,
+    "address1_addressid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "address1_city": "Sydney",
+    "address1_country": "Australia",
+    "address1_line1": "200 Collins Street",
+    "address1_postalcode": "2000",
+    "address1_telephone1": "+61-2-5555-0103"
+}

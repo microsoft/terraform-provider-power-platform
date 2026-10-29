@@ -1,0 +1,43 @@
+{
+    "id": "00000000-0000-0000-0000-000000000001",
+    "links": {
+        "self": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001"
+        },
+        "environment": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001"
+        }
+    },
+    "type": {
+        "id": "Delete"
+    },
+    "typeDisplayName": "Delete",
+    "state": {
+        "id": "Succeeded"
+    },
+    "createdDateTime": "2026-08-19T08:45:25.3761337Z",
+    "lastActionDateTime": "2026-08-19T08:45:43.4915067Z",
+    "stages": [
+        {
+            "id": "Validate",
+            "name": "Validate",
+            "state": {
+                "id": "Succeeded"
+            }
+        },
+        {
+            "id": "Run",
+            "name": "Run",
+            "state": {
+                "id": "Succeeded"
+            }
+        },
+        {
+            "id": "Finalize",
+            "name": "Finalize",
+            "state": {
+                "id": "Succeeded"
+            }
+        }
+    ]
+}
