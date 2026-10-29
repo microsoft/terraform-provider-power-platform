@@ -194,11 +194,16 @@ const (
 )
 
 // The RBAC role assignment collection is eventually consistent with the create that committed an
-// assignment, so a create has to wait for its own assignment to become listable. Environment scope
-// listings have been observed to lag by more than two minutes.
+// assignment, so a create has to wait for its own assignment to become listable. At environment scope
+// the outcome is bimodal: across 25 nightly acceptance runs the passing tests took as long under a
+// two-minute wait as under a ten-minute one, and every failing create was still unlisted after the
+// full wait; none became listable in between. Waiting longer does not help, so each attempt waits
+// RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT, then the unlisted assignment is deleted by its id and created
+// again, up to RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS creates in total.
 const (
-	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
-	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 10 * time.Minute
+	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL   = 5 * time.Second
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT    = 3 * time.Minute
+	RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS = 3
 )
 
 // The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
