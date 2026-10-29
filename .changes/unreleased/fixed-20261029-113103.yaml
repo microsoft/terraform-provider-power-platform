@@ -1,0 +1,5 @@
+kind: fixed
+body: Recreate a `powerplatform_rbac_role_assignment` whose created assignment never appears in the role assignment listing, deleting the unlisted assignment by its id first, instead of failing after a 10 minute wait
+time: 2026-10-29T11:31:03.000000000Z
+custom:
+    Issue: "1319"
