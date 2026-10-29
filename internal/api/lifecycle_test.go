@@ -6,10 +6,10 @@ package api_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
@@ -53,38 +53,40 @@ func TestUnitDoWaitForLifecycleOperationStatus_InvalidLocationHeader(t *testing.
 	require.Nil(t, lifecycle)
 }
 
+// lifecycleTestLocation is an https URL on the BAPI host, because a request without explicit scopes is only
+// authorized for https URLs of known hosts. httpmock serves it, so the lifecycle tests that poll it cannot run
+// in parallel with the tests that use the real http.DefaultTransport.
+const lifecycleTestLocation = "https://" + constants.PUBLIC_BAPI_DOMAIN + "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001"
+
+func lifecycleTestUrls() config.ProviderConfigUrls {
+	return config.ProviderConfigUrls{
+		BapiUrl:        constants.PUBLIC_BAPI_DOMAIN,
+		PowerAppsScope: constants.PUBLIC_POWERAPPS_SCOPE,
+	}
+}
+
 func TestUnitDoWaitForLifecycleOperationStatus_ConflictThenSuccess(t *testing.T) {
-	t.Parallel()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
 	callCount := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	httpmock.RegisterResponder(http.MethodGet, lifecycleTestLocation, func(*http.Request) (*http.Response, error) {
 		callCount++
 		if callCount == 1 {
-			w.WriteHeader(http.StatusConflict)
-			return
+			return httpmock.NewStringResponse(http.StatusConflict, ""), nil
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"state":{"id":"Succeeded"}}`))
-	}))
-	defer server.Close()
+		return httpmock.NewStringResponse(http.StatusOK, `{"state":{"id":"Succeeded"}}`), nil
+	})
 
 	clientCfg := config.ProviderConfig{
 		TestMode: true,
-		Urls: config.ProviderConfigUrls{
-			BapiUrl:            server.URL,
-			PowerAppsUrl:       server.URL,
-			PowerPlatformUrl:   server.URL,
-			PowerAppsScope:     "scope",
-			PowerPlatformScope: "scope",
-		},
+		Urls:     lifecycleTestUrls(),
 	}
 	client := api.NewApiClientBase(&clientCfg, api.NewAuthBase(&clientCfg))
 
 	ctx := helpers.TestContext(context.Background(), t.Name())
-	location := server.URL + "/lifecycle/status"
 	resp := &api.Response{HttpResponse: &http.Response{Header: http.Header{
-		constants.HEADER_OPERATION_LOCATION: []string{location},
+		constants.HEADER_OPERATION_LOCATION: []string{lifecycleTestLocation},
 		constants.HEADER_RETRY_AFTER:        []string{"0"},
 	}}}
 
@@ -96,24 +98,15 @@ func TestUnitDoWaitForLifecycleOperationStatus_ConflictThenSuccess(t *testing.T)
 }
 
 func TestUnitDoWaitForLifecycleOperationStatus_SucceededNoSleep(t *testing.T) {
-	t.Parallel()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"state":{"id":"Succeeded"}}`))
-	}))
-	defer server.Close()
+	httpmock.RegisterResponder(http.MethodGet, lifecycleTestLocation,
+		httpmock.NewStringResponder(http.StatusOK, `{"state":{"id":"Succeeded"}}`))
 
 	clientCfg := config.ProviderConfig{
 		TestMode: false,
-		Urls: config.ProviderConfigUrls{
-			BapiUrl:            server.URL,
-			PowerAppsUrl:       server.URL,
-			PowerPlatformUrl:   server.URL,
-			PowerAppsScope:     "scope",
-			PowerPlatformScope: "scope",
-		},
+		Urls:     lifecycleTestUrls(),
 	}
 	authCfg := clientCfg
 	authCfg.TestMode = true
@@ -123,7 +116,7 @@ func TestUnitDoWaitForLifecycleOperationStatus_SucceededNoSleep(t *testing.T) {
 	defer cancel()
 
 	resp := &api.Response{HttpResponse: &http.Response{Header: http.Header{
-		constants.HEADER_LOCATION:    []string{server.URL + "/lifecycle/status"},
+		constants.HEADER_LOCATION:    []string{lifecycleTestLocation},
 		constants.HEADER_RETRY_AFTER: []string{"120"},
 	}}}
 
@@ -134,24 +127,15 @@ func TestUnitDoWaitForLifecycleOperationStatus_SucceededNoSleep(t *testing.T) {
 }
 
 func TestUnitDoWaitForLifecycleOperationStatus_ContextTimeout(t *testing.T) {
-	t.Parallel()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"state":{"id":"InProgress"}}`))
-	}))
-	defer server.Close()
+	httpmock.RegisterResponder(http.MethodGet, lifecycleTestLocation,
+		httpmock.NewStringResponder(http.StatusOK, `{"state":{"id":"InProgress"}}`))
 
 	clientCfg := config.ProviderConfig{
 		TestMode: false,
-		Urls: config.ProviderConfigUrls{
-			BapiUrl:            server.URL,
-			PowerAppsUrl:       server.URL,
-			PowerPlatformUrl:   server.URL,
-			PowerAppsScope:     "scope",
-			PowerPlatformScope: "scope",
-		},
+		Urls:     lifecycleTestUrls(),
 	}
 	authCfg := clientCfg
 	// Use TestMode=false for lifecycle polling, but keep auth in TestMode to avoid real token requests.
@@ -162,7 +146,7 @@ func TestUnitDoWaitForLifecycleOperationStatus_ContextTimeout(t *testing.T) {
 	defer cancel()
 
 	resp := &api.Response{HttpResponse: &http.Response{Header: http.Header{
-		constants.HEADER_LOCATION:    []string{server.URL + "/lifecycle/status"},
+		constants.HEADER_LOCATION:    []string{lifecycleTestLocation},
 		constants.HEADER_RETRY_AFTER: []string{"120"},
 	}}}
 

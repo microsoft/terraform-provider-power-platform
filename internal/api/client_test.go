@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -570,4 +571,50 @@ func TestUnitApiClient_Execute_CancelledRetry_ReturnsLastRealFailure(t *testing.
 		assert.Contains(t, string(resp.BodyAsBytes), failureBody,
 			"the body of the failure that caused the retries must survive the cancellation")
 	}
+}
+
+// A request without explicit scopes must never carry a token to a host that only mentions a known API domain
+// somewhere in its URL, and a URL that cannot be parsed must be rejected rather than crash the provider.
+func TestUnitApiClient_Execute_InferredScope_SendsNoTokenToForeignHost(t *testing.T) {
+	t.Parallel()
+
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	cfg := config.ProviderConfig{
+		TestMode: true,
+		Urls: config.ProviderConfigUrls{
+			BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
+			PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
+			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+		},
+	}
+	client := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+
+	for _, target := range []string{
+		server.URL + "/collect?x=" + constants.PUBLIC_BAPI_DOMAIN,
+		server.URL + "/" + constants.PUBLIC_POWERPLATFORM_API_DOMAIN + "/collect",
+		server.URL + "/collect#" + constants.PUBLIC_POWERAPPS_API_DOMAIN,
+		strings.Replace(server.URL, "://", "://"+constants.PUBLIC_BAPI_DOMAIN+"@", 1) + "/collect",
+		server.URL + "/collect",
+	} {
+		_, err := client.Execute(context.Background(), nil, http.MethodGet, target, http.Header{}, nil, []int{http.StatusOK}, nil)
+		assert.Error(t, err, target)
+	}
+
+	for _, target := range []string{"https://evil.example/%zz", "https://" + constants.PUBLIC_BAPI_DOMAIN + "/%zz"} {
+		assert.NotPanics(t, func() {
+			_, err := client.Execute(context.Background(), nil, http.MethodGet, target, http.Header{}, nil, []int{http.StatusOK}, nil)
+			var urlErr *customerrors.UrlFormatError
+			assert.ErrorAs(t, err, &urlErr, target)
+		}, target)
+	}
+
+	assert.Zero(t, requests.Load(), "no request, and so no token, may reach a host that is not a known Power Platform or Dataverse host")
 }
