@@ -1,0 +1,5 @@
+kind: fixed
+body: Record a powerplatform_environment in state when its create times out while the create operation is still running, so Terraform destroys it instead of leaving it untracked
+time: 2026-10-21T14:15:52.000000000Z
+custom:
+    Issue: "1308"

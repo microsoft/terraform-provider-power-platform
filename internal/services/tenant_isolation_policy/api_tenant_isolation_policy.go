@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
@@ -28,6 +29,7 @@ func NewTenantIsolationPolicyClient(apiClient *api.Client, tenantClient tenant.C
 type Client struct {
 	Api       *api.Client
 	TenantApi tenant.Client
+	sleep     func(ctx context.Context, duration time.Duration) error
 }
 
 // getTenantIsolationPolicy retrieves the tenant isolation policy for the specified tenant.
@@ -142,9 +144,11 @@ func getRetryAfterDuration(resp *http.Response) time.Duration {
 }
 
 // doWaitForLifecycleOperationStatus polls an asynchronous operation until completion.
-// It follows the location header from the initial response, respects Retry-After
-// headers to control polling frequency, and implements exponential backoff with
-// minimum 2s and maximum 60s between attempts.
+// It follows the location header from the initial response and waits the delay of the Retry-After
+// header (default 5s, bounded to 2s-60s) before the first poll and between polls, including after a
+// 409. The operation service can answer 404 OperationNotFound for an operation it has just accepted,
+// so a 404 is polled again until the delays spent on 404 answers reach
+// constants.TENANT_ISOLATION_OPERATION_NOT_FOUND_TIMEOUT.
 //
 // Parameters:
 //   - ctx: Context for the request with cancellation and timeout capabilities
@@ -164,19 +168,23 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 		return nil, errors.New("no Location or Operation-Location header found in async response")
 	}
 
+	// Polling the moment the operation is accepted races its registration, so wait first.
+	if err := client.sleepWithContext(ctx, getRetryAfterDuration(response.HttpResponse)); err != nil {
+		return nil, fmt.Errorf("polling interrupted: %w", err)
+	}
+
+	notFoundWaited := time.Duration(0)
 	for {
-		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, http.StatusConflict}, nil)
+		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, http.StatusConflict, http.StatusNotFound}, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error polling operation status: %w", err)
 		}
 
+		statusCode := apiResp.HttpResponse.StatusCode
 		tflog.Debug(ctx, fmt.Sprintf("Operation poll status: %s", apiResp.HttpResponse.Status))
-		if apiResp.HttpResponse.StatusCode == http.StatusConflict {
-			continue
-		}
 
 		// If we get a 200 OK, the operation is complete
-		if apiResp.HttpResponse.StatusCode == http.StatusOK {
+		if statusCode == http.StatusOK {
 			// Return nil since we'll get the fresh state later
 			return nil, nil
 		}
@@ -184,12 +192,30 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 		// Get the next wait time from the Retry-After header if available
 		waitTime := getRetryAfterDuration(apiResp.HttpResponse)
 
+		if statusCode == http.StatusNotFound {
+			if notFoundWaited >= constants.TENANT_ISOLATION_OPERATION_NOT_FOUND_TIMEOUT {
+				statusErr := customerrors.NewUnexpectedHttpStatusCodeError([]int{http.StatusOK, http.StatusAccepted, http.StatusConflict}, statusCode, apiResp.HttpResponse.Status, apiResp.BodyAsBytes)
+				return nil, fmt.Errorf("error polling operation status: the operation was still not found after waiting %s: %w", notFoundWaited, statusErr)
+			}
+			notFoundWaited += waitTime
+			tflog.Debug(ctx, fmt.Sprintf("Operation %s is not found yet, %s of %s spent waiting for it", locationHeader, notFoundWaited, constants.TENANT_ISOLATION_OPERATION_NOT_FOUND_TIMEOUT))
+		}
+
 		tflog.Debug(ctx, fmt.Sprintf("Waiting for %s before polling again", waitTime))
 
 		// Wait before polling again
-		err = client.Api.SleepWithContext(ctx, waitTime)
+		err = client.sleepWithContext(ctx, waitTime)
 		if err != nil {
 			return nil, fmt.Errorf("polling interrupted: %w", err)
 		}
 	}
+}
+
+// sleepWithContext waits between operation polls. Tests replace it through the sleep field to observe
+// the delays, because the api client does not sleep in test mode.
+func (client *Client) sleepWithContext(ctx context.Context, duration time.Duration) error {
+	if client.sleep != nil {
+		return client.sleep(ctx, duration)
+	}
+	return client.Api.SleepWithContext(ctx, duration)
 }

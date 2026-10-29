@@ -1,0 +1,5 @@
+kind: fixed
+body: Retry a request rejected with 401 up to 5 times with a fresh token instead of 2, to ride out brief token issuance delays
+time: 2026-10-21T14:15:52.000000000Z
+custom:
+    Issue: "1308"

@@ -1,0 +1,5 @@
+kind: fixed
+body: Keep waiting for a lifecycle operation when a single poll of it fails transiently instead of failing the whole operation
+time: 2026-10-21T14:15:52.000000000Z
+custom:
+    Issue: "1308"
