@@ -186,6 +186,11 @@ const (
 	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 10 * time.Minute
 )
 
+// The tenant isolation operation service has answered 404 OperationNotFound for an operation that the
+// policy PUT had accepted seconds earlier. Such a 404 is polled again until this much time has been
+// spent waiting on 404 answers.
+const TENANT_ISOLATION_OPERATION_NOT_FOUND_TIMEOUT = 2 * time.Minute
+
 // The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
 // and a lost assertion fails a whole provider operation rather than a single request.
 const (

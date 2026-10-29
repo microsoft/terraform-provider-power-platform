@@ -1,0 +1,5 @@
+kind: fixed
+body: Keep polling a powerplatform_tenant_isolation_policy operation that answers 404 OperationNotFound for up to 2 minutes, wait before the first poll, and wait between polls that answer 409 instead of polling again at once
+time: 2026-10-29T07:58:37.000000000Z
+custom:
+    Issue: "1308"
