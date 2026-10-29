@@ -1,5 +1,0 @@
-kind: fixed
-body: Removing an item from a `powerplatform_data_record` relationship now disassociates the related row with a `$ref` request instead of deleting the related row
-time: 2026-10-21T08:06:09.551100297Z
-custom:
-    Issue: "1306"

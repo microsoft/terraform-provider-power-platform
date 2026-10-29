@@ -39,6 +39,8 @@ variable "role_ids" {
 resource "powerplatform_data_record" "team" {
   environment_id     = var.environment_id
   table_logical_name = "team"
+  # Removing a role from role_ids only unassigns it; the default would delete the role itself.
+  relationship_removal_behavior = "disassociate"
   columns = {
     name        = var.team_name
     description = var.team_description

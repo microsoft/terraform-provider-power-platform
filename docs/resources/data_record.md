@@ -8,6 +8,8 @@ description: |-
 
 The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.
 
+~> **Use this resource for configuration data only.** `powerplatform_data_record` is intended to manage configuration that is stored as Dataverse rows, such as business units, security roles, teams, application users or environment variable values. Do not use it to manage business data: rows that people or business processes create and change as part of normal work, such as accounts, contacts, leads, opportunities or cases. Terraform treats your configuration as the source of truth for every row it manages, so changes made to those rows outside Terraform can be overwritten or deleted on the next apply.
+
 Data Record is a special type of a resources, that allows creation of any type Dataverese table record. The syntax for working with `data_record` resource is simmilar to raw WebAPI HTTP requests that this record uses:
 
 - [WebAPI overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/overview)
@@ -23,6 +25,17 @@ Look the correct name up against your own environment:
 ```text
 GET https://<environment>.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='<table>')/ManyToOneRelationships?$select=ReferencingEntityNavigationPropertyName,ReferencedEntity,ReferencingAttribute
 ```
+
+## Relationship (collection) columns
+
+A collection-valued relationship (one-to-many or many-to-many, for example `teamroles_association`) is set by assigning a set of `table_logical_name` / `data_record_id` objects to the relationship name. On every apply the provider associates the listed rows with this record.
+
+When you remove an item from that set, the optional `relationship_removal_behavior` attribute decides what happens to the related row:
+
+- `delete_related_record` (the default when the attribute is not set): the related row itself is deleted from Dataverse. This is the behavior of earlier provider versions.
+- `disassociate`: only the link between the two rows is removed, with a `DELETE <record>/<relationship>(<related id>)/$ref` request, and the related row is kept.
+
+Use `disassociate` when the related rows are managed elsewhere (for example security roles assigned to a team or an application user), so that removing an assignment does not delete the role. This setting only applies to items removed from a relationship during an update; it does not change what happens when the `powerplatform_data_record` resource itself is destroyed.
 
 ## Example Usage
 
@@ -131,6 +144,8 @@ resource "powerplatform_data_record" "app_user" {
   table_logical_name = "systemuser"
   environment_id     = var.environment_id
   disable_on_destroy = true # Application Users cannot be deleted without being disabled first
+  # Removing a role from role_ids only unassigns it; the default would delete the role itself.
+  relationship_removal_behavior = "disassociate"
   columns = {
     applicationid = var.application_id
     businessunitid = {
@@ -251,6 +266,8 @@ variable "role_ids" {
 resource "powerplatform_data_record" "team" {
   environment_id     = var.environment_id
   table_logical_name = "team"
+  # Removing a role from role_ids only unassigns it; the default would delete the role itself.
+  relationship_removal_behavior = "disassociate"
   columns = {
     name        = var.team_name
     description = var.team_description
@@ -360,6 +377,7 @@ module "application_user" {
 ### Optional
 
 - `disable_on_destroy` (Boolean) If true, the resource will either set isdisabled to true or statecode to 1 with a PATCH request, before attempting to delete the record.
+- `relationship_removal_behavior` (String) How to handle an item that is removed from a collection-valued relationship in `columns`. `delete_related_record` (the default when not set) deletes the related row itself. `disassociate` only removes the link between the two rows and keeps the related row.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
