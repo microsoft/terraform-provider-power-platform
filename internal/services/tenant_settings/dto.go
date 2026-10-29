@@ -696,7 +696,6 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 
 	tenantSettingsProperties := map[string]attr.Type{
 		"walk_me_opt_out":                                       types.BoolType,
-		"disable_nps_comments_reachout":                         types.BoolType,
 		"disable_newsletter_sendout":                            types.BoolType,
 		"disable_environment_creation_by_non_admin_users":       types.BoolType,
 		"disable_portals_creation_by_non_admin_users":           types.BoolType,
@@ -709,7 +708,6 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 
 	tenantSettingsValues := map[string]attr.Value{
 		"walk_me_opt_out":                                       types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
-		"disable_nps_comments_reachout":                         types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
 		"disable_newsletter_sendout":                            types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
 		"disable_environment_creation_by_non_admin_users":       types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
 		"disable_portals_creation_by_non_admin_users":           types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
