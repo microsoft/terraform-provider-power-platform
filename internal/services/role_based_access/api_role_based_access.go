@@ -67,13 +67,19 @@ func (client *client) tenantScope(ctx context.Context) (string, error) {
 //     the create leg of a replacement, and adopting during a create_before_destroy replacement
 //     would let the deposed instance destroy the very grant just adopted;
 //   - if several already exist the create fails too: deduplicate or import one;
-//   - otherwise the relationship is created with a single POST. The POST is never replayed, since
-//     a retry after an ambiguous failure could grant twice. The one exception is the specific
+//   - otherwise the relationship is created with a single POST. A failed POST is never replayed,
+//     since a retry after an ambiguous failure could grant twice. The one exception is the specific
 //     scope-propagation 400, which proves nothing was committed. Any other failure that leaves
 //     the outcome unknown is returned as an explicit unknown-outcome error: the API assigns the
 //     id server-side, permits duplicates, and issues no idempotency or correlation token, so no
 //     later listing can prove which assignment, if any, this request created. Guessing could
-//     seize a concurrent caller's assignment, so nothing is adopted and nothing reaches state.
+//     seize a concurrent caller's assignment, so nothing is adopted and nothing reaches state;
+//   - a successful POST is verified against the listing that Read uses. An assignment that never
+//     appears there, in a listing that answered successfully, is deleted again by the id the POST
+//     returned, which identifies this request's own assignment and no one else's, and only after
+//     that delete succeeds is it created anew, a bounded number of times. If none appears, the
+//     create fails with nothing left behind. If the last listing failed, the assignment was never
+//     proven missing, so it is left in place and the error hands over its import id.
 func (client *client) CreateRoleAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	tenantScope, err := client.tenantScope(ctx)
 	if err != nil {
@@ -109,14 +115,62 @@ func (client *client) CreateRoleAssignment(ctx context.Context, scope assignment
 		return nil, fmt.Errorf("found %d existing role assignments for this principal, role and scope; the API permits duplicates, so deduplicate them or import one before managing it with Terraform", len(matches))
 	}
 
+	// The listing is the only way to read an assignment back (the API has no GET by id), and Read
+	// treats an unlisted assignment as deleted. An assignment that successful listings never return
+	// is deleted again by the id its own POST returned, which cannot touch anyone else's grant, and
+	// created anew; see RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS for the evidence behind this.
+	var unlisted []string
+	for attempt := 1; ; attempt++ {
+		created, postErr := client.postRoleAssignment(ctx, scope, request)
+		if postErr != nil {
+			if len(unlisted) > 0 {
+				return nil, fmt.Errorf("the create was retried because the role assignments created before (%s) never became visible in the role assignment listing and were deleted again, and the retry failed: %w", strings.Join(unlisted, ", "), postErr)
+			}
+			return nil, postErr
+		}
+
+		waitErr := client.waitForRoleAssignmentVisible(ctx, scope, created.RoleAssignmentId)
+		if waitErr == nil {
+			return created, nil
+		}
+		var notListed roleAssignmentNotListedError
+		if !errors.As(waitErr, &notListed) {
+			// Interrupted: the assignment exists but is unverified, and the context that would be
+			// needed to delete it again is gone.
+			return nil, fmt.Errorf("interrupted while waiting for role assignment %s, created at scope %s, to become visible in the role assignment listing: %w. It was created, so once it appears, import it: terraform import <address> %q", created.RoleAssignmentId, scope, waitErr, scope.importId(created.RoleAssignmentId))
+		}
+
+		// Only a listing that answered without the assignment shows it is missing. When the last
+		// listing failed, the assignment was never proven missing, so it is left in place for import.
+		if notListed.lastListErr != nil {
+			message := fmt.Sprintf("%s, so it could not be verified and was left in place. Once the listing works and shows it, import it: terraform import <address> %q", notListed, scope.importId(created.RoleAssignmentId))
+			if len(unlisted) > 0 {
+				message += fmt.Sprintf(". The role assignments created before it (%s) were listed successfully without appearing and were deleted again", strings.Join(unlisted, ", "))
+			}
+			return nil, fmt.Errorf("%s: %w", message, notListed.lastListErr)
+		}
+
+		if deleteErr := client.DeleteRoleAssignment(ctx, scope, created.RoleAssignmentId); deleteErr != nil {
+			return nil, fmt.Errorf("%w, and deleting it again so it could be created anew failed: %w. It may still exist: inspect the role assignments at this scope and, once it appears, import it: terraform import <address> %q", notListed, deleteErr, scope.importId(created.RoleAssignmentId))
+		}
+		unlisted = append(unlisted, created.RoleAssignmentId)
+
+		if attempt >= constants.RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS {
+			return nil, fmt.Errorf("none of the %d role assignments created at scope %s (%s) became visible in the role assignment listing within %s of its create, so Terraform would immediately see it as deleted. Each one was deleted again by its id (a 404 meaning it was already absent), so none is left behind; retry the apply", attempt, scope, strings.Join(unlisted, ", "), constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT)
+		}
+		tflog.Warn(ctx, fmt.Sprintf("%s; deleted it again and creating the role assignment anew (attempt %d of %d)", notListed, attempt+1, constants.RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS))
+	}
+}
+
+// postRoleAssignment sends the create POST once. The only replay is after the scope-propagation
+// 400, which proves nothing was committed; any other failure that may have committed is returned as
+// an unknown-outcome error.
+func (client *client) postRoleAssignment(ctx context.Context, scope assignmentScope, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	apiUrl := client.url(scope.collectionPath())
-	response := roleAssignmentDto{}
 	for {
+		response := roleAssignmentDto{}
 		_, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", apiUrl, nil, request, []int{http.StatusOK, http.StatusCreated}, &response)
 		if err == nil {
-			if waitErr := client.waitForRoleAssignmentVisible(ctx, scope, response.RoleAssignmentId); waitErr != nil {
-				return nil, waitErr
-			}
 			return &response, nil
 		}
 		if isScopeNotYetPropagated(err) {
@@ -141,10 +195,28 @@ func unknownOutcomeError(err error) error {
 	return fmt.Errorf("the create outcome is unknown. The API may have committed the assignment, but it provides no idempotency key or correlation identifier that would let the provider identify it safely. Inspect the role assignments at this scope: if one was created, import it using the scope-shaped import id, and if duplicates exist, deduplicate them first. Terraform has not recorded an assignment in state. Original failure: %w", err)
 }
 
+// roleAssignmentNotListedError reports that a created assignment never appeared in the listing
+// within the wait, as opposed to a wait that was interrupted. lastListErr is set when the final
+// listing failed, in which case the assignment was not proven missing.
+type roleAssignmentNotListedError struct {
+	roleAssignmentId string
+	scope            assignmentScope
+	lastListErr      error
+}
+
+func (e roleAssignmentNotListedError) Error() string {
+	message := fmt.Sprintf("role assignment %s was created at scope %s but did not become visible in the role assignment listing within %s", e.roleAssignmentId, e.scope, constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT)
+	if e.lastListErr != nil {
+		message += " (the last listing failed)"
+	}
+	return message
+}
+
 // waitForRoleAssignmentVisible blocks until the assignment the POST just created is returned by the
 // listing that Read uses. The collection is eventually consistent with the create, and Read treats
 // an absent assignment as deleted, so returning before it converges makes the refresh that follows
-// the apply drop the resource from state and plan a second create.
+// the apply drop the resource from state and plan a second create. It returns a
+// roleAssignmentNotListedError when the wait runs out, and the context error when interrupted.
 func (client *client) waitForRoleAssignmentVisible(ctx context.Context, scope assignmentScope, roleAssignmentId string) error {
 	maxRetries := int(constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT / constants.RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL)
 
@@ -157,7 +229,7 @@ func (client *client) waitForRoleAssignmentVisible(ctx context.Context, scope as
 		}
 
 		if retry >= maxRetries {
-			return fmt.Errorf("role assignment %s was created at scope %s but did not become visible in the role assignment listing within %s, so Terraform would immediately see it as deleted. Import it once it appears: terraform import <address> %q", roleAssignmentId, scope, constants.RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT, scope.importId(roleAssignmentId))
+			return roleAssignmentNotListedError{roleAssignmentId: roleAssignmentId, scope: scope, lastListErr: err}
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Role assignment %s is not visible in the listing at scope %s yet, retrying", roleAssignmentId, scope))

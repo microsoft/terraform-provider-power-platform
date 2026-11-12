@@ -844,6 +844,255 @@ func TestUnitRoleAssignmentResource_Validate_Create_Definitive_Failure_Does_Not_
 	})
 }
 
+// environmentAssignmentConfig is a single environment scope assignment with fixed identifiers.
+const environmentAssignmentConfig = `
+				resource "powerplatform_rbac_role_assignment" "test" {
+					scope_type         = "environment"
+					environment_id     = "` + testEnvironmentId + `"
+					principal_id       = "` + testPrincipalId + `"
+					principal_type     = "ApplicationUser"
+					role_definition_id = "` + testRoleDefinitionId + `"
+				}`
+
+// A create whose assignment the listing never returns is not waited out: the listing at environment
+// scope either shows a new assignment quickly or not at all. The unlisted assignment is deleted
+// again by the id its own POST returned and created anew, and the assignment that does become
+// listed is the one Terraform records. The refresh after the apply finds it, so the plan is empty.
+func TestUnitRoleAssignmentResource_Validate_Create_Recreates_Assignment_That_Is_Never_Listed(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	const unlistedAssignmentId = "44444444-4444-4444-4444-444444444444"
+	posts := 0
+	listed := false
+	deletes := map[string]int{}
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			posts++
+			id := unlistedAssignmentId
+			if posts > 1 {
+				id = environmentAssignmentId
+				listed = true
+			}
+			return httpmock.NewStringResponse(http.StatusCreated, assignmentJSON(id, testPrincipalId, testRoleDefinitionId, envSuffix, "")), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			// The first assignment is committed but never listed; the second one is.
+			if listed && deletes[environmentAssignmentId] == 0 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[`+assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")+`]}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	for _, id := range []string{unlistedAssignmentId, environmentAssignmentId} {
+		httpmock.RegisterResponder("DELETE", environmentCollection+"/"+id+apiVersionQuery,
+			func(_ *http.Request) (*http.Response, error) {
+				deletes[id]++
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			})
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: environmentAssignmentConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_rbac_role_assignment.test", "id", environmentAssignmentId),
+					func(_ *terraform.State) error {
+						if posts != 2 {
+							return fmt.Errorf("the unlisted assignment must be created anew exactly once, got %d POSTs", posts)
+						}
+						if deletes[unlistedAssignmentId] != 1 {
+							return fmt.Errorf("the unlisted assignment must be deleted again by its id exactly once, got %d DELETEs", deletes[unlistedAssignmentId])
+						}
+						if deletes[environmentAssignmentId] != 0 {
+							return fmt.Errorf("the listed assignment must not be deleted, got %d DELETEs", deletes[environmentAssignmentId])
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+// When no created assignment ever becomes listed, the create still fails clearly after a bounded
+// number of attempts, and every assignment it created is deleted again, so no grant is left behind
+// without Terraform tracking it. A DELETE that answers 404 means the assignment is already absent.
+func TestUnitRoleAssignmentResource_Validate_Create_Fails_When_No_Created_Assignment_Is_Listed(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	createdIds := []string{
+		"44444444-4444-4444-4444-444444444444",
+		"55555555-5555-5555-5555-555555555555",
+		"66666666-6666-6666-6666-666666666666",
+		"77777777-7777-7777-7777-777777777777",
+	}
+	posts := 0
+	deletes := map[string]int{}
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			id := createdIds[posts]
+			posts++
+			return httpmock.NewStringResponse(http.StatusCreated, assignmentJSON(id, testPrincipalId, testRoleDefinitionId, envSuffix, "")), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`))
+	for i, id := range createdIds {
+		status := http.StatusNoContent
+		if i == 1 {
+			status = http.StatusNotFound
+		}
+		httpmock.RegisterResponder("DELETE", environmentCollection+"/"+id+apiVersionQuery,
+			func(_ *http.Request) (*http.Response, error) {
+				deletes[id]++
+				return httpmock.NewStringResponse(status, ""), nil
+			})
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      environmentAssignmentConfig,
+				ExpectError: regexp.MustCompile(`(?s)none\s+of\s+the\s+3\s+role\s+assignments\s+created\s+at\s+scope\s+environment\s+` + testEnvironmentId + `.*became\s+visible\s+in\s+the\s+role\s+assignment\s+listing.*none\s+is\s+left\s+behind`),
+			},
+			{
+				Config: `# empty`,
+				Check: func(state *terraform.State) error {
+					if len(state.RootModule().Resources) != 0 {
+						return fmt.Errorf("no assignment may reach state when none became listed, found %d resources", len(state.RootModule().Resources))
+					}
+					if posts != constants.RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS {
+						return fmt.Errorf("the create must be attempted exactly %d times, got %d POSTs", constants.RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS, posts)
+					}
+					for _, id := range createdIds[:posts] {
+						if deletes[id] != 1 {
+							return fmt.Errorf("created assignment %s must be deleted again exactly once, got %d DELETEs", id, deletes[id])
+						}
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// If the unlisted assignment cannot be deleted again, it is not created a second time, since that
+// could leave two grants. The create fails and hands over the import id of the assignment it made.
+func TestUnitRoleAssignmentResource_Validate_Create_Does_Not_Recreate_When_Delete_Of_Unlisted_Assignment_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	posts := 0
+	deletes := 0
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			posts++
+			return httpmock.NewStringResponse(http.StatusCreated, assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`))
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			deletes++
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"code":"Forbidden","message":"The caller cannot delete this role assignment."}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      environmentAssignmentConfig,
+				ExpectError: regexp.MustCompile(`(?s)did\s+not\s+become\s+visible.*deleting\s+it\s+again.*failed.*environments/` + testEnvironmentId + `/` + environmentAssignmentId),
+			},
+			{
+				Config: `# empty`,
+				Check: func(state *terraform.State) error {
+					if len(state.RootModule().Resources) != 0 {
+						return fmt.Errorf("no assignment may reach state, found %d resources", len(state.RootModule().Resources))
+					}
+					if posts != 1 {
+						return fmt.Errorf("an assignment that could not be deleted must not be created again, got %d POSTs", posts)
+					}
+					if deletes != 1 {
+						return fmt.Errorf("the unlisted assignment must be deleted exactly once, got %d DELETEs", deletes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
+// A failing listing is not evidence that the assignment is missing. When the last listing of the
+// wait failed, the assignment is neither deleted nor created again: it is left in place and the
+// create fails with the verification error and its import id.
+func TestUnitRoleAssignmentResource_Validate_Create_Keeps_Assignment_When_Listing_Fails(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	envSuffix := "/environments/" + testEnvironmentId
+	posts := 0
+	deletes := 0
+	httpmock.RegisterResponder("POST", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			posts++
+			return httpmock.NewStringResponse(http.StatusCreated, assignmentJSON(environmentAssignmentId, testPrincipalId, testRoleDefinitionId, envSuffix, "")), nil
+		})
+	httpmock.RegisterResponder("GET", environmentCollection+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			// The preflight listing works; every listing after the create fails.
+			if posts == 0 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"code":"ListingUnavailable","message":"The role assignment listing is unavailable."}`), nil
+		})
+	httpmock.RegisterResponder("DELETE", environmentCollection+"/"+environmentAssignmentId+apiVersionQuery,
+		func(_ *http.Request) (*http.Response, error) {
+			deletes++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      environmentAssignmentConfig,
+				ExpectError: regexp.MustCompile(`(?s)did\s+not\s+become\s+visible.*last\s+listing\s+failed.*left\s+in\s+place.*environments/` + testEnvironmentId + `/` + environmentAssignmentId + `.*ListingUnavailable`),
+			},
+			{
+				Config: `# empty`,
+				Check: func(state *terraform.State) error {
+					if len(state.RootModule().Resources) != 0 {
+						return fmt.Errorf("no assignment may reach state, found %d resources", len(state.RootModule().Resources))
+					}
+					if posts != 1 {
+						return fmt.Errorf("an assignment that was never proven missing must not be created again, got %d POSTs", posts)
+					}
+					if deletes != 0 {
+						return fmt.Errorf("an assignment that was never proven missing must not be deleted, got %d DELETEs", deletes)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
 // scope_type must arrive with its matching id: the per-attribute validators cannot catch an id
 // that is absent entirely, so ValidateConfig covers that side.
 func TestUnitRoleAssignmentResource_Validate_ScopeType_Requires_Its_Id(t *testing.T) {
