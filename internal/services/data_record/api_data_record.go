@@ -426,7 +426,7 @@ func (client *client) GetEntityRelationDefinitionInfo(ctx context.Context, envir
 	return tableName, nil
 }
 
-func (client *client) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any) (*dataRecordDto, error) {
+func (client *client) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any, relationshipRemovalBehavior string) (*dataRecordDto, error) {
 	result := dataRecordDto{}
 
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
@@ -535,7 +535,7 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		return nil, errors.New("no entity record id returned from the API")
 	}
 
-	err = applyRelations(ctx, client, relations, environmentId, result.Id, entityDefinition)
+	err = applyRelations(ctx, client, relations, environmentId, result.Id, entityDefinition, relationshipRemovalBehavior)
 
 	if err != nil {
 		return nil, err
@@ -605,6 +605,17 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 	return nil
 }
 
+// getRecordIdFromODataId returns the record id (the last GUID) from an OData row URL such as
+// https://<host>/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000000).
+func getRecordIdFromODataId(odataId string) (string, error) {
+	re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+	match := re.FindAllString(odataId, -1)
+	if len(match) == 0 {
+		return "", fmt.Errorf("no record id found in related record reference '%s'", odataId)
+	}
+	return match[len(match)-1], nil
+}
+
 func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]any) (tableLogicalName string, dataRecordId string, err error) {
 	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
 	if !ok {
@@ -617,7 +628,7 @@ func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]any) (tableL
 	return tableLogicalName, id, nil
 }
 
-func applyRelations(ctx context.Context, client *client, relations map[string]any, environmentId string, parentRecordId string, entityDefinition *entityDefinitionsDto) error {
+func applyRelations(ctx context.Context, client *client, relations map[string]any, environmentId string, parentRecordId string, entityDefinition *entityDefinitionsDto, relationshipRemovalBehavior string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
@@ -625,7 +636,7 @@ func applyRelations(ctx context.Context, client *client, relations map[string]an
 
 	for key, value := range relations {
 		if nestedMapList, ok := value.([]any); ok {
-			err := applyRelation(ctx, environmentHost, entityDefinition, parentRecordId, key, client, nestedMapList, environmentId)
+			err := applyRelation(ctx, environmentHost, entityDefinition, parentRecordId, key, client, nestedMapList, environmentId, relationshipRemovalBehavior)
 			if err != nil {
 				return err
 			}
@@ -634,7 +645,27 @@ func applyRelations(ctx context.Context, client *client, relations map[string]an
 	return nil
 }
 
-func applyRelation(ctx context.Context, environmentHost string, entityDefinition *entityDefinitionsDto, parentRecordId string, key string, client *client, nestedMapList []any, environmentId string) error {
+// getRelationRemovalUrl returns the URL to send a DELETE to when an item is removed from a collection-valued
+// relationship. With RelationshipRemovalBehaviorDisassociate it is the $ref form, which only removes the link
+// and keeps the related row. Otherwise (the default, RelationshipRemovalBehaviorDeleteRelatedRecord) it is the
+// related row's own URL, so the related row itself is deleted.
+func getRelationRemovalUrl(relation relationApiBodyDto, environmentHost string, entityDefinition *entityDefinitionsDto, parentRecordId, key, relationshipRemovalBehavior string) (string, error) {
+	if relationshipRemovalBehavior != RelationshipRemovalBehaviorDisassociate {
+		return relation.OdataID, nil
+	}
+	relatedRecordId, err := getRecordIdFromODataId(relation.OdataID)
+	if err != nil {
+		return "", err
+	}
+	disassociateUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key, relatedRecordId),
+	}
+	return disassociateUrl.String(), nil
+}
+
+func applyRelation(ctx context.Context, environmentHost string, entityDefinition *entityDefinitionsDto, parentRecordId string, key string, client *client, nestedMapList []any, environmentId string, relationshipRemovalBehavior string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
@@ -690,7 +721,11 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 	}
 
 	for _, relation := range toBeDeleted {
-		_, err = client.Api.Execute(ctx, nil, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+		removeUrl, err := getRelationRemovalUrl(relation, environmentHost, entityDefinition, parentRecordId, key, relationshipRemovalBehavior)
+		if err != nil {
+			return err
+		}
+		_, err = client.Api.Execute(ctx, nil, "DELETE", removeUrl, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}
