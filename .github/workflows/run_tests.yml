@@ -104,6 +104,11 @@ jobs:
     needs: [build, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
+    # A GitHub-hosted runner kills a job after 360 minutes without running any further step, which
+    # would skip the cleanup after the tests. The steps are bounded so that the job ends well before
+    # that: setup (about 10 minutes), cleanup before the tests (15), the tests (300), cleanup after
+    # the tests (15) and the reports (a few minutes). This is only the backstop.
+    timeout-minutes: 355
     permissions:
       id-token: write # Required for OIDC authentication
       contents: read  # Required for checkout
@@ -139,30 +144,19 @@ jobs:
 
     - name: Environments cleanup
       if: success() || failure()
+      timeout-minutes: 15
       shell: pwsh
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.52.1
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        $output = pac admin list --name "Test" --json
-        if ($LASTEXITCODE -eq 0 -and $output) {
-          try {
-            $environmentsList = $output | ConvertFrom-Json
-            $environmentsList | ForEach-Object -Parallel {
-                if ($_.DisplayName.StartsWith("Test")){
-                    Write-Output $_.DisplayName
-                    pac admin delete -env $_.EnvironmentID
-                }
-            } -ThrottleLimit 15
-          } catch {
-            Write-Output "Failed to parse environments list: $_"
-            Write-Output "Raw output: $output"
-          }
-        } else {
-          Write-Output "Failed to list environments or no output received. Exit code: $LASTEXITCODE"
-          Write-Output "Output: $output"
-        }
+        ./.github/scripts/cleanup-test-environments.ps1
 
     - name: Run tests
+      # Leaves time for the cleanup after the tests within the job limit. Hitting it kills the test
+      # processes and fails this step; the cleanup and report steps below still run.
+      timeout-minutes: 300
+      # An explicit bash shell runs with pipefail, so the step fails when go test fails.
+      shell: bash
       env: 
         TF_LOG: WARN
         TF_ACC: 1
@@ -191,16 +185,28 @@ jobs:
         # - ./...: Runs tests in all packages recursively from the current directory
         # - -run ^Test: Executes only functions matching the pattern "^Test" (standard Go test functions)
         # - -coverprofile=test-coverage.out: Generates a coverage profile and saves it to test-coverage.out
-        # - -timeout 600m: Sets a 10-hour timeout for the entire test suite
+        # - -timeout 300m: Fails a test package that runs longer than 300 minutes (the step timeout bounds the whole suite)
         # - -failfast: Stops test execution immediately upon first failure
         # - -shuffle=on: Randomizes test execution order to detect order-dependent test failures
         #
-        # The output is piped to go-junit-report which:
-        # - -set-exit-code: Preserves the original test exit code
-        # - -iocopy: Copies test output to stdout while generating the report
-        # - -out junit.xml: Writes JUnit-formatted test results to junit.xml
-        go test -p 2 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -shuffle=off | go-junit-report -set-exit-code  -iocopy -out junit.xml
-        
+        # The output is copied to test-output.txt, from which a later step writes the JUnit report, so
+        # that the report also covers a run that the step timeout cut short.
+        go test -p 2 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m -shuffle=off | tee test-output.txt
+
+    - name: Environments cleanup after tests
+      if: always()
+      timeout-minutes: 15
+      shell: pwsh
+      run: |
+        # The tests run for hours, so authenticate again rather than rely on the earlier profile.
+        pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+        ./.github/scripts/cleanup-test-environments.ps1
+
+    - name: Write JUnit test report
+      if: always()
+      run: |
+        go-junit-report -in test-output.txt -out junit.xml
+
     - name: Prepare coverage report
       if: success() || failure()
       run: |
