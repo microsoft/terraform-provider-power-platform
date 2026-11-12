@@ -28,8 +28,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
 					description      = "description"
-					location         = "europe"
-					azure_region     = "northeurope"
+					location         = "switzerland"
+					azure_region     = "switzerlandnorth"
 					environment_type = "Sandbox"
 					cadence = "Moderate"
 					dataverse = {
@@ -52,8 +52,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("id"), knownvalue.StringRegexp(regexp.MustCompile(helpers.GuidRegex))),
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("display_name"), knownvalue.StringExact(mocks.TestName())),
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("description"), knownvalue.StringExact("description")),
-					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("location"), knownvalue.StringExact("europe")),
-					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("azure_region"), knownvalue.StringExact("northeurope")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("location"), knownvalue.StringExact("switzerland")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("azure_region"), knownvalue.StringExact("switzerlandnorth")),
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("environment_type"), knownvalue.StringExact("Sandbox")),
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("cadence"), knownvalue.StringExact("Moderate")),
 					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("language_code"), knownvalue.Int32Exact(1033)),

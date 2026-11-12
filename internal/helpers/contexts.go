@@ -75,7 +75,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 	ctx = tflog.SetField(ctx, "request_id", reqId)
 	ctx = tflog.SetField(ctx, "request_type", reqType)
 
-	ctx, cancel := enterTimeoutContext(ctx, req)
+	ctx, cancel := enterTimeoutContext(ctx, typ, req)
 
 	// This returns a closure that can be used to defer the exit of the request scope.
 	return ctx, func() {
@@ -87,7 +87,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 }
 
 // EnterTimeoutContext is a helper function that enters a timeout context based on the request type and the timeouts set in the plan or state.
-func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, req T) (context.Context, *context.CancelFunc) {
+func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, typ TypeInfo, req T) (context.Context, *context.CancelFunc) {
 	var tos timeouts.Value
 	switch req := any(req).(type) {
 	case resource.CreateRequest:
@@ -96,7 +96,12 @@ func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, req T) (con
 			return ctx, nil
 		}
 
-		dur, err := tos.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		defaultCreateTimeout := constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES
+		if typ.DefaultCreateTimeout > 0 {
+			defaultCreateTimeout = typ.DefaultCreateTimeout
+		}
+
+		dur, err := tos.Create(ctx, defaultCreateTimeout)
 		if err != nil {
 			// function returns default timeout even if error occurs
 			tflog.Debug(ctx, "Could not retrieve create timeout, using default")

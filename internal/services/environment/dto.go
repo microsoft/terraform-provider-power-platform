@@ -53,6 +53,14 @@ type EnvironmentDto struct {
 	Properties  *EnviromentPropertiesDto `json:"properties"`
 }
 
+type graphServerErrorResponseDto struct {
+	Error graphServerErrorDto `json:"error"`
+}
+
+type graphServerErrorDto struct {
+	Code string `json:"code"`
+}
+
 type EnviromentPropertiesDto struct {
 	AzureRegion               string                            `json:"azureRegion,omitempty"`
 	DatabaseType              string                            `json:"databaseType,omitempty"`

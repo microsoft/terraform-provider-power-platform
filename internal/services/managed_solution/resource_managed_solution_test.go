@@ -42,7 +42,7 @@ func TestAccManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 				Config: fmt.Sprintf(`
 resource "powerplatform_environment" "environment" {
   display_name     = "%s"
-  location         = "europe"
+  location         = "switzerland"
   environment_type = "Sandbox"
   dataverse = {
     language_code     = "1033"

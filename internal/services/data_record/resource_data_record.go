@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -80,6 +82,13 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+			},
+			"relationship_removal_behavior": schema.StringAttribute{
+				MarkdownDescription: fmt.Sprintf("How to handle an item that is removed from a collection-valued relationship in `columns`. `%[1]s` (the default when not set) deletes the related row itself. `%[2]s` only removes the link between the two rows and keeps the related row.", RelationshipRemovalBehaviorDeleteRelatedRecord, RelationshipRemovalBehaviorDisassociate),
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(RelationshipRemovalBehaviorDeleteRelatedRecord, RelationshipRemovalBehaviorDisassociate),
+				},
 			},
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
@@ -154,7 +163,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns, plan.relationshipRemovalBehavior())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
@@ -235,7 +244,7 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns, plan.relationshipRemovalBehavior())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
@@ -290,7 +299,7 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		}
 
 		if len(attributes) > 0 {
-			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes)
+			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes, state.relationshipRemovalBehavior())
 			if err != nil {
 				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s", r.FullTypeName()), err.Error())
 				return
