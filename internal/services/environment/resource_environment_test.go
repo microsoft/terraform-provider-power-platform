@@ -470,7 +470,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 					}
 				`,
@@ -485,7 +485,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -505,7 +505,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -525,7 +525,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -763,7 +763,7 @@ func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.
 
 				resource "powerplatform_environment" "development" {
 					display_name         = "` + mocks.TestName() + `"
-					location             = "europe"
+					location             = "switzerland"
 					environment_type     = "Developer"
 					owner_id = azuread_user.test_user.id
 					dataverse = {
@@ -2817,13 +2817,13 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "switzerland"
 					environment_type                          = "Sandbox"
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
 
@@ -3178,13 +3178,13 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
-					location                                  = "europe"
-					azure_region 							  = "westeurope"
+					location                                  = "switzerland"
+					azure_region 							  = "switzerlandnorth"
 					environment_type                          = "Sandbox"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "switzerlandnorth"),
 				),
 			},
 		},
