@@ -1,0 +1,35 @@
+name: Remove Acceptance Tests Label
+
+# Makes the run-acceptance-tests label one-shot: a push to a labeled pull request removes the
+# label, so the new code runs the acceptance tests only after a maintainer reviews it and applies
+# the label again. This is defense in depth; the acceptance-tests-pr environment is the trust
+# boundary for credentialed runs (see run_tests.yml).
+# Kept out of run_tests.yml so it does not wait behind that workflow's concurrency group.
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  remove_label:
+    name: Remove run-acceptance-tests label
+    runs-on: ubuntu-latest
+    # Pull requests from forks get a read-only token and never receive acceptance test credentials.
+    if: contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests') && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      pull-requests: write # Required to remove the label from the pull request
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25 # v2.22.1
+        with:
+          egress-policy: audit
+
+      - name: Remove label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh api --method DELETE "repos/$REPO/issues/$PR_NUMBER/labels/run-acceptance-tests"
