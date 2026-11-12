@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
@@ -194,6 +195,70 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "is_disabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// TestUnitTenantIsolationPolicyResource_Validate_Create_Operation_Not_Found_Yet tests an asynchronous create
+// whose operation the operation service does not know yet on the first poll (404 OperationNotFound).
+// The create must keep polling until the operation completes instead of failing.
+func TestUnitTenantIsolationPolicyResource_Validate_Create_Operation_Not_Found_Yet(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	setupTenantHttpMocks()
+
+	const operationUrl = "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/operations/00000000-0000-0000-0000-000000000002"
+
+	httpmock.RegisterResponder("PUT", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", operationUrl)
+			return resp, nil
+		})
+
+	operationPolls := 0
+	httpmock.RegisterResponder("GET", operationUrl,
+		func(req *http.Request) (*http.Response, error) {
+			operationPolls++
+			if operationPolls <= 2 {
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/Validate_Create_Operation_Not_Found/get_operation_not_found.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/policy_response.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = false
+					allowed_tenants = toset([
+						{
+							tenant_id = "11111111-1111-1111-1111-111111111111"
+							inbound = true
+							outbound = false
+						}
+					])
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "is_disabled", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
+					func(_ *terraform.State) error {
+						if operationPolls != 3 {
+							return fmt.Errorf("expected the operation to be polled 3 times, got %d", operationPolls)
+						}
+						return nil
+					},
 				),
 			},
 		},
