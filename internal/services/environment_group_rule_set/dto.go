@@ -1087,6 +1087,7 @@ func convertContentSecurityPolicyDtoToModel(ruleSets []policyRuleSetDto) (basety
 		options = int64(n)
 	case int64:
 		options = n
+	default:
 	}
 
 	getConfig := func(key string, strict bool) (basetypes.ObjectValue, error) {
