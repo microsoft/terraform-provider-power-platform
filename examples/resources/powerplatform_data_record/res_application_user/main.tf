@@ -44,6 +44,8 @@ resource "powerplatform_data_record" "app_user" {
   table_logical_name = "systemuser"
   environment_id     = var.environment_id
   disable_on_destroy = true # Application Users cannot be deleted without being disabled first
+  # Removing a role from role_ids only unassigns it; the default would delete the role itself.
+  relationship_removal_behavior = "disassociate"
   columns = {
     applicationid = var.application_id
     businessunitid = {

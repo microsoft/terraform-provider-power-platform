@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -937,7 +938,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 					}
 				`,
@@ -952,7 +953,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -972,7 +973,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -992,7 +993,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
-						location                                  = "europe"
+						location                                  = "switzerland"
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
@@ -1230,7 +1231,7 @@ func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.
 
 				resource "powerplatform_environment" "development" {
 					display_name         = "` + mocks.TestName() + `"
-					location             = "europe"
+					location             = "switzerland"
 					environment_type     = "Developer"
 					owner_id = azuread_user.test_user.id
 					dataverse = {
@@ -2127,6 +2128,13 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.unique_name", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "release_cycle", "Standard"),
+					// The api client replays the 401 answers of an organization the provider just created for longer.
+					func(_ *terraform.State) error {
+						if !api.IsNewDataverseOrg("https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts") {
+							return errors.New("creating the environment did not record its Dataverse organization as new")
+						}
+						return nil
+					},
 				),
 			},
 		},
@@ -3284,13 +3292,13 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "switzerland"
 					environment_type                          = "Sandbox"
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
 
@@ -3645,13 +3653,13 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
-					location                                  = "europe"
-					azure_region 							  = "westeurope"
+					location                                  = "switzerland"
+					azure_region 							  = "switzerlandnorth"
 					environment_type                          = "Sandbox"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "switzerland"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "switzerlandnorth"),
 				),
 			},
 		},
@@ -5394,6 +5402,75 @@ func TestUnitEnvironmentsResource_Validate_Create_Waits_For_Dataverse_Metadata(t
 			},
 		},
 	})
+}
+
+// A create whose lifecycle operation outlives the create timeout has already been accepted and may
+// still produce the environment. Its id has to reach the state so that Terraform destroys it instead
+// of leaving an untracked environment behind in the tenant.
+func TestUnitEnvironmentsResource_Validate_Create_Lifecycle_Timeout_Keeps_Environment_For_Destroy(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	const environmentId = "00000000-0000-0000-0000-000000000001"
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"id": "b03e1e6d-73db-4367-90e1-2e378bf7e2fc",
+				"links": {"environment": {"path": "/providers/Microsoft.BusinessAppPlatform/environments/`+environmentId+`"}},
+				"state": {"id": "Running"}
+			}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/`+environmentId+`\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Waits_For_Dataverse_Metadata/get_environment_with_dataverse.json").String()), nil
+		})
+
+	deletedEnvironments := []string{}
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			deletedEnvironments = append(deletedEnvironments, httpmock.MustGetSubmatch(req, 1))
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "00000000-0000-0000-0000-000000000001"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+					timeouts = {
+						create = "1s"
+					}
+				}`,
+				ExpectError: regexp.MustCompile(`context deadline exceeded`),
+			},
+		},
+	})
+
+	if len(deletedEnvironments) != 1 || deletedEnvironments[0] != environmentId {
+		t.Fatalf("the environment of a timed out create must be destroyed with the rest of the state, deleted: %v", deletedEnvironments)
+	}
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_Lifecycle_Failed(t *testing.T) {

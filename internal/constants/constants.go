@@ -163,6 +163,10 @@ const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 	MAX_RETRY_COUNT                               = 10
 
+	// Creating an environment provisions its Dataverse organization within the same operation, and
+	// that provisioning has been observed to run past the shared 20 minute default by itself.
+	DEFAULT_ENVIRONMENT_CREATE_TIMEOUT = 60 * time.Minute
+
 	// BAPI can report an environment lifecycle operation as succeeded before the Dataverse
 	// metadata of that environment becomes readable, so it has to be polled for separately.
 	MAX_DATAVERSE_METADATA_RETRY_COUNT = 30
@@ -194,12 +198,22 @@ const (
 )
 
 // The RBAC role assignment collection is eventually consistent with the create that committed an
-// assignment, so a create has to wait for its own assignment to become listable. Environment scope
-// listings have been observed to lag by more than two minutes.
+// assignment, so a create has to wait for its own assignment to become listable. At environment scope
+// the outcome is bimodal: across 25 nightly acceptance runs the passing tests took as long under a
+// two-minute wait as under a ten-minute one, and every failing create was still unlisted after the
+// full wait; none became listable in between. Waiting longer does not help, so each attempt waits
+// RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT, then the unlisted assignment is deleted by its id and created
+// again, up to RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS creates in total.
 const (
-	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL = 5 * time.Second
-	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT  = 10 * time.Minute
+	RBAC_ROLE_ASSIGNMENT_POLL_INTERVAL   = 5 * time.Second
+	RBAC_ROLE_ASSIGNMENT_POLL_TIMEOUT    = 3 * time.Minute
+	RBAC_ROLE_ASSIGNMENT_CREATE_ATTEMPTS = 3
 )
+
+// The tenant isolation operation service has answered 404 OperationNotFound for an operation that the
+// policy PUT had accepted seconds earlier. Such a 404 is polled again until this much time has been
+// spent waiting on 404 answers.
+const TENANT_ISOLATION_OPERATION_NOT_FOUND_TIMEOUT = 2 * time.Minute
 
 // The workload identity token endpoint of a CI provider answers transiently with 5xx under load,
 // and a lost assertion fails a whole provider operation rather than a single request.
@@ -210,7 +224,45 @@ const (
 
 // MAX_UNAUTHORIZED_RETRIES bounds how many times a rejected credential is replayed. A token that is
 // refused for a reason other than expiry would be minted identically on every attempt.
-const MAX_UNAUTHORIZED_RETRIES = 2
+// Five replays spaced by the default 10-20 second retry delay ride out roughly a minute of token
+// issuance or propagation lag, while a credential that stays refused still fails permanently after it.
+const MAX_UNAUTHORIZED_RETRIES = 5
+
+// A Dataverse organization that the provider has just created answers its caller with 401 for a
+// while: the nightly acceptance runs fail with "still unauthorized" only in tests that created their
+// environment minutes earlier, while every other request with the same credential succeeds. Such a
+// window has outlasted two calls in a row with two replays each (at least 40-80 seconds), and before
+// replays were capped every window ended. So a 401 from an organization this provider process created less than
+// NEW_DATAVERSE_ORG_PERIOD ago is replayed until the delays between the replays add up to
+// NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET, the same ten minutes the provider already waits for a
+// new organization to stop answering 403 (DATAVERSE_CALLER_PROVISIONING_POLL_TIMEOUT). Any other 401
+// keeps the MAX_UNAUTHORIZED_RETRIES cap, so a credential that is refused for good still fails fast.
+const (
+	NEW_DATAVERSE_ORG_PERIOD                    = 60 * time.Minute
+	NEW_DATAVERSE_ORG_UNAUTHORIZED_RETRY_BUDGET = 10 * time.Minute
+)
+
+// A Dataverse organization that the provider has just created can also accept its caller before it has
+// assigned that caller its security roles: a solution import into an organization created minutes
+// earlier has failed validation with "The user with id ... has not been assigned any roles. They need a
+// role with the prvImportCustomization privilege", although the same import passes once the roles are
+// in place. Such a refusal from an organization this provider process created less than
+// NEW_DATAVERSE_ORG_PERIOD ago is replayed every NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_INTERVAL until
+// the delays add up to NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_BUDGET, the same ten minutes as its 401
+// replays. Anywhere else a caller without roles is a configuration error and fails at once.
+const (
+	NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_INTERVAL = 15 * time.Second
+	NEW_DATAVERSE_ORG_CALLER_ROLES_RETRY_BUDGET   = 10 * time.Minute
+)
+
+// A lifecycle operation is polled for as long as its resource operation timeout allows. A single
+// failed read of the operation is retried on the next tick; only this many failures in a row end the
+// wait. Each HTTP attempt of a read gets its own deadline, so a connection that hangs is cut and
+// retried. A lifecycle operation read answers within seconds, so five minutes only cuts a hung one.
+const (
+	LIFECYCLE_POLL_MAX_CONSECUTIVE_FAILURES = 5
+	LIFECYCLE_POLL_REQUEST_TIMEOUT          = 5 * time.Minute
+)
 
 // Dataverse resolves an application user's application id against Entra, and a service principal
 // created moments earlier has not necessarily replicated there yet.
