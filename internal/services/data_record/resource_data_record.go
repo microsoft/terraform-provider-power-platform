@@ -497,6 +497,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 			if err != nil {
 				return nil, err
 			}
+		default:
 		}
 	}
 	columnField, diags := types.ObjectValue(attributeTypes, attributes)
