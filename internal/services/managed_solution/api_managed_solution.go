@@ -92,6 +92,26 @@ func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutio
 	return client.SolutionClient.DeleteSolution(ctx, environmentId, solutionId)
 }
 
+// stageSolutionResultError returns the error for a StageSolution result that did not pass, nil for one that
+// did, and whether the validation refused the caller for having no roles. Without roles the caller cannot
+// be validated at all, so such a result is worth repeating once the organization has assigned them.
+func stageSolutionResultError(results stageSolutionImportResultResponseDto) (bool, error) {
+	if results.StageSolutionStatus == "Passed" {
+		return false, nil
+	}
+
+	e := fmt.Errorf("solution failed with status: '%s'", results.StageSolutionStatus)
+	for _, missingDependency := range results.MissingDependencies {
+		e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
+	}
+	callerWithoutRoles := false
+	for _, validation := range results.SolutionValidationResults {
+		e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
+		callerWithoutRoles = callerWithoutRoles || api.IsCallerWithoutRolesMessage(validation.Message)
+	}
+	return callerWithoutRoles, e
+}
+
 // importOperation selects the Dataverse import API used to realize the managed solution:
 // initial installation or in-place staged upgrade of an existing managed install.
 type importOperation string
@@ -121,27 +141,25 @@ func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId st
 		Path:   "/api/data/v9.2/StageSolution",
 	}
 
+	// A Dataverse organization created minutes earlier can fail this validation because it has not yet
+	// assigned the caller its roles. Staging only uploads the package, so it is safe to repeat.
 	stageResponse := stageSolutionImportResponseDto{}
-	resp, err := client.Api.Execute(ctx, nil, "POST", stageURL.String(), nil, stageRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &stageResponse)
+	err = client.Api.ReplayWhileNewDataverseOrgAssignsCallerRoles(ctx, stageURL.String(), func() (bool, error) {
+		stageResponse = stageSolutionImportResponseDto{}
+		resp, stageErr := client.Api.Execute(ctx, nil, "POST", stageURL.String(), nil, stageRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &stageResponse)
+		if stageErr != nil {
+			return false, stageErr
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return false, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+			return false, err
+		}
+		return stageSolutionResultError(stageResponse.StageSolutionResults)
+	})
 	if err != nil {
 		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
-	}
-
-	if stageResponse.StageSolutionResults.StageSolutionStatus != "Passed" {
-		e := fmt.Errorf("solution failed with status: '%s'", stageResponse.StageSolutionResults.StageSolutionStatus)
-		for _, missingDependency := range stageResponse.StageSolutionResults.MissingDependencies {
-			e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
-		}
-		for _, validation := range stageResponse.StageSolutionResults.SolutionValidationResults {
-			e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
-		}
-		return nil, e
 	}
 
 	importRequestBody := importSolutionDto{
@@ -160,7 +178,7 @@ func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId st
 		Path:   "/api/data/v9.2/" + string(operation),
 	}
 	importResponse := importSolutionResponseDto{}
-	resp, err = client.Api.ExecuteWithoutRetry(ctx, nil, "POST", importURL.String(), nil, importRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importResponse)
+	resp, err := client.Api.ExecuteWithoutRetry(ctx, nil, "POST", importURL.String(), nil, importRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importResponse)
 	if err != nil {
 		return nil, err
 	}
