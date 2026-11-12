@@ -1,0 +1,5 @@
+kind: added
+body: '`powerplatform_data_record` has a new optional `relationship_removal_behavior` attribute. Set it to `disassociate` to only remove the link (a `$ref` request) when an item is removed from a collection-valued relationship and keep the related row. The default, `delete_related_record`, keeps the existing behavior of deleting the related row'
+time: 2026-10-21T08:06:09.551100297Z
+custom:
+    Issue: "1306"

@@ -1683,7 +1683,7 @@ func TestAccSecurityRoleAssignmentResource_Validate_Create_By_Name(t *testing.T)
 
 	resource "powerplatform_environment" "test_env" {
 		display_name     = "` + mocks.TestName() + `"
-		location         = "europe"
+		location         = "switzerland"
 		environment_type = "Sandbox"
 		dataverse = {
 			language_code     = "1033"
@@ -1758,7 +1758,7 @@ func TestAccSecurityRoleAssignmentResource_Validate_Create_By_Role_Id(t *testing
 
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "switzerland"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code     = "1033"
@@ -1807,7 +1807,7 @@ func TestAccSecurityRoleAssignmentResource_Validate_Create_Team(t *testing.T) {
 				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "switzerland"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code     = "1033"

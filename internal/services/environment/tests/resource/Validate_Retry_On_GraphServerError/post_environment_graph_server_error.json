@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "GraphServerError",
+        "message": "Encountered internal server error from Graph. The tracking Id is '00000000-0000-0000-0000-000000000000'.",
+        "detailUrlType": "NotSpecified"
+    }
+}
