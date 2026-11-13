@@ -1,0 +1,5 @@
+kind: fixed
+body: Remove `powerplatform_data_record` from state when its Dataverse row was deleted outside Terraform instead of failing the refresh with `Client error when reading powerplatform_data_record`
+time: 2026-11-13T11:00:00.000000000Z
+custom:
+    Issue: "1327"
