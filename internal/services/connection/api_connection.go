@@ -32,9 +32,13 @@ type client struct {
 }
 
 func (client *client) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
 	}
 	values := url.Values{}
@@ -76,9 +80,13 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 		return nil, err
 	}
 
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -100,9 +108,13 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 }
 
 func (client *client) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*connectionDto, error) {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -111,7 +123,7 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 	apiUrl.RawQuery = values.Encode()
 
 	connection := connectionDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Connection '%s' not found", connectionId))
@@ -122,9 +134,13 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 }
 
 func (client *client) GetConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   "/connectivity/connections",
 	}
 
@@ -133,7 +149,7 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	connetionsArray := connectionArrayDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get connections: %w", err)
 	}
@@ -142,9 +158,13 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 }
 
 func (client *client) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -152,7 +172,7 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete connection: %w", err)
 	}
@@ -160,9 +180,13 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 }
 
 func (client *client) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -188,7 +212,7 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 		Delete: []shareConnectionRequestDeleteDto{},
 	}
 
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to share connection: %w", err)
 	}
@@ -208,9 +232,13 @@ func getPrincipalString(principal map[string]any, key string) (string, error) {
 }
 
 func (client *client) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/permissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -220,7 +248,7 @@ func (client *client) GetConnectionShares(ctx context.Context, environmentId, co
 
 	share := shareConnectionResponseArrayDto{}
 
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get connection shares: %w", err)
 	}
@@ -263,9 +291,13 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 }
 
 func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -273,7 +305,7 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to update connection share: %w", err)
 	}
@@ -281,9 +313,13 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 }
 
 func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -300,7 +336,7 @@ func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, 
 		},
 	}
 
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete connection share: %w", err)
 	}

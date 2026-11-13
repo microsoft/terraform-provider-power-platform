@@ -156,6 +156,10 @@ func TestUnitTryGetScopeFromURL_KnownHosts(t *testing.T) {
 
 	for _, cloud := range scopeTestClouds() {
 		urls := cloud.urls
+		envHost, err := helpers.BuildEnvironmentHostUri(scopeTestId, urls.PowerPlatformUrl)
+		require.NoError(t, err)
+		tenantHost, err := helpers.BuildTenantHostUri(scopeTestId, urls.PowerPlatformUrl)
+		require.NoError(t, err)
 		cases := []struct {
 			name  string
 			url   string
@@ -165,8 +169,8 @@ func TestUnitTryGetScopeFromURL_KnownHosts(t *testing.T) {
 			{"regional bapi", "https://europe." + urls.BapiUrl + "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/1", urls.PowerAppsScope},
 			{"powerapps", "https://" + urls.PowerAppsUrl + "/providers/Microsoft.PowerApps/apps", urls.PowerAppsScope},
 			{"power platform", "https://" + urls.PowerPlatformUrl + "/appmanagement/applicationPackages", urls.PowerPlatformScope},
-			{"environment host", "https://" + helpers.BuildEnvironmentHostUri(scopeTestId, urls.PowerPlatformUrl) + "/connectivity/connectors", urls.PowerPlatformScope},
-			{"tenant host", "https://" + helpers.BuildTenantHostUri(scopeTestId, urls.PowerPlatformUrl) + "/gateway/cluster?api-version=1", urls.PowerPlatformScope},
+			{"environment host", "https://" + envHost + "/connectivity/connectors", urls.PowerPlatformScope},
+			{"tenant host", "https://" + tenantHost + "/gateway/cluster?api-version=1", urls.PowerPlatformScope},
 			{"regional advisor", "https://unitedstates." + urls.PowerAppsAdvisor + "/api/rule", urls.PowerAppsAdvisorScope},
 			{"admin", "https://" + urls.AdminPowerPlatformUrl + "/api/tenant", constants.PPAC_SCOPE},
 			{"licensing", "https://" + urls.LicensingUrl + "/v0.1-alpha/tenants", "https://" + urls.LicensingUrl + "/.default"},

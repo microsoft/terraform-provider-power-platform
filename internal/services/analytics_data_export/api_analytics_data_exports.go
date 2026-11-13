@@ -36,9 +36,13 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 		return nil, fmt.Errorf("failed to get tenant information: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantInfo.TenantId, client.Api.Config.Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	tenantApiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantInfo.TenantId, client.Api.Config.Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   "gateway/cluster",
 		RawQuery: url.Values{
 			"api-version": []string{"1"},

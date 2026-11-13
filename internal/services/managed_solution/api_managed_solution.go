@@ -275,9 +275,13 @@ func (client *Client) validateSolutionImportResult(ctx context.Context, environm
 }
 
 func (client *Client) getConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
+	host, err := helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiURL := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   "/connectivity/connections",
 	}
 	values := url.Values{}
@@ -285,7 +289,7 @@ func (client *Client) getConnections(ctx context.Context, environmentId string) 
 	apiURL.RawQuery = values.Encode()
 
 	connections := connectionArrayDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiURL.String(), nil, nil, []int{http.StatusOK}, &connections)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiURL.String(), nil, nil, []int{http.StatusOK}, &connections)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get connections: %w", err)
 	}

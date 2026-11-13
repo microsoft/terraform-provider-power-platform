@@ -34,9 +34,13 @@ func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/governance/environmentGroups/%s/ruleSets", environmentGroupId),
 	}
 
@@ -71,9 +75,13 @@ func (client *Client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/governance/environmentGroups/%s/ruleSets", environmentGroupId),
 	}
 
@@ -103,9 +111,13 @@ func (client *Client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environ
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/governance/ruleSets/%s", environmentGroupId),
 	}
 
@@ -129,9 +141,13 @@ func (client *Client) DeleteEnvironmentGroupRuleSet(ctx context.Context, ruleSet
 		return fmt.Errorf("failed to get tenant: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/governance/ruleSets/%s", ruleSetId),
 	}
 
