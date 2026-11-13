@@ -420,6 +420,134 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitSolutionResource_ImportState(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	solution_checksum := createFile("test_solution.zip", "test_solution")
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/post_stage_solution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/post_import_solution_async.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_async_operations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution_import_result.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+%27TerraformTestSolution%27",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+
+				resource "powerplatform_solution" "solution" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					solution_file    = "test_solution.zip"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
+					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
+				),
+			},
+			{
+				ResourceName:            "powerplatform_solution.solution",
+				ImportState:             true,
+				ImportStateId:           "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"solution_file", "solution_file_checksum", "settings_file", "settings_file_checksum", "timeouts"},
+			},
+			{
+				ResourceName:            "powerplatform_solution.solution",
+				ImportState:             true,
+				ImportStateId:           "00000000-0000-0000-0000-000000000001/86928ed8-df37-4ce2-add5-47030a833bff",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"solution_file", "solution_file_checksum", "settings_file", "settings_file_checksum", "timeouts"},
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "86928ed8-df37-4ce2-add5-47030a833bff",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000001__86928ed8-df37-4ce2-add5-47030a833bff",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000001_ignored_86928ed8-df37-4ce2-add5-47030a833bff",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000001/86928ed8-df37-4ce2-add5-47030a833bff/extra",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff/extra",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+			{
+				ResourceName:  "powerplatform_solution.solution",
+				ImportState:   true,
+				ImportStateId: "/86928ed8-df37-4ce2-add5-47030a833bff",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
+			},
+		},
+	})
+}
 func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

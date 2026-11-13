@@ -340,7 +340,22 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// Import ID format: {environment_id}_{solution_id} (the resource id) or {environment_id}/{solution_id}.
+	// Environment ids are GUIDs and never contain '_' or '/', so the first separator splits the two parts.
+	environmentId, solutionId, found := strings.Cut(req.ID, "_")
+	if !found {
+		environmentId, solutionId, found = strings.Cut(req.ID, "/")
+	}
+	if !found || environmentId == "" || solutionId == "" || strings.ContainsAny(environmentId, "_/") || strings.ContainsAny(solutionId, "_/") {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Expected import ID in format 'environment_id/solution_id' or 'environment_id_solution_id', got '%s'", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), environmentId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), fmt.Sprintf("%s_%s", environmentId, solutionId))...)
 }
 
 func getSolutionId(id string) string {
