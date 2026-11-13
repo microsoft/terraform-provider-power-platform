@@ -2165,6 +2165,76 @@ func TestUnitDataRecordResource_Validate_Read_ParentDeleted(t *testing.T) {
 	})
 }
 
+func TestUnitDataRecordResource_Validate_Read_RowDeletedOutOfBand(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	rowDeleted := false
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	// The environment still exists, so a missing row must not be reported as an error.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?.+expand`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+		func(req *http.Request) (*http.Response, error) {
+			if rowDeleted {
+				resp := httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"0x80040217","message":"contact With Id = 00000000-0000-0000-0000-000000000010 Does Not Exist"}}`)
+				resp.Request = req
+				return resp, nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_contact_00000000-0000-0000-0000-000000000010.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/([a-zA-Z]+)`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_data_record" "data_record_sample_contact1" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "contact"
+					columns = {
+						firstname = "John"
+						lastname  = "Doe"
+					}
+				}`,
+				Check: resource.TestCheckResourceAttr("powerplatform_data_record.data_record_sample_contact1", "table_logical_name", "contact"),
+			},
+			{
+				// The row is deleted outside Terraform: refresh must drop the resource from state instead of failing.
+				PreConfig:          func() { rowDeleted = true },
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestUnitDataRecordResource_Validate_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

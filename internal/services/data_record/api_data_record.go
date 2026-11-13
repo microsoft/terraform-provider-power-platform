@@ -214,8 +214,9 @@ func (client *client) GetDataRecord(ctx context.Context, recordId, environmentId
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
 	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
+	// Surface a missing row as ErrObjectNotFound so callers can drop it from state.
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("data record '%s' not found in table '%s'", recordId, tableName))
 	}
 
 	return result, nil
