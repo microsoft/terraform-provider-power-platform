@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -291,11 +293,59 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
+// shareImportIdFormat is the import ID of a connection share. A share is one principal's permission on one connection,
+// so Read needs all four parts to find it; the share id alone is not enough.
+const shareImportIdFormat = "environment_id/connector_name/connection_id/principal_entra_object_id"
+
+var guidRegex = regexp.MustCompile(helpers.GuidRegex)
+
+// shareImportId is a parsed connection share import ID.
+type shareImportId struct {
+	EnvironmentId string
+	ConnectorName string
+	ConnectionId  string
+	PrincipalId   string
+}
+
+// parseShareImportId parses an import ID in shareImportIdFormat. No part may be empty or padded with whitespace, and the
+// environment and principal ids must be guids, in either letter case.
+func parseShareImportId(importId string) (shareImportId, error) {
+	names := strings.Split(shareImportIdFormat, "/")
+	parts := strings.Split(importId, "/")
+	if len(parts) != len(names) {
+		return shareImportId{}, fmt.Errorf("expected import ID in format '%s', got '%s'", shareImportIdFormat, importId)
+	}
+	for i, name := range names {
+		if parts[i] == "" || strings.TrimSpace(parts[i]) != parts[i] {
+			return shareImportId{}, fmt.Errorf("%s in import ID '%s' must not be empty or have leading or trailing whitespace", name, importId)
+		}
+	}
+
+	id := shareImportId{EnvironmentId: parts[0], ConnectorName: parts[1], ConnectionId: parts[2], PrincipalId: parts[3]}
+	if !guidRegex.MatchString(id.EnvironmentId) {
+		return shareImportId{}, fmt.Errorf("environment_id '%s' in import ID is not a guid", id.EnvironmentId)
+	}
+	if !guidRegex.MatchString(id.PrincipalId) {
+		return shareImportId{}, fmt.Errorf("principal_entra_object_id '%s' in import ID is not a guid", id.PrincipalId)
+	}
+	return id, nil
+}
+
 func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	id, err := parseShareImportId(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid import ID", err.Error())
+		return
+	}
+
+	// Read fills in id, role_name and the principal from the live share.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), id.EnvironmentId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connector_name"), id.ConnectorName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connection_id"), id.ConnectionId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal").AtName("entra_object_id"), id.PrincipalId)...)
 }
 
 func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) (*ShareResourceModel, error) {
