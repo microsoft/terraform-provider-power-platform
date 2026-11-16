@@ -11,26 +11,31 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-// BuildEnvironmentHostUri builds the host uri for the environmentid
+// buildHostUri builds the host uri for an environment or tenant id. It returns an error when the id is too short
+// to contain the two character realm suffix (for example an empty id).
+func buildHostUri(id, kind, powerPlatformUrl string) (string, error) {
+	cleaned := strings.ReplaceAll(id, "-", "")
+	if len(cleaned) < 3 {
+		return "", fmt.Errorf("invalid %s id %q: expected a GUID", kind, id)
+	}
+	realm := cleaned[len(cleaned)-2:]
+	cleaned = cleaned[:len(cleaned)-2]
+
+	return fmt.Sprintf("%s.%s.%s.%s", cleaned, realm, kind, powerPlatformUrl), nil
+}
+
+// BuildEnvironmentHostUri builds the host uri for the environmentid, returning an error for an empty or too short id
 // example input: 00000000-0000-0000-0000-000000000123
 // example output: 0000000000000001.23.environment.api.powerplatform.com.
-func BuildEnvironmentHostUri(environmentId, powerPlatformUrl string) string {
-	envId := strings.ReplaceAll(environmentId, "-", "")
-	realm := string(envId[len(envId)-2:])
-	envId = envId[:len(envId)-2]
-
-	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, powerPlatformUrl)
+func BuildEnvironmentHostUri(environmentId, powerPlatformUrl string) (string, error) {
+	return buildHostUri(environmentId, "environment", powerPlatformUrl)
 }
 
 // BuildTenantHostUri builds the host uri for the tenantId
 // example input: 00000000-0000-0000-0000-000000000123
 // example output: 0000000000000001.23.tenant.api.powerplatform.com.
-func BuildTenantHostUri(tenantId, powerPlatformUrl string) string {
-	envId := strings.ReplaceAll(tenantId, "-", "")
-	realm := string(envId[len(envId)-2:])
-	envId = envId[:len(envId)-2]
-
-	return fmt.Sprintf("%s.%s.tenant.%s", envId, realm, powerPlatformUrl)
+func BuildTenantHostUri(tenantId, powerPlatformUrl string) (string, error) {
+	return buildHostUri(tenantId, "tenant", powerPlatformUrl)
 }
 
 // BuildApiUrl builds a URL for API endpoints with a given host, path, and query parameters.

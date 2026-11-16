@@ -156,9 +156,13 @@ func (client *client) RemoveEnvironmentFromEnvironmentGroup(ctx context.Context,
 		return fmt.Errorf("failed to get tenant: %w", err)
 	}
 
+	host, err := helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl)
+	if err != nil {
+		return err
+	}
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   host,
 		Path:   fmt.Sprintf("/environmentmanagement/environmentGroups/%s/removeEnvironment/%s", environmentGroupId, environmentId),
 	}
 
