@@ -319,7 +319,10 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 		}
 	}
 
-	// Read looks the share up by principal, then fills in id, role_name and principal.display_name.
+	// Read finds the share by an exact match on the principal id and the API returns object ids in lowercase, so an
+	// uppercase GUID would not be found. Read then fills in id, role_name and principal.display_name.
+	principalId = strings.ToLower(principalId)
+
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), environmentId)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connector_name"), connectorName)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connection_id"), connectionId)...)
