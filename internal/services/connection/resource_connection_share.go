@@ -7,6 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -291,11 +294,36 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
+// ImportState accepts {environment_id}/{connector_name}/{connection_id}/{principal_entra_object_id}. A share is one
+// principal's permission on one connection, so Read needs all four parts to find it; the share id is not enough.
 func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	parts := strings.Split(req.ID, "/")
+	if len(parts) != 4 || slices.Contains(parts, "") {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Expected import ID in format 'environment_id/connector_name/connection_id/principal_entra_object_id', got '%s'", req.ID),
+		)
+		return
+	}
+
+	environmentId, connectorName, connectionId, principalId := parts[0], parts[1], parts[2], parts[3]
+
+	guidRegex := regexp.MustCompile(helpers.GuidRegex)
+	for _, part := range []string{environmentId, principalId} {
+		if !guidRegex.MatchString(part) {
+			resp.Diagnostics.AddError("Invalid import ID", fmt.Sprintf("'%s' is not a guid", part))
+			return
+		}
+	}
+
+	// Read looks the share up by principal, then fills in id, role_name and principal.display_name.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), environmentId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connector_name"), connectorName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("connection_id"), connectionId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("principal").AtName("entra_object_id"), principalId)...)
 }
 
 func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) (*ShareResourceModel, error) {

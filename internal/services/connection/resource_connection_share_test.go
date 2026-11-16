@@ -269,3 +269,114 @@ func TestUnitConnectionsShareResource_Validate_Read_ParentDeleted(t *testing.T) 
 		},
 	})
 }
+
+const connectionShareImportConfig = `
+	resource "powerplatform_connection_share" "share_with_user1" {
+		environment_id = "00000000-0000-0000-0000-000000000000"
+		connector_name = "shared_commondataserviceforapps"
+		connection_id  = "00000000-0000-0000-0000-000000000001"
+		role_name      = "CanViewWithShare"
+		principal = {
+			entra_object_id = "00000000-0000-0000-0000-000000000002"
+		}
+	}`
+
+func registerConnectionShareImportMocks() {
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/modifyPermissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connection_shares/Validate_Create/get_connection_shares.json").String()), nil
+		})
+}
+
+func TestUnitConnectionsShareResource_ImportState(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	registerConnectionShareImportMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: connectionShareImportConfig,
+			},
+			{
+				// terraform import: every attribute Read needs comes from the import ID, the rest from the live share.
+				ResourceName:            "powerplatform_connection_share.share_with_user1",
+				ImportState:             true,
+				ImportStateId:           "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"timeouts"},
+			},
+			{
+				// import block: the plan after the import must be a no-op.
+				ResourceName:    "powerplatform_connection_share.share_with_user1",
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportStateId:   "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsShareResource_ImportState_InvalidId(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	registerConnectionShareImportMocks()
+
+	for name, importId := range map[string]string{
+		"legacy single id":      "00000000-0000-0000-0000-000000000002",
+		"three segments":        "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001",
+		"empty connector":       "00000000-0000-0000-0000-000000000000//00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
+		"empty connection":      "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps//00000000-0000-0000-0000-000000000002",
+		"empty principal":       "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/",
+		"five segments":         "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002/extra",
+		"environment not guid":  "not-a-guid/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
+		"principal not guid":    "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/admin@contoso.com",
+		"environment empty":     "/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
+		"principal braced guid": "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/{00000000-0000-0000-0000-000000000002}",
+	} {
+		t.Run(name, func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:        connectionShareImportConfig,
+						ResourceName:  "powerplatform_connection_share.share_with_user1",
+						ImportState:   true,
+						ImportStateId: importId,
+						ExpectError:   regexp.MustCompile(`Invalid import ID`),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestUnitConnectionsShareResource_ImportState_NotFound(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	registerConnectionShareImportMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// The connection is not shared with this principal, so Read removes the resource and Terraform reports
+				// the standard import error instead of storing an empty share.
+				Config:        connectionShareImportConfig,
+				ResourceName:  "powerplatform_connection_share.share_with_user1",
+				ImportState:   true,
+				ImportStateId: "00000000-0000-0000-0000-000000000000/shared_commondataserviceforapps/00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000009",
+				ExpectError:   regexp.MustCompile(`Cannot import non-existent remote object`),
+			},
+		},
+	})
+}
