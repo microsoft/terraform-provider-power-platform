@@ -277,7 +277,8 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 			return nil, err
 		}
 
-		if id == principalId {
+		// Object ids are guids, which may be given in any case; the API returns them in lowercase.
+		if strings.EqualFold(id, principalId) {
 			displayName, err := getPrincipalString(share.Properties.Principal, "displayName")
 			if err != nil || displayName == "" {
 				return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND),
