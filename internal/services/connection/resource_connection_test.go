@@ -491,3 +491,85 @@ func TestUnitConnectionsResource_Validate_Read_ParentDeleted(t *testing.T) {
 		},
 	})
 }
+
+func registerConnectionImportMocks() {
+	const hostPrefix = `^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`
+	for _, method := range []string{"PUT", "GET"} {
+		status := http.StatusOK
+		if method == "PUT" {
+			status = http.StatusCreated
+		}
+		httpmock.RegisterRegexpResponder(method, regexp.MustCompile(hostPrefix),
+			func(req *http.Request) (*http.Response, error) {
+				return httpmock.NewStringResponse(status, httpmock.File("tests/resource/connections/Validate_Create/put_connection.json").String()), nil
+			})
+	}
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(hostPrefix),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+}
+
+func TestUnitConnectionsResource_ImportState(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	registerConnectionImportMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id = "00000000-0000-0000-0000-000000000000"
+						name           = "shared_azureopenai"
+						display_name   = "OpenAI Connection"
+					}`,
+			},
+			{
+				ResourceName:            "powerplatform_connection.azure_openai_connection",
+				ImportState:             true,
+				ImportStateId:           "00000000-0000-0000-0000-000000000000/shared_azureopenai/d4e4a6ff9a67492aa1f6de854528668c",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"connection_parameters", "connection_parameters_set", "timeouts"},
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsResource_ImportState_InvalidId(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	registerConnectionImportMocks()
+
+	for name, importId := range map[string]string{
+		"legacy single id": "d4e4a6ff9a67492aa1f6de854528668c",
+		"two segments":     "00000000-0000-0000-0000-000000000000/shared_azureopenai",
+		"empty segment":    "00000000-0000-0000-0000-000000000000//d4e4a6ff9a67492aa1f6de854528668c",
+		"four segments":    "00000000-0000-0000-0000-000000000000/shared_azureopenai/d4e4a6ff9a67492aa1f6de854528668c/extra",
+	} {
+		t.Run(name, func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				IsUnitTest:               true,
+				ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+							resource "powerplatform_connection" "azure_openai_connection" {
+								environment_id = "00000000-0000-0000-0000-000000000000"
+								name           = "shared_azureopenai"
+								display_name   = "OpenAI Connection"
+							}`,
+					},
+					{
+						ResourceName:  "powerplatform_connection.azure_openai_connection",
+						ImportState:   true,
+						ImportStateId: importId,
+						ExpectError:   regexp.MustCompile(`Invalid import ID`),
+					},
+				},
+			})
+		})
+	}
+}

@@ -1,0 +1,5 @@
+kind: fixed
+body: Importing `powerplatform_connection` (ID `{environment_id}/{connector_name}/{connection_id}`) no longer panics, and importing `powerplatform_solution` no longer fails with `ENVIRONMENT_URL_NOT_FOUND`, because `ImportState` now populates `environment_id` (and `name` for connections) from the import ID; malformed import IDs and empty environment or tenant IDs now return a diagnostic instead of crashing
+time: 2026-11-13T10:00:00.000000000Z
+custom:
+    Issue: "1326"
