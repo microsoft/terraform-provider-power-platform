@@ -1,0 +1,5 @@
+kind: fixed
+body: Stream acceptance test output and retain diagnostics, with a two-hour package timeout to expose stalled tests
+time: 2026-11-19T08:39:53.248000000Z
+custom:
+    Issue: "0"
