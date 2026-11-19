@@ -1,0 +1,13 @@
+{
+  "value": [
+    {
+      "solutionid": "44444444-4444-4444-4444-444444444444",
+      "uniquename": "solution-two",
+      "friendlyname": "solution-two",
+      "ismanaged": false,
+      "isvisible": true,
+      "enabledforsourcecontrolintegration": true,
+      "version": "1.0.0.0"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "EnvironmentNotFound",
+    "message": "environment not found"
+  }
+}

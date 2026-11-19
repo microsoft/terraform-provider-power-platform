@@ -1,0 +1,8 @@
+{
+  "sourcecontrolconfigurationid": "11111111-1111-1111-1111-111111111111",
+  "name": "example-repo",
+  "organizationname": "example-org",
+  "projectname": "example-project",
+  "repositoryname": "example-repo",
+  "gitprovider": 0
+}
