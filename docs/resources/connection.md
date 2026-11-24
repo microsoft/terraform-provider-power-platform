@@ -4,11 +4,14 @@ page_title: "powerplatform_connection Resource - Power Platform"
 subcategory: ""
 description: |-
   Manages a Connection https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections. A connection in Power Platform serves as a means to integrate external data sources and services with your Power Platform apps, flows, and other solutions. It acts as a bridge, facilitating secure communication between your solutions and various external systems.
+  Known Limitations: This resource may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the connectivity permissions it needs are not currently available to delegated tokens. Use service principal authentication https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret instead. A connection created by a service principal is owned by it; use powerplatform_connection_share to share it.
 ---
 
 # powerplatform_connection (Resource)
 
 Manages a [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections). A connection in Power Platform serves as a means to integrate external data sources and services with your Power Platform apps, flows, and other solutions. It acts as a bridge, facilitating secure communication between your solutions and various external systems.
+
+**Known Limitations:** This resource may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the connectivity permissions it needs are not currently available to delegated tokens. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead. A connection created by a service principal is owned by it; use `powerplatform_connection_share` to share it.
 
 ## Example Usage
 

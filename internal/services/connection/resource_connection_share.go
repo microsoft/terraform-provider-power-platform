@@ -54,7 +54,7 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "",
+		MarkdownDescription: "Manages the sharing of a [Connection](https://learn.microsoft.com/en-us/power-automate/connection-sharing) with users or groups.\n\n**Known Limitations:** This resource may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the connectivity permissions it needs are not currently available to delegated tokens. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead. Some connectors (for example Teams) only allow sharing with service principals.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

@@ -3,12 +3,15 @@
 page_title: "powerplatform_connection_share Resource - Power Platform"
 subcategory: ""
 description: |-
-  
+  Manages the sharing of a Connection https://learn.microsoft.com/en-us/power-automate/connection-sharing with users or groups.
+  Known Limitations: This resource may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the connectivity permissions it needs are not currently available to delegated tokens. Use service principal authentication https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret instead. Some connectors (for example Teams) only allow sharing with service principals.
 ---
 
 # powerplatform_connection_share (Resource)
 
+Manages the sharing of a [Connection](https://learn.microsoft.com/en-us/power-automate/connection-sharing) with users or groups.
 
+**Known Limitations:** This resource may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the connectivity permissions it needs are not currently available to delegated tokens. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead. Some connectors (for example Teams) only allow sharing with service principals.
 
 ## Example Usage
 
