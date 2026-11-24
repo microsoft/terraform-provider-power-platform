@@ -1606,6 +1606,160 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	})
 }
 
+// keepsEnvironmentUnmanagedConfig is a description update followed by a read of the environment's governance
+// configuration once the service had time to act on the update (issue #1340).
+func keepsEnvironmentUnmanagedConfig(environmentConfig, description string, readGovernance bool) string {
+	config := fmt.Sprintf(environmentConfig, description)
+	if !readGovernance {
+		return config
+	}
+	return config + `
+	resource "time_sleep" "wait_after_update" {
+		create_duration = "60s"
+		triggers = {
+			description = powerplatform_environment.development.description
+		}
+	}
+
+	data "powerplatform_rest_query" "environment" {
+		scope                = "https://service.powerapps.com/.default"
+		url                  = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/${powerplatform_environment.development.id}?api-version=2023-06-01"
+		method               = "GET"
+		expected_http_status = [200]
+
+		depends_on = [time_sleep.wait_after_update]
+	}`
+}
+
+// An in-place update of an environment that is in no environment group must leave it an unmanaged environment.
+func TestAccEnvironmentsResource_Validate_Update_Keeps_Environment_Unmanaged(t *testing.T) {
+	environmentConfig := `
+	resource "powerplatform_environment" "development" {
+		display_name     = "` + mocks.TestName() + `"
+		description      = "%s"
+		location         = "unitedstates"
+		environment_type = "Sandbox"
+		dataverse = {
+			language_code     = "1033"
+			currency_code     = "USD"
+			security_group_id = "00000000-0000-0000-0000-000000000000"
+		}
+	}`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "before update", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
+				),
+			},
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "after update"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
+				),
+			},
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_rest_query.environment", "output.body", regexp.MustCompile(`"protectionLevel"\s*:\s*"Basic"`)),
+				),
+			},
+		},
+	})
+}
+
+// An in-place update of an environment in a pay-as-you-go billing policy must keep it in the policy and
+// leave it an unmanaged environment.
+func TestAccEnvironmentsResource_Validate_Update_Keeps_Environment_Unmanaged_With_Billing_Policy(t *testing.T) {
+	environmentConfig := `
+	data "azapi_client_config" "current" {}
+
+	resource "azapi_resource" "rg_example" {
+		type     = "Microsoft.Resources/resourceGroups@2021-04-01"
+		location = "East US"
+		name     = "power-platform-billing-` + mocks.TestName()[:60] + strconv.Itoa(rand.Intn(9999)) + `"
+	}
+
+	resource "powerplatform_billing_policy" "pay_as_you_go" {
+		name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "")[:40] + strconv.Itoa(rand.Intn(9999)) + `"
+		location = "unitedstates"
+		status   = "Enabled"
+		billing_instrument = {
+			resource_group  = azapi_resource.rg_example.name
+			subscription_id = data.azapi_client_config.current.subscription_id
+		}
+	}
+
+	resource "powerplatform_environment" "development" {
+		display_name      = "` + mocks.TestName() + `"
+		description       = "%s"
+		location          = "unitedstates"
+		environment_type  = "Sandbox"
+		billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+	}`
+
+	billingPolicyMembership := `
+	data "powerplatform_rest_query" "billing_policy_environments" {
+		scope                = "https://api.powerplatform.com/.default"
+		url                  = "https://api.powerplatform.com/licensing/billingPolicies/${powerplatform_billing_policy.pay_as_you_go.id}/environments?api-version=2022-03-01-preview"
+		method               = "GET"
+		expected_http_status = [200]
+
+		depends_on = [time_sleep.wait_after_update]
+	}`
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "azure/azapi",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "before update", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair("powerplatform_environment.development", "billing_policy_id", "powerplatform_billing_policy.pay_as_you_go", "id"),
+				),
+			},
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "after update"),
+					resource.TestCheckResourceAttrPair("powerplatform_environment.development", "billing_policy_id", "powerplatform_billing_policy.pay_as_you_go", "id"),
+				),
+			},
+			{
+				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", true) + billingPolicyMembership,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_rest_query.environment", "output.body", regexp.MustCompile(`"protectionLevel"\s*:\s*"Basic"`)),
+					func(s *terraform.State) error {
+						environmentId := s.RootModule().Resources["powerplatform_environment.development"].Primary.ID
+						body := s.RootModule().Resources["data.powerplatform_rest_query.billing_policy_environments"].Primary.Attributes["output.body"]
+						if !strings.Contains(strings.ToLower(body), strings.ToLower(environmentId)) {
+							return fmt.Errorf("environment %s is no longer in its billing policy: %s", environmentId, body)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentsResource_Validate_Domain_Uniqueness_On_Update(t *testing.T) {
 	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
 
