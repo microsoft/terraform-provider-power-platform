@@ -695,8 +695,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	updateDescription(plan, &environmentDto)
 	updateCadence(plan, &environmentDto)
 
-	updateEnvironmentGroupId(plan, &environmentDto)
-	updateBillingPolicyId(plan, &environmentDto)
+	updateEnvironmentGroupId(plan, state, &environmentDto)
+	updateBillingPolicyId(plan, state, &environmentDto)
 
 	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
 	if err != nil {
@@ -704,15 +704,19 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	err = r.removeBillingPolicy(ctx, state)
-	if err != nil {
-		resp.Diagnostics.AddError("Error when removing billing policy", err.Error())
-		return
-	}
-	err = r.addBillingPolicy(ctx, plan)
-	if err != nil {
-		resp.Diagnostics.AddError("Error when adding billing policy", err.Error())
-		return
+	// Moving the environment between billing policies only when the policy changed keeps an unchanged
+	// environment from being removed from its policy and added back on every update.
+	if billingPolicyChanged(plan, state) {
+		err = r.removeBillingPolicy(ctx, state)
+		if err != nil {
+			resp.Diagnostics.AddError("Error when removing billing policy", err.Error())
+			return
+		}
+		err = r.addBillingPolicy(ctx, plan)
+		if err != nil {
+			resp.Diagnostics.AddError("Error when adding billing policy", err.Error())
+			return
+		}
 	}
 
 	_, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
@@ -987,16 +991,27 @@ func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceM
 	return nil, nil
 }
 
-func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.EnvironmentGroupId.IsNull() {
+// updateEnvironmentGroupId sends parentEnvironmentGroup only when the planned group differs from state.
+// Environment groups can only contain managed environments, so writing the group, even the empty guid
+// of an environment that is in no group, makes the service convert the environment to a Managed
+// Environment (issue #1340). Joining, moving and leaving (the empty guid) are changes and are still sent.
+func updateEnvironmentGroupId(plan, state *SourceModel, environmentDto *EnvironmentDto) {
+	if helpers.IsKnown(plan.EnvironmentGroupId) && plan.EnvironmentGroupId.ValueString() != state.EnvironmentGroupId.ValueString() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: plan.EnvironmentGroupId.ValueString(),
 		}
 	}
 }
 
-func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.BillingPolicyId.IsNull() {
+// billingPolicyChanged reports whether the planned billing policy differs from state.
+func billingPolicyChanged(plan, state *SourceModel) bool {
+	return helpers.IsKnown(plan.BillingPolicyId) && plan.BillingPolicyId.ValueString() != state.BillingPolicyId.ValueString()
+}
+
+// updateBillingPolicyId sends billingPolicy only when the planned policy differs from state, so an update
+// never writes an unchanged billing policy, including the empty guid of an environment without one (issue #1340).
+func updateBillingPolicyId(plan, state *SourceModel, environmentDto *EnvironmentDto) {
+	if billingPolicyChanged(plan, state) {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
