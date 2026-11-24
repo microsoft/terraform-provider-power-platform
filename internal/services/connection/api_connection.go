@@ -54,7 +54,7 @@ func (client *client) CreateConnection(ctx context.Context, environmentId, conne
 			return &connection, nil
 		}
 		if !isEnvironmentNotYetVisible(err) || time.Now().After(deadline) {
-			return nil, fmt.Errorf("failed to create connection: %w", err)
+			return nil, withDelegatedPermissionsHint(fmt.Errorf("failed to create connection: %w", err))
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Environment '%s' is not yet visible to the connectivity endpoint, retrying connection creation", environmentId))
@@ -72,6 +72,19 @@ func isEnvironmentNotYetVisible(err error) bool {
 		return false
 	}
 	return httpErr.StatusCode == http.StatusNotFound && strings.Contains(string(httpErr.Body), "ServiceToServiceEnvironmentNotFound")
+}
+
+// withDelegatedPermissionsHint prefixes an actionable hint when the connectivity endpoint rejects a
+// delegated (user) token, keeping the original error in the chain.
+func withDelegatedPermissionsHint(err error) error {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if err == nil || !errors.As(err, &httpErr) {
+		return err
+	}
+	if httpErr.StatusCode != http.StatusForbidden || !strings.Contains(string(httpErr.Body), "InsufficientDelegatedPermissions") {
+		return err
+	}
+	return fmt.Errorf("%s: %w", constants.CONNECTIVITY_INSUFFICIENT_DELEGATED_PERMISSIONS_ERROR_MSG, err)
 }
 
 func (client *client) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*connectionDto, error) {
@@ -101,7 +114,7 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 	updatedConnection := connectionDto{}
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update connection: %w", err)
+		return nil, withDelegatedPermissionsHint(fmt.Errorf("failed to update connection: %w", err))
 	}
 
 	return &updatedConnection, nil
@@ -128,7 +141,7 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
-		return nil, fmt.Errorf("failed to get connection: %w", err)
+		return nil, withDelegatedPermissionsHint(fmt.Errorf("failed to get connection: %w", err))
 	}
 	return &connection, nil
 }
@@ -151,7 +164,7 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 	connetionsArray := connectionArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get connections: %w", err)
+		return nil, withDelegatedPermissionsHint(fmt.Errorf("failed to get connections: %w", err))
 	}
 
 	return connetionsArray.Value, nil
@@ -174,7 +187,7 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 
 	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to delete connection: %w", err)
+		return withDelegatedPermissionsHint(fmt.Errorf("failed to delete connection: %w", err))
 	}
 	return nil
 }
@@ -214,7 +227,7 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to share connection: %w", err)
+		return withDelegatedPermissionsHint(fmt.Errorf("failed to share connection: %w", err))
 	}
 	return nil
 }
@@ -250,7 +263,7 @@ func (client *client) GetConnectionShares(ctx context.Context, environmentId, co
 
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get connection shares: %w", err)
+		return nil, withDelegatedPermissionsHint(fmt.Errorf("failed to get connection shares: %w", err))
 	}
 
 	sort.SliceStable(share.Value, func(i, j int) bool {
@@ -308,7 +321,7 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to update connection share: %w", err)
+		return withDelegatedPermissionsHint(fmt.Errorf("failed to update connection share: %w", err))
 	}
 	return nil
 }
@@ -339,7 +352,7 @@ func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, 
 
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return fmt.Errorf("failed to delete connection share: %w", err)
+		return withDelegatedPermissionsHint(fmt.Errorf("failed to delete connection share: %w", err))
 	}
 	return nil
 }
