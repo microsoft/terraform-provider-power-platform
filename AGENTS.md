@@ -16,6 +16,8 @@ The agent that makes a change runs all three layers itself before it opens or up
 
 Live runs use the test tenant credentials already configured for acceptance tests, never a production tenant.
 Name every resource you create with the test name prefix, never modify resources you did not create, and confirm that everything you created was deleted after each run.
+The one exception is a singleton resource such as `powerplatform_tenant_settings`, whose create updates existing settings and whose delete restores them: capture its current state as a baseline before the live check, and after the run verify that the state matches the baseline again.
+If the baseline cannot be captured or the restoration cannot be verified safely, stop and escalate to a human instead of testing.
 Record the commands and results of all three layers in the pull request description.
 
 Also run `make lint`, and `make userdocs` when a schema description changes.
