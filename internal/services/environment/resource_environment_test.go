@@ -2219,6 +2219,19 @@ func TestUnitEnvironmentsResource_Validate_Create_Omits_Empty_Environment_Group(
 // writing the (empty guid) group on every update silently converted the environment to a Managed
 // Environment (issue #1340). Only attributes whose planned value differs from state may be sent.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_And_Billing_Policy(t *testing.T) {
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "")
+}
+
+// An environment that stays in the same group must not have its group written again on update either.
+func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_When_In_Group(t *testing.T) {
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "00000000-0000-0000-0000-000000000001")
+}
+
+// testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy creates an environment in environmentGroupId
+// (no group when empty), then changes its description and its display name, and checks that no update sends
+// parentEnvironmentGroup or billingPolicy.
+func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, environmentGroupId string) {
+	t.Helper()
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -2259,7 +2272,11 @@ func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Gr
 					fixture = "get_environment_2.json"
 				}
 			}
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/"+fixture).String()), nil
+			environment := httpmock.File(fixtures + "/" + fixture).String()
+			if environmentGroupId != "" {
+				environment = strings.Replace(environment, `"connectedGroups": [],`, fmt.Sprintf(`"parentEnvironmentGroup": {"id": "%s"}, "connectedGroups": [],`, environmentGroupId), 1)
+			}
+			return httpmock.NewStringResponse(http.StatusOK, environment), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -2274,6 +2291,13 @@ func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Gr
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle_delete.json").String()), nil
 		})
 
+	expectedGroupId := constants.ZERO_UUID
+	groupLine := ""
+	if environmentGroupId != "" {
+		expectedGroupId = environmentGroupId
+		groupLine = fmt.Sprintf("environment_group_id = %q", environmentGroupId)
+	}
+
 	config := func(displayName, description string) string {
 		descriptionLine := ""
 		if description != "" {
@@ -2285,13 +2309,14 @@ func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Gr
 			location         = "europe"
 			environment_type = "Sandbox"
 			%s
+			%s
 			dataverse = {
 				language_code     = "1033"
 				currency_code     = "PLN"
 				domain            = "00000000-0000-0000-0000-000000000001"
 				security_group_id = "00000000-0000-0000-0000-000000000000"
 			}
-		}`, displayName, descriptionLine)
+		}`, displayName, descriptionLine, groupLine)
 	}
 
 	updatesOmitGroupAndBillingPolicy := func(expectedPatches int) resource.TestCheckFunc {
@@ -2301,7 +2326,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Gr
 			}
 			for _, body := range patchBodies {
 				if strings.Contains(body, "parentEnvironmentGroup") {
-					return fmt.Errorf("update PATCH must not send parentEnvironmentGroup for an environment that is not in a group, got: %s", body)
+					return fmt.Errorf("update PATCH must not send parentEnvironmentGroup when the environment group did not change, got: %s", body)
 				}
 				if strings.Contains(body, `"billingPolicy":`) {
 					return fmt.Errorf("update PATCH must not send billingPolicy when the billing policy did not change, got: %s", body)
@@ -2318,7 +2343,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Gr
 			{
 				Config: config("Example1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", expectedGroupId),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", constants.ZERO_UUID),
 				),
 			},
@@ -4098,7 +4123,26 @@ func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T)
 
 func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing.T) {
 	postEnvGroupRequestInx := 0
-	getEnvironmentRequestInx := 0
+
+	// Group membership is written through the environment update. Each step checks the update bodies it sent.
+	var patchBodies []string
+	checkedPatches := 0
+	expectGroupUpdates := func(expectedGroupIds ...string) resource.TestCheckFunc {
+		return func(_ *terraform.State) error {
+			stepBodies := patchBodies[checkedPatches:]
+			checkedPatches = len(patchBodies)
+			if len(stepBodies) != len(expectedGroupIds) {
+				return fmt.Errorf("expected %d update requests, got %d: %v", len(expectedGroupIds), len(stepBodies), stepBodies)
+			}
+			for i, body := range stepBodies {
+				expected := fmt.Sprintf(`"parentEnvironmentGroup":{"id":"%s"}`, expectedGroupIds[i])
+				if !strings.Contains(body, expected) {
+					return fmt.Errorf("update request %d must send %s, got: %s", i, expected, body)
+				}
+			}
+			return nil
+		}
+	}
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -4128,13 +4172,17 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			id := httpmock.MustGetSubmatch(req, 1)
-			getEnvironmentRequestInx++
-			if getEnvironmentRequestInx < 14 {
-				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_1.json", id)).String()), nil
-			} else if getEnvironmentRequestInx < 21 {
-				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_2.json", id)).String()), nil
+			// The environment is in the group the last update put it in: _1 and _2 are groups 1 and 2, _3 is no group.
+			fixture := 3
+			if len(patchBodies) > 0 {
+				lastBody := patchBodies[len(patchBodies)-1]
+				if strings.Contains(lastBody, `"parentEnvironmentGroup":{"id":"00000000-0000-0000-0000-000000000001"}`) {
+					fixture = 1
+				} else if strings.Contains(lastBody, `"parentEnvironmentGroup":{"id":"00000000-0000-0000-0000-000000000002"}`) {
+					fixture = 2
+				}
 			}
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_3.json", id)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_%d.json", id, fixture)).String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -4187,6 +4235,8 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			patchBodies = append(patchBodies, string(body))
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
@@ -4194,6 +4244,8 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			patchBodies = append(patchBodies, string(body))
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
@@ -4224,6 +4276,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					expectGroupUpdates(),
 				),
 			},
 			{
@@ -4248,6 +4301,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+					expectGroupUpdates("00000000-0000-0000-0000-000000000001"),
 				),
 			},
 			{
@@ -4277,6 +4331,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000002"),
+					expectGroupUpdates("00000000-0000-0000-0000-000000000002"),
 				),
 			},
 			{
@@ -4306,6 +4361,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
+					expectGroupUpdates("00000000-0000-0000-0000-000000000000"),
 				),
 			},
 		},
