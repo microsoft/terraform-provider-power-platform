@@ -4,14 +4,14 @@ page_title: "powerplatform_connections Data Source - Power Platform"
 subcategory: ""
 description: |-
   Fetches a list of Connection https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections for a given environment. Each connection represents an connection instance to an external data source or service.
-  Known Limitations: This data source may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated Connectivity.Connections.Write and ManagedApps.ReadWrite.All permissions. Use service principal authentication https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret instead.
+  Known Limitations: This data source may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated Connectivity.Connections.Write and ManagedApps.ReadWrite.All permissions. Use service principal authentication instead, for example OIDC https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/oidc or managed identity https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/managed_identity.
 ---
 
 # powerplatform_connections (Data Source)
 
 Fetches a list of [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections) for a given environment. Each connection represents an connection instance to an external data source or service.
 
-**Known Limitations:** This data source may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated `Connectivity.Connections.Write` and `ManagedApps.ReadWrite.All` permissions. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead.
+**Known Limitations:** This data source may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated `Connectivity.Connections.Write` and `ManagedApps.ReadWrite.All` permissions. Use service principal authentication instead, for example [OIDC](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/oidc) or [managed identity](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/managed_identity).
 
 ## Example Usage
 

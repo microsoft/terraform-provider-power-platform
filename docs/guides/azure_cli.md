@@ -60,5 +60,5 @@ For service principal authentication using Azure CLI, you need to create an app 
 
 ## Important Notes
 
-* Known limitations: `powerplatform_connection`, `powerplatform_connection_share` and the `powerplatform_connections` / `powerplatform_connection_shares` data sources may fail with `403 InsufficientDelegatedPermissions` when authenticated as a user through the Azure CLI. Use [service principal authentication](client_secret.md) for them.
+* Known limitations: `powerplatform_connection`, `powerplatform_connection_share` and the `powerplatform_connections` / `powerplatform_connection_shares` data sources may fail with `403 InsufficientDelegatedPermissions` when authenticated as a user through the Azure CLI. Use service principal authentication for them, for example [OIDC](oidc.md) or [managed identity](managed_identity.md).
 * Terraform only supports authenticating using the az CLI (and this must be available on your PATH) - authenticating using the older azure CLI or PowerShell Cmdlets are not supported.
