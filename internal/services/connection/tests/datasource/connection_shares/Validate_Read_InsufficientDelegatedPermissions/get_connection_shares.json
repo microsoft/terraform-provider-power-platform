@@ -1,0 +1,1 @@
+{"code":"Forbidden","message":"The caller is not authorized to perform the request.","innererror":{"code":"InsufficientDelegatedPermissions","message":"Authorization denied: Application missing required delegated permissions: [Connectivity.Connections.Read, PowerApps.Apps.Play, ManagedApps.ReadWrite.All]"}}
