@@ -2219,18 +2219,24 @@ func TestUnitEnvironmentsResource_Validate_Create_Omits_Empty_Environment_Group(
 // writing the (empty guid) group on every update silently converted the environment to a Managed
 // Environment (issue #1340). Only attributes whose planned value differs from state may be sent.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_And_Billing_Policy(t *testing.T) {
-	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "")
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "")
 }
 
 // An environment that stays in the same group must not have its group written again on update either.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_When_In_Group(t *testing.T) {
-	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "00000000-0000-0000-0000-000000000001")
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "00000000-0000-0000-0000-000000000001", "")
 }
 
-// testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy creates an environment in environmentGroupId
-// (no group when empty), then changes its description and its display name, and checks that no update sends
-// parentEnvironmentGroup or billingPolicy.
-func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, environmentGroupId string) {
+// An environment that stays in the same billing policy must not have the policy written again on update, and
+// must not be removed from the policy and added back through the licensing service.
+func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Billing_Policy_When_In_Policy(t *testing.T) {
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "00000000-0000-0000-0000-000000000002")
+}
+
+// testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy creates an environment in environmentGroupId and
+// billingPolicyId (none when empty), then changes its description and its display name, and checks that no update
+// sends parentEnvironmentGroup or billingPolicy or changes the billing policy membership.
+func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, environmentGroupId, billingPolicyId string) {
 	t.Helper()
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -2276,7 +2282,20 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 			if environmentGroupId != "" {
 				environment = strings.Replace(environment, `"connectedGroups": [],`, fmt.Sprintf(`"parentEnvironmentGroup": {"id": "%s"}, "connectedGroups": [],`, environmentGroupId), 1)
 			}
+			if billingPolicyId != "" {
+				environment = regexp.MustCompile(`"billingPolicy":\s*\{\s*"id":\s*""\s*\}`).ReplaceAllString(environment, fmt.Sprintf(`"billingPolicy": {"id": "%s"}`, billingPolicyId))
+			}
 			return httpmock.NewStringResponse(http.StatusOK, environment), nil
+		})
+
+	// Create confirms the billing policy membership with the licensing service; updates must not change it.
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([0-9a-fA-F-]+)/environments\?api-version=2022-03-01-preview\z`,
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[{"environmentId":"00000000-0000-0000-0000-000000000001"}]}`))
+	billingPolicyMembershipChanges := 0
+	httpmock.RegisterResponder("POST", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([0-9a-fA-F-]+)/environments/(add|remove)\?api-version=2022-03-01-preview\z`,
+		func(req *http.Request) (*http.Response, error) {
+			billingPolicyMembershipChanges++
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -2292,10 +2311,15 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 		})
 
 	expectedGroupId := constants.ZERO_UUID
-	groupLine := ""
+	membershipLines := ""
 	if environmentGroupId != "" {
 		expectedGroupId = environmentGroupId
-		groupLine = fmt.Sprintf("environment_group_id = %q", environmentGroupId)
+		membershipLines = fmt.Sprintf("environment_group_id = %q", environmentGroupId)
+	}
+	expectedBillingPolicyId := constants.ZERO_UUID
+	if billingPolicyId != "" {
+		expectedBillingPolicyId = billingPolicyId
+		membershipLines += fmt.Sprintf("\nbilling_policy_id = %q", billingPolicyId)
 	}
 
 	config := func(displayName, description string) string {
@@ -2316,7 +2340,7 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 				domain            = "00000000-0000-0000-0000-000000000001"
 				security_group_id = "00000000-0000-0000-0000-000000000000"
 			}
-		}`, displayName, descriptionLine, groupLine)
+		}`, displayName, descriptionLine, membershipLines)
 	}
 
 	updatesOmitGroupAndBillingPolicy := func(expectedPatches int) resource.TestCheckFunc {
@@ -2332,6 +2356,9 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 					return fmt.Errorf("update PATCH must not send billingPolicy when the billing policy did not change, got: %s", body)
 				}
 			}
+			if billingPolicyMembershipChanges != 0 {
+				return fmt.Errorf("update must not remove the environment from its billing policy or add it back, got %d licensing calls", billingPolicyMembershipChanges)
+			}
 			return nil
 		}
 	}
@@ -2344,7 +2371,7 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 				Config: config("Example1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", expectedGroupId),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", constants.ZERO_UUID),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", expectedBillingPolicyId),
 				),
 			},
 			{
@@ -2519,7 +2546,29 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 
 	mocks.ActivateEnvironmentHttpMocks()
 
-	getResponseInx := 0
+	// The mocked environment follows the updates: its billing policy and description are the last ones sent.
+	currentBillingPolicyId := ""
+	currentDescription := ""
+	var lastPatchBody string
+	recordBillingPolicy := func(req *http.Request) {
+		var body struct {
+			Properties struct {
+				Description   string `json:"description"`
+				BillingPolicy *struct {
+					Id string `json:"id"`
+				} `json:"billingPolicy"`
+			} `json:"properties"`
+		}
+		raw, _ := io.ReadAll(req.Body)
+		lastPatchBody = string(raw)
+		_ = json.Unmarshal(raw, &body)
+		if body.Properties.BillingPolicy != nil {
+			currentBillingPolicyId = strings.TrimPrefix(body.Properties.BillingPolicy.Id, constants.ZERO_UUID)
+		}
+		if body.Properties.Description != "" {
+			currentDescription = body.Properties.Description
+		}
+	}
 	patchResponseInx := 0
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -2536,8 +2585,14 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			getResponseInx++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_With_Billing_Policy/get_environment_%d.json", getResponseInx)).String()), nil
+			// The environment is in the billing policy the last update put it in: _1 is none, _4 is policy 1, _7 is policy 2.
+			fixture := map[string]int{"": 1, "00000000-0000-0000-0000-000000000001": 4, "00000000-0000-0000-0000-000000000002": 7}[currentBillingPolicyId]
+			var environment map[string]any
+			if err := json.Unmarshal(httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_With_Billing_Policy/get_environment_%d.json", fixture)).Bytes(), &environment); err != nil {
+				return nil, err
+			}
+			environment["properties"].(map[string]any)["description"] = currentDescription
+			return httpmock.NewJsonResponse(http.StatusOK, environment)
 		})
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
@@ -2584,6 +2639,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
+			recordBillingPolicy(req)
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
@@ -2591,6 +2647,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
+			recordBillingPolicy(req)
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
@@ -2608,6 +2665,25 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
 		})
+
+	// The environment is moved between billing policies through the licensing service only when the policy changes.
+	expectLicensingCalls := func(addedToFirst, removedFromFirst, addedToSecond, removedFromSecond int) resource.TestCheckFunc {
+		return func(_ *terraform.State) error {
+			calls := httpmock.GetCallCountInfo()
+			expected := map[string]int{
+				"POST https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments/add?api-version=2022-03-01-preview":    addedToFirst,
+				"POST https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001/environments/remove?api-version=2022-03-01-preview": removedFromFirst,
+				"POST https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000002/environments/add?api-version=2022-03-01-preview":    addedToSecond,
+				"POST https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000002/environments/remove?api-version=2022-03-01-preview": removedFromSecond,
+			}
+			for call, count := range expected {
+				if calls[call] != count {
+					return fmt.Errorf("expected %d calls of %s, got %d", count, call, calls[call])
+				}
+			}
+			return nil
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -2630,6 +2706,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
+					expectLicensingCalls(0, 0, 0, 0),
 				),
 			},
 			{
@@ -2650,12 +2727,44 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000001"),
+					expectLicensingCalls(1, 0, 0, 0),
+				),
+			},
+			{
+				// The billing policy does not change: the update must neither send it nor move the environment
+				// out of the policy and back in through the licensing service.
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					description                               = "billing policy unchanged"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					billing_policy_id                         = "00000000-0000-0000-0000-000000000001"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "billing policy unchanged"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000001"),
+					expectLicensingCalls(1, 0, 0, 0),
+					func(_ *terraform.State) error {
+						if strings.Contains(lastPatchBody, `"billingPolicy":`) {
+							return fmt.Errorf("update must not send an unchanged billing policy, got: %s", lastPatchBody)
+						}
+						return nil
+					},
 				),
 			},
 			{
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
+					description                               = "billing policy unchanged"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
@@ -2670,12 +2779,14 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000002"),
+					expectLicensingCalls(1, 1, 1, 0),
 				),
 			},
 			{
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
+					description                               = "billing policy unchanged"
 					location                                  = "europe"
 					billing_policy_id                         = "00000000-0000-0000-0000-000000000000"
 					environment_type                          = "Sandbox"
@@ -2690,6 +2801,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
+					expectLicensingCalls(1, 1, 1, 1),
 				),
 			},
 		},
