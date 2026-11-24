@@ -2214,6 +2214,133 @@ func TestUnitEnvironmentsResource_Validate_Create_Omits_Empty_Environment_Group(
 	})
 }
 
+// An in-place update of an environment that is not in a group and has no billing policy must not send
+// parentEnvironmentGroup or billingPolicy. Environment groups can only contain managed environments, so
+// writing the (empty guid) group on every update silently converted the environment to a Managed
+// Environment (issue #1340). Only attributes whose planned value differs from state may be sent.
+func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_And_Billing_Policy(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	const fixtures = "tests/resource/Validate_Update_Omits_Unchanged_Environment_Group_And_Billing_Policy"
+
+	var patchBodies []string
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			body, _ := io.ReadAll(req.Body)
+			patchBodies = append(patchBodies, string(body))
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	// The environment read reflects the last update: none yet, a new description, then a new display name.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			fixture := "get_environment_0.json"
+			if len(patchBodies) > 0 {
+				fixture = "get_environment_1.json"
+				if strings.Contains(patchBodies[len(patchBodies)-1], `"displayName":"Example2"`) {
+					fixture = "get_environment_2.json"
+				}
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/"+fixture).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/delete-op?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/delete-op?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixtures+"/get_lifecycle_delete.json").String()), nil
+		})
+
+	config := func(displayName, description string) string {
+		descriptionLine := ""
+		if description != "" {
+			descriptionLine = fmt.Sprintf("description = %q", description)
+		}
+		return fmt.Sprintf(`
+		resource "powerplatform_environment" "development" {
+			display_name     = %q
+			location         = "europe"
+			environment_type = "Sandbox"
+			%s
+			dataverse = {
+				language_code     = "1033"
+				currency_code     = "PLN"
+				domain            = "00000000-0000-0000-0000-000000000001"
+				security_group_id = "00000000-0000-0000-0000-000000000000"
+			}
+		}`, displayName, descriptionLine)
+	}
+
+	updatesOmitGroupAndBillingPolicy := func(expectedPatches int) resource.TestCheckFunc {
+		return func(_ *terraform.State) error {
+			if len(patchBodies) != expectedPatches {
+				return fmt.Errorf("expected %d update requests, got %d", expectedPatches, len(patchBodies))
+			}
+			for _, body := range patchBodies {
+				if strings.Contains(body, "parentEnvironmentGroup") {
+					return fmt.Errorf("update PATCH must not send parentEnvironmentGroup for an environment that is not in a group, got: %s", body)
+				}
+				if strings.Contains(body, `"billingPolicy":`) {
+					return fmt.Errorf("update PATCH must not send billingPolicy when the billing policy did not change, got: %s", body)
+				}
+			}
+			return nil
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config("Example1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", constants.ZERO_UUID),
+				),
+			},
+			{
+				Config: config("Example1", "Updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "Updated description"),
+					updatesOmitGroupAndBillingPolicy(1),
+				),
+			},
+			{
+				// A display name change sends the update twice (a BAPI propagation workaround).
+				Config: config("Example2", "Updated description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example2"),
+					updatesOmitGroupAndBillingPolicy(3),
+				),
+			},
+		},
+	})
+}
+
 // The environment record does not always show the billing policy straight after create. When that
 // happens the provider used to write the zero guid into state and Terraform failed the apply with
 // "Provider produced inconsistent result after apply". Membership is confirmed with the licensing
