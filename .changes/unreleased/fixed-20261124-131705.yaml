@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_environment no longer sends an unchanged environment_group_id or billing_policy_id on in-place update, which silently converted environments to Managed Environments; already-converted environments must be reverted manually
+time: 2026-11-24T13:17:05.128668187Z
+custom:
+    Issue: "1340"
