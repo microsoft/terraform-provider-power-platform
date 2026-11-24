@@ -23,8 +23,10 @@ Following API permissions are required to use the Terraform Power Platform provi
 - Power Platform API
   - AppManagement.ApplicationPackages.Install
   - AppManagement.ApplicationPackages.Read
+  - Connectivity.Connections.Write
   - Licensing.Allocations.ReadWrite
   - Licensing.BillingPolicies.ReadWrite
+  - ManagedApps.ReadWrite.All
   - PowerApps.Apps.Play
   - PowerApps.Apps.Read
   - EnvironmentManagement.Environments.Read

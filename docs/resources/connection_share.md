@@ -4,14 +4,14 @@ page_title: "powerplatform_connection_share Resource - Power Platform"
 subcategory: ""
 description: |-
   Manages the sharing of a Connection https://learn.microsoft.com/en-us/power-automate/connection-sharing with a service principal. The principal is always shared as a service principal, so principal.entra_object_id must be the object id of a service principal; sharing with users or groups is not supported.
-  Known Limitations: This resource may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the connectivity permissions it needs are not currently available to delegated tokens. Use service principal authentication https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret instead.
+  Known Limitations: This resource may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated Connectivity.Connections.Write and ManagedApps.ReadWrite.All permissions. Use service principal authentication https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret instead.
 ---
 
 # powerplatform_connection_share (Resource)
 
 Manages the sharing of a [Connection](https://learn.microsoft.com/en-us/power-automate/connection-sharing) with a service principal. The principal is always shared as a service principal, so `principal.entra_object_id` must be the object id of a service principal; sharing with users or groups is not supported.
 
-**Known Limitations:** This resource may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the connectivity permissions it needs are not currently available to delegated tokens. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead.
+**Known Limitations:** This resource may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated `Connectivity.Connections.Write` and `ManagedApps.ReadWrite.All` permissions. Use [service principal authentication](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret) instead.
 
 ## Example Usage
 

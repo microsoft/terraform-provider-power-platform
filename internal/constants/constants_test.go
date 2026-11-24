@@ -128,7 +128,7 @@ func TestUnitHeaderAndErrorConstants(t *testing.T) {
 	require.Equal(t, "https", HTTPS)
 	require.Equal(t, "api-version", API_VERSION_PARAM)
 	require.Equal(t, "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application", NO_MANAGEMENT_APPLICATION_ERROR_MSG)
-	require.Equal(t, "the token is missing connectivity delegated permissions (InsufficientDelegatedPermissions). Connections may not be manageable with user authentication such as use_cli or use_dev_cli; use service principal authentication instead: https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret", CONNECTIVITY_INSUFFICIENT_DELEGATED_PERMISSIONS_ERROR_MSG)
+	require.Equal(t, "the token is missing connectivity delegated permissions (InsufficientDelegatedPermissions). With user authentication such as use_cli or use_dev_cli the token is issued to the Azure CLI or Azure Developer CLI client app, which is not granted Connectivity.Connections.Write and ManagedApps.ReadWrite.All; use service principal authentication instead: https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret", CONNECTIVITY_INSUFFICIENT_DELEGATED_PERMISSIONS_ERROR_MSG)
 	require.Equal(t, "claims=", CAE_CHALLENGE_CLAIMS_INDICATOR)
 	require.Equal(t, "insufficient_claims", CAE_CHALLENGE_INSUFFICIENT_CLAIMS_INDICATOR)
 	require.Equal(t, "OBJECT_NOT_FOUND", ERROR_OBJECT_NOT_FOUND)

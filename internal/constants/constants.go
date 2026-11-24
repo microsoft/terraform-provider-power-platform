@@ -329,7 +329,7 @@ const (
 
 const (
 	NO_MANAGEMENT_APPLICATION_ERROR_MSG                       = "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
-	CONNECTIVITY_INSUFFICIENT_DELEGATED_PERMISSIONS_ERROR_MSG = "the token is missing connectivity delegated permissions (InsufficientDelegatedPermissions). Connections may not be manageable with user authentication such as use_cli or use_dev_cli; use service principal authentication instead: https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret"
+	CONNECTIVITY_INSUFFICIENT_DELEGATED_PERMISSIONS_ERROR_MSG = "the token is missing connectivity delegated permissions (InsufficientDelegatedPermissions). With user authentication such as use_cli or use_dev_cli the token is issued to the Azure CLI or Azure Developer CLI client app, which is not granted Connectivity.Connections.Write and ManagedApps.ReadWrite.All; use service principal authentication instead: https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/client_secret"
 )
 
 const (
