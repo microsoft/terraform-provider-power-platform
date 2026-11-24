@@ -1,5 +1,0 @@
-kind: fixed
-body: Importing `powerplatform_connection_share` no longer fails with a `Value Conversion Error` on `principal`, because `ImportState` now populates `environment_id`, `connector_name`, `connection_id` and `principal.entra_object_id` from the import ID `{environment_id}/{connector_name}/{connection_id}/{principal_entra_object_id}`; the principal GUID may be given in any case, and malformed import IDs return `Invalid import ID`
-time: 2026-11-16T11:00:00.000000000Z
-custom:
-    Issue: "1332"
