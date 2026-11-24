@@ -3,12 +3,15 @@
 page_title: "powerplatform_connection_shares Data Source - Power Platform"
 subcategory: ""
 description: |-
-  Lists connection shares found in an environment. For more information about the connection sharing, see Share a connection reference https://learn.microsoft.com/en-us/power-automate/connection-sharing
+  Lists connection shares found in an environment. For more information about the connection sharing, see Share a connection reference https://learn.microsoft.com/en-us/power-automate/connection-sharing.
+  Known Limitations: This data source may fail with 403 InsufficientDelegatedPermissions when using user (delegated) authentication such as use_cli or use_dev_cli, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated Connectivity.Connections.Write and ManagedApps.ReadWrite.All permissions. Use service principal authentication instead, for example OIDC https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/oidc or managed identity https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/managed_identity.
 ---
 
 # powerplatform_connection_shares (Data Source)
 
-Lists connection shares found in an environment. For more information about the connection sharing, see [Share a connection reference](https://learn.microsoft.com/en-us/power-automate/connection-sharing)
+Lists connection shares found in an environment. For more information about the connection sharing, see [Share a connection reference](https://learn.microsoft.com/en-us/power-automate/connection-sharing).
+
+**Known Limitations:** This data source may fail with `403 InsufficientDelegatedPermissions` when using user (delegated) authentication such as `use_cli` or `use_dev_cli`, because the Azure CLI and Azure Developer CLI client apps are not granted the delegated `Connectivity.Connections.Write` and `ManagedApps.ReadWrite.All` permissions. Use service principal authentication instead, for example [OIDC](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/oidc) or [managed identity](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/guides/managed_identity).
 
 ## Example Usage
 

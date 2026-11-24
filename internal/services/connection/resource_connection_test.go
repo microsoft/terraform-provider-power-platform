@@ -573,3 +573,31 @@ func TestUnitConnectionsResource_ImportState_InvalidId(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitConnectionsResource_Validate_Create_InsufficientDelegatedPermissions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusForbidden, httpmock.File("tests/resource/connections/Validate_Create_InsufficientDelegatedPermissions/put_connection.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id = "00000000-0000-0000-0000-000000000000"
+						name           = "shared_azureopenai"
+						display_name   = "OpenAI Connection"
+					}
+					`,
+				ExpectError: regexp.MustCompile(`(?s)use_dev_cli.*InsufficientDelegatedPermissions`),
+			},
+		},
+	})
+}

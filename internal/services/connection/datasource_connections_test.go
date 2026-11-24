@@ -5,6 +5,7 @@ package connection_test
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -107,6 +108,32 @@ func TestUnitConnectionsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_connections.all_connections", "connections.0.connection_parameters_set"),
 					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.1.connection_parameters_set", "{\"name\":\"firstParty\",\"values\":{}}"),
 				),
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsDataSource_Validate_Read_InsufficientDelegatedPermissions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connections?api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusForbidden, httpmock.File("tests/datasource/connections/Validate_Read_InsufficientDelegatedPermissions/get_connections.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "powerplatform_connections" "all_connections" {
+					environment_id = "00000000-0000-0000-0000-000000000000"
+				}
+				`,
+				ExpectError: regexp.MustCompile(`(?s)use_dev_cli.*InsufficientDelegatedPermissions`),
 			},
 		},
 	})

@@ -161,3 +161,31 @@ func TestUnitConnectionsShareDataSource_Validate_Read(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitConnectionsShareDataSource_Validate_Read_InsufficientDelegatedPermissions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000002/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000001%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusForbidden, httpmock.File("tests/datasource/connection_shares/Validate_Read_InsufficientDelegatedPermissions/get_connection_shares.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "powerplatform_connection_shares" "all_shares" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					connector_name = "shared_commondataserviceforapps"
+					connection_id  = "00000000-0000-0000-0000-000000000002"
+				}
+				`,
+				ExpectError: regexp.MustCompile(`(?s)use_dev_cli.*InsufficientDelegatedPermissions`),
+			},
+		},
+	})
+}
