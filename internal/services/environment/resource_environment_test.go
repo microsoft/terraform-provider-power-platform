@@ -1606,14 +1606,9 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	})
 }
 
-// keepsEnvironmentUnmanagedConfig is a description update followed by a read of the environment's governance
-// configuration once the service had time to act on the update (issue #1340).
-func keepsEnvironmentUnmanagedConfig(environmentConfig, description string, readGovernance bool) string {
-	config := fmt.Sprintf(environmentConfig, description)
-	if !readGovernance {
-		return config
-	}
-	return config + `
+// readGovernanceAfterUpdateConfig reads the environment's governance configuration once the service had time
+// to act on a description update (issue #1340).
+const readGovernanceAfterUpdateConfig = `
 	resource "time_sleep" "wait_after_update" {
 		create_duration = "60s"
 		triggers = {
@@ -1629,7 +1624,6 @@ func keepsEnvironmentUnmanagedConfig(environmentConfig, description string, read
 
 		depends_on = [time_sleep.wait_after_update]
 	}`
-}
 
 // An in-place update of an environment that is in no environment group must leave it an unmanaged environment.
 func TestAccEnvironmentsResource_Validate_Update_Keeps_Environment_Unmanaged(t *testing.T) {
@@ -1655,20 +1649,20 @@ func TestAccEnvironmentsResource_Validate_Update_Keeps_Environment_Unmanaged(t *
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "before update", false),
+				Config: fmt.Sprintf(environmentConfig, "before update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
 				),
 			},
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", false),
+				Config: fmt.Sprintf(environmentConfig, "after update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "after update"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", constants.ZERO_UUID),
 				),
 			},
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", true),
+				Config: fmt.Sprintf(environmentConfig, "after update") + readGovernanceAfterUpdateConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("data.powerplatform_rest_query.environment", "output.body", regexp.MustCompile(`"protectionLevel"\s*:\s*"Basic"`)),
 				),
@@ -1730,20 +1724,20 @@ func TestAccEnvironmentsResource_Validate_Update_Keeps_Environment_Unmanaged_Wit
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "before update", false),
+				Config: fmt.Sprintf(environmentConfig, "before update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair("powerplatform_environment.development", "billing_policy_id", "powerplatform_billing_policy.pay_as_you_go", "id"),
 				),
 			},
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", false),
+				Config: fmt.Sprintf(environmentConfig, "after update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "after update"),
 					resource.TestCheckResourceAttrPair("powerplatform_environment.development", "billing_policy_id", "powerplatform_billing_policy.pay_as_you_go", "id"),
 				),
 			},
 			{
-				Config: keepsEnvironmentUnmanagedConfig(environmentConfig, "after update", true) + billingPolicyMembership,
+				Config: fmt.Sprintf(environmentConfig, "after update") + readGovernanceAfterUpdateConfig + billingPolicyMembership,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("data.powerplatform_rest_query.environment", "output.body", regexp.MustCompile(`"protectionLevel"\s*:\s*"Basic"`)),
 					func(s *terraform.State) error {
@@ -2715,21 +2709,16 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 	var lastPatchBody string
 	recordBillingPolicy := func(req *http.Request) {
 		var body struct {
-			Properties struct {
-				Description   string `json:"description"`
-				BillingPolicy *struct {
-					Id string `json:"id"`
-				} `json:"billingPolicy"`
-			} `json:"properties"`
+			Properties map[string]any `json:"properties"`
 		}
 		raw, _ := io.ReadAll(req.Body)
 		lastPatchBody = string(raw)
 		_ = json.Unmarshal(raw, &body)
-		if body.Properties.BillingPolicy != nil {
-			currentBillingPolicyId = strings.TrimPrefix(body.Properties.BillingPolicy.Id, constants.ZERO_UUID)
+		if billingPolicy, ok := body.Properties["billingPolicy"].(map[string]any); ok {
+			currentBillingPolicyId = strings.TrimPrefix(billingPolicy["id"].(string), constants.ZERO_UUID)
 		}
-		if body.Properties.Description != "" {
-			currentDescription = body.Properties.Description
+		if description, ok := body.Properties["description"].(string); ok && description != "" {
+			currentDescription = description
 		}
 	}
 	patchResponseInx := 0
