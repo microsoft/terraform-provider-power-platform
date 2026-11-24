@@ -1038,7 +1038,9 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	// values.Add("api-version", "2022-05-01")
 	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusConflict}, nil)
+	// The service answers 204 when it applies the update synchronously (for example a display name change
+	// alone); there is no lifecycle operation to wait for then, and the readiness check below still runs.
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusNoContent, http.StatusConflict}, nil)
 	if err != nil {
 		return nil, err
 	}

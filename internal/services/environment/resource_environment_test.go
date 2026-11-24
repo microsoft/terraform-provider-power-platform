@@ -2373,24 +2373,30 @@ func TestUnitEnvironmentsResource_Validate_Create_Omits_Empty_Environment_Group(
 // writing the (empty guid) group on every update silently converted the environment to a Managed
 // Environment (issue #1340). Only attributes whose planned value differs from state may be sent.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_And_Billing_Policy(t *testing.T) {
-	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "")
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "", http.StatusAccepted)
+}
+
+// Without a group or billing policy write the service may apply an update synchronously and answer 204 without
+// a lifecycle operation; the update must still succeed.
+func TestUnitEnvironmentsResource_Validate_Update_Accepts_No_Content(t *testing.T) {
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "", http.StatusNoContent)
 }
 
 // An environment that stays in the same group must not have its group written again on update either.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Environment_Group_When_In_Group(t *testing.T) {
-	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "00000000-0000-0000-0000-000000000001", "")
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "00000000-0000-0000-0000-000000000001", "", http.StatusAccepted)
 }
 
 // An environment that stays in the same billing policy must not have the policy written again on update, and
 // must not be removed from the policy and added back through the licensing service.
 func TestUnitEnvironmentsResource_Validate_Update_Omits_Unchanged_Billing_Policy_When_In_Policy(t *testing.T) {
-	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "00000000-0000-0000-0000-000000000002")
+	testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t, "", "00000000-0000-0000-0000-000000000002", http.StatusAccepted)
 }
 
 // testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy creates an environment in environmentGroupId and
 // billingPolicyId (none when empty), then changes its description and its display name, and checks that no update
 // sends parentEnvironmentGroup or billingPolicy or changes the billing policy membership.
-func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, environmentGroupId, billingPolicyId string) {
+func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, environmentGroupId, billingPolicyId string, patchStatus int) {
 	t.Helper()
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -2417,7 +2423,10 @@ func testUnitUpdateOmitsUnchangedEnvironmentGroupAndBillingPolicy(t *testing.T, 
 		func(req *http.Request) (*http.Response, error) {
 			body, _ := io.ReadAll(req.Body)
 			patchBodies = append(patchBodies, string(body))
-			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			if patchStatus == http.StatusNoContent {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			resp := httpmock.NewStringResponse(patchStatus, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
 		})
