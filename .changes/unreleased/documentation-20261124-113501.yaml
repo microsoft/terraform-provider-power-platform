@@ -1,0 +1,5 @@
+kind: documentation
+body: 'docs: document that connection resources and data sources may fail with 403 InsufficientDelegatedPermissions under user authentication (use_cli/use_dev_cli), and add an actionable error hint pointing to service principal authentication'
+time: 2026-11-24T11:35:01.479286471Z
+custom:
+    Issue: "1328"
