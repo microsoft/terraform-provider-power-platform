@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "organizationname": "example-org",
+      "projectname": "example-project",
+      "repositoryname": "example-repo",
+      "defaultbranch": "refs/heads/main"
+    },
+    {
+      "organizationname": "example-org",
+      "projectname": "example-project",
+      "repositoryname": "example-repo-updated",
+      "defaultbranch": "refs/heads/main"
+    }
+  ]
+}
